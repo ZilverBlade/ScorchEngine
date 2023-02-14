@@ -1,0 +1,9 @@
+[submodule "GammaHUD"]
+	path = GammaHUD
+	url = https://github.com/ZilverBlade/GammaHUD.git
+[submodule "vendor/GammaHUD"]
+	path = vendor/GammaHUD
+	url = https://github.com/ZilverBlade/GammaHUD.git
+[submodule "vendor/glfw"]
+	path = vendor/glfw
+	url = https://github.com/glfw/glfw.git
