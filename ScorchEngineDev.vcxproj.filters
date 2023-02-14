@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="apps">
+      <UniqueIdentifier>{992B947C-8562-950D-2E4F-7B101A65110F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vkapi">
+      <UniqueIdentifier>{A0A39210-0CB8-BAC1-D539-5E21410DB7F2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\scorch\apps\app.h">
+      <Filter>apps</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\window_test.h">
+      <Filter>apps</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\log.h" />
+    <ClInclude Include="src\scorch\vkapi\device.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\scorch\apps\app.cpp">
+      <Filter>apps</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\apps\window_test.cpp">
+      <Filter>apps</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\main.cpp" />
+    <ClCompile Include="src\scorch\vkapi\device.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\window.cpp" />
+  </ItemGroup>
+</Project>
