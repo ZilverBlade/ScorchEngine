@@ -1,10 +1,21 @@
 #pragma once
 
 #include <vector>
-#include <vulkan/vulkan.h>
 #include <scorch/log.h>
+#include <scorch/vkapi/queue.h>
 
 namespace ScorchEngine {
+	struct QueueFamilyIndices {
+		uint32_t presentFamily = 0;
+		uint32_t presentQueueCount = 0;
+
+		uint32_t graphicsFamily = -1;
+		uint32_t graphicsQueueCount = 0;
+
+		uint32_t computeFamily = -1;
+		uint32_t computeQueueCount = 0;
+	};
+
 	class SEDevice {
 	public:
 		const std::vector<const char*> validationLayers = {
@@ -15,6 +26,7 @@ namespace ScorchEngine {
 #else
 		const bool enableValidationLayers = false;
 #endif
+
 		SEDevice(const SEDevice&) = delete;
 		SEDevice& operator=(const SEDevice&) = delete;
 		SEDevice(SEDevice&&) = delete;
@@ -23,17 +35,43 @@ namespace ScorchEngine {
 		SEDevice();
 		~SEDevice();
 
-		VkInstance getInstance();
-		VkDevice getDevice();
-		VkPhysicalDevice getPhysicalDevice();
+		VkInstance getInstance() {
+			return instance;
+		}
+		VkDevice getDevice() {
+			return device;
+		}
+		VkPhysicalDevice getPhysicalDevice() {
+			return physicalDevice;
+		}
 
+		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+		const VkPhysicalDeviceProperties& getDeviceProperties() { return deviceProperties; }
+		const VkPhysicalDeviceFeatures& getDeviceFeatures() { return deviceFeatures; }
 	private:
+
+		VkPhysicalDeviceProperties deviceProperties{};
+		VkPhysicalDeviceFeatures deviceFeatures{};
+
 		bool checkValidationLayerSupport();
 
 		void createInstance();
 		void createPhysicalDevice();
-		std::vector<const char*> getRequiredExtensions();
 		void createLogicalDevice();
+
+
+		VkPhysicalDeviceFeatures requestFeatures();
+		bool checkDeviceFeatureSupport(VkPhysicalDevice device);
+		bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+
+		void pickPhyisicalDevice();
+		bool isDeviceSuitable(VkPhysicalDevice device);
+
+		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+		std::vector<const char*> getRequiredExtensions();
+
+		std::vector<SEQueue> createQueues(SEQueueType queueType, uint32_t queueCount, uint32_t queueOffset);
 
 		void setupDebugMessenger();
 
@@ -41,6 +79,14 @@ namespace ScorchEngine {
 		VkDevice device{};
 		VkPhysicalDevice physicalDevice{};
 
+		std::vector<SEQueue> graphicsQueues{};
+		std::vector<SEQueue> computeQueues{};
+		std::vector<SEQueue> presentQueues{};
+
 		VkDebugUtilsMessengerEXT debugMessenger{};
+
+		const std::vector<const char*> deviceExtensions = {
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		};
 	};
 }

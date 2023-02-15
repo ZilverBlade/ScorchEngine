@@ -19,8 +19,8 @@ namespace ScorchEngine {
 
 		virtual void run();
 	protected:
-		SEWindow seWindow;
 		SEDevice seDevice{};
+		SEWindow seWindow;
 		//SERenderer seRenderer = { seWindow, seDevice };
 	};
 }

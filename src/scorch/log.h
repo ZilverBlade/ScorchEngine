@@ -3,15 +3,15 @@
 #include <windows.h> // Include the windows header
 static HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-#define SELOG_ERR(fmt, fmtdat)				\
+#define SELOG_ERR(fmt, ...)				\
 	(SetConsoleTextAttribute(hConsole, 12));	\
-	std::printf("[ERROR]\t"##fmt"\n", fmtdat);	\
+	std::printf("[ERROR]\t"##fmt"\n", __VA_ARGS__);	\
 	(SetConsoleTextAttribute(hConsole, 7))
 
-#define SELOG_WRN(fmt, fmtdat)				\
+#define SELOG_WRN(fmt, ...)				\
 	(SetConsoleTextAttribute(hConsole, 14));	\
-	std::printf("[WARN]\t"##fmt"\n", fmtdat);\
+	std::printf("[WARN]\t"##fmt"\n", __VA_ARGS__);\
 	(SetConsoleTextAttribute(hConsole, 7))
 
-#define SELOG_INF(fmt, fmtdat)				\
-	std::printf("[INFO]\t"##fmt"\n", fmtdat)
+#define SELOG_INF(fmt, ...)				\
+	std::printf("[INFO]\t"##fmt"\n", __VA_ARGS__)

@@ -1,7 +1,9 @@
 #pragma once
 
+#include <vulkan/vk_enum_string_helper.h>
 #include <scorch/vkapi/device.h>
 #include <GLFW/glfw3.h>
+#include <set>
 
 namespace ScorchEngine {
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -54,12 +56,17 @@ namespace ScorchEngine {
 	SEDevice::SEDevice() {
 		createInstance();
 		setupDebugMessenger();
+		createPhysicalDevice();
+		createLogicalDevice();
+		graphicsQueues = createQueues(SEQueueType::Graphics, 2, 0);
+		presentQueues = createQueues(SEQueueType::Present, 1, 2);
 	}
 
 	SEDevice::~SEDevice() {
 		if (enableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
+		vkDestroyDevice(device, nullptr);
 		vkDestroyInstance(instance, nullptr);
 	}
 
@@ -94,13 +101,22 @@ namespace ScorchEngine {
 		if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create instance!");
 		}
+
+		uint32_t extensionCount = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+		std::vector<VkExtensionProperties> pextensions(extensionCount);
+		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, pextensions.data());
+		std::cout << "available extensions:\n";
+		for (const auto& extension : pextensions) {
+			std::cout << '\t' << extension.extensionName << '\n';
+		}
 	}
 	void SEDevice::setupDebugMessenger() {
 		if (!enableValidationLayers) return;
 
 		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		createInfo.pfnUserCallback = debugCallback;
 		createInfo.pUserData = nullptr; // Optional
@@ -111,11 +127,95 @@ namespace ScorchEngine {
 
 	}
 	void SEDevice::createPhysicalDevice() {
-	
+		pickPhyisicalDevice();
 		
 	
 	}
+
+	void SEDevice::pickPhyisicalDevice() {
+		uint32_t deviceCount = 0;
+		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+		if (deviceCount == 0) {
+			throw std::runtime_error("failed to find GPUs with Vulkan support!");
+		}
+		std::vector<VkPhysicalDevice> devices(deviceCount);
+		vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+		SELOG_INF("%s", "GPUs found: ");
+		for (uint32_t i = 0; i < devices.size(); i++) {
+			VkPhysicalDeviceProperties properties{};
+			vkGetPhysicalDeviceProperties(devices[i], &properties);
+			SELOG_INF("---- [%i] (%s) %s ", i, 24 + string_VkPhysicalDeviceType(properties.deviceType), properties.deviceName);
+		}
+		for (const auto& device : devices) {
+			if (isDeviceSuitable(device)) {
+				physicalDevice = device;
+				break;
+			}
+		}
+		if (physicalDevice == VK_NULL_HANDLE) {
+			throw std::runtime_error("failed to find a suitable GPU!");
+		}
+		vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+		deviceFeatures = requestFeatures();
+		SELOG_INF("Picked %s", deviceProperties.deviceName);
+	}
+
+	VkPhysicalDeviceFeatures SEDevice::requestFeatures() {
+		VkPhysicalDeviceFeatures enabledFeatuers{};
+		enabledFeatuers.samplerAnisotropy = VK_TRUE;
+		enabledFeatuers.sampleRateShading = VK_TRUE;
+		return enabledFeatuers;
+	}
+
+	bool SEDevice::checkDeviceFeatureSupport(VkPhysicalDevice device) {
+		VkPhysicalDeviceFeatures features{};
+		vkGetPhysicalDeviceFeatures(device, &features);
+		return 
+			features.samplerAnisotropy &
+			features.sampleRateShading
+			;
+	}
 	
+	bool SEDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+		uint32_t extensionCount;
+		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+		std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+		std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+		for (const auto& extension : availableExtensions) {
+			requiredExtensions.erase(extension.extensionName);
+		}
+
+		return requiredExtensions.empty();
+	}
+
+	bool SEDevice::isDeviceSuitable(VkPhysicalDevice device) {
+		return checkDeviceExtensionSupport(device) && checkDeviceFeatureSupport(device);
+	}
+	
+	QueueFamilyIndices SEDevice::findQueueFamilies(VkPhysicalDevice device) {
+		QueueFamilyIndices indices{};
+		uint32_t queueFamilyCount = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+		int i = 0;
+		for (const auto& queueFamily : queueFamilies) {
+			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT && indices.graphicsFamily == uint32_t(-1)) {
+				indices.graphicsFamily = i;
+			}
+			if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT && indices.computeFamily == uint32_t(-1)) {
+				indices.computeFamily = i;
+			}
+			i++;
+		}
+		return indices;
+	}
+
 	std::vector<const char*> SEDevice::getRequiredExtensions() {
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions;
@@ -127,7 +227,85 @@ namespace ScorchEngine {
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
 
+		extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+#ifdef _WIN32
+		extensions.push_back("VK_KHR_win32_surface");
+#endif
 		return extensions;
+	}
+
+	std::vector<SEQueue> SEDevice::createQueues(SEQueueType queueType, uint32_t queueCount, uint32_t queueOffset) {
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+		uint32_t queueFamilyIndex = 0;
+		uint32_t qiOffset = 0;
+		switch (queueType) {
+		case(SEQueueType::Graphics):
+			queueFamilyIndex = indices.graphicsFamily;
+			break;
+		case(SEQueueType::Compute):
+			queueFamilyIndex = indices.computeFamily;
+			break;
+		case(SEQueueType::Present):
+			queueFamilyIndex = indices.presentFamily;
+			break;
+		}
+
+		std::vector<SEQueue> queues{};
+		queues.resize(queueCount);
+		for (uint32_t i = 0; i < queueCount; i++) {
+			queues[i].type = queueType;
+			vkGetDeviceQueue(device, queueFamilyIndex, i + queueOffset, &queues[i].queue);
+		}
+		return queues;
+	}
+
+	void SEDevice::createLogicalDevice() {
+		VkDeviceCreateInfo createInfo{};
+
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+		std::vector<float> queuePriorities{
+			1.0f,
+			1.0f,
+			0.9f
+		};
+		VkDeviceQueueCreateInfo queueCreateInfo[1]{};
+		queueCreateInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo[0].queueFamilyIndex = 0;
+		queueCreateInfo[0].queueCount = 3;
+		queueCreateInfo[0].pQueuePriorities = queuePriorities.data();
+
+
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO; 
+		createInfo.pQueueCreateInfos = queueCreateInfo;
+		createInfo.queueCreateInfoCount = 1;
+
+		createInfo.pEnabledFeatures = &deviceFeatures;
+
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
+		if (enableValidationLayers) {
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		} else {
+			createInfo.enabledLayerCount = 0;
+		}
+		if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create logical device!");
+		}
+	}
+
+	uint32_t SEDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+		VkPhysicalDeviceMemoryProperties memProperties;
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+			if ((typeFilter & (1 << i)) &&
+				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+				return i;
+			}
+		}
+
+		throw std::runtime_error("failed to find suitable memory type!");
 	}
 
 	bool SEDevice::checkValidationLayerSupport() {

@@ -19,6 +19,18 @@
     <ClInclude Include="src\scorch\vkapi\device.h">
       <Filter>vkapi</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\frame_buffer.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\frame_buffer_attachment.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\queue.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\render_pass.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -30,6 +42,15 @@
     </ClCompile>
     <ClCompile Include="src\scorch\main.cpp" />
     <ClCompile Include="src\scorch\vkapi\device.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\frame_buffer.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\frame_buffer_attachment.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\render_pass.cpp">
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />

@@ -104,6 +104,10 @@
     <ClInclude Include="src\scorch\apps\window_test.h" />
     <ClInclude Include="src\scorch\log.h" />
     <ClInclude Include="src\scorch\vkapi\device.h" />
+    <ClInclude Include="src\scorch\vkapi\frame_buffer.h" />
+    <ClInclude Include="src\scorch\vkapi\frame_buffer_attachment.h" />
+    <ClInclude Include="src\scorch\vkapi\queue.h" />
+    <ClInclude Include="src\scorch\vkapi\render_pass.h" />
     <ClInclude Include="src\scorch\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -111,6 +115,9 @@
     <ClCompile Include="src\scorch\apps\window_test.cpp" />
     <ClCompile Include="src\scorch\main.cpp" />
     <ClCompile Include="src\scorch\vkapi\device.cpp" />
+    <ClCompile Include="src\scorch\vkapi\frame_buffer.cpp" />
+    <ClCompile Include="src\scorch\vkapi\frame_buffer_attachment.cpp" />
+    <ClCompile Include="src\scorch\vkapi\render_pass.cpp" />
     <ClCompile Include="src\scorch\window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
