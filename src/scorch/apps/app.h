@@ -21,6 +21,6 @@ namespace ScorchEngine {
 	protected:
 		SEDevice seDevice{};
 		SEWindow seWindow;
-		//SERenderer seRenderer = { seWindow, seDevice };
+
 	};
 }

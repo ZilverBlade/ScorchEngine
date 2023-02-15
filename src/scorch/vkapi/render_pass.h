@@ -8,28 +8,28 @@ namespace ScorchEngine {
 		VkClearDepthStencilValue depth{ 1.f, 0 };
 	};
 	struct AttachmentInfo {
-		FrameBufferAttachment* frameBufferAttachment;
+		SEFrameBufferAttachment* frameBufferAttachment;
 		VkAttachmentLoadOp loadOp;
 		VkAttachmentStoreOp storeOp;
 		AttachmentClearColor clear = AttachmentClearColor{};
 	};
 
-	class RenderPass {
+	class SERenderPass {
 	public:
-		RenderPass(SEDevice& device, const std::vector<AttachmentInfo>& attachments);
-		~RenderPass();
+		SERenderPass(SEDevice& device, const std::vector<AttachmentInfo>& attachments);
+		~SERenderPass();
 
-		RenderPass(const RenderPass&) = delete;
-		RenderPass& operator=(const RenderPass&) = delete;
-		RenderPass(RenderPass&&) = delete;
-		RenderPass& operator=(RenderPass&&) = delete;
+		SERenderPass(const SERenderPass&) = delete;
+		SERenderPass& operator=(const SERenderPass&) = delete;
+		SERenderPass(SERenderPass&&) = delete;
+		SERenderPass& operator=(SERenderPass&&) = delete;
 
-		void beginRenderPass(VkCommandBuffer commandbuffer, FrameBuffer* frameBuffer);
+		void beginRenderPass(VkCommandBuffer commandbuffer, SEFrameBuffer* frameBuffer);
 		void endRenderPass(VkCommandBuffer commandbuffer);
 
-		inline void setViewportSize(uint32_t _width, uint32_t _height) { width = _width; height = _height; }
+		void setViewportSize(uint32_t w, uint32_t h) { width = w; height = h; }
 
-		inline VkRenderPass getRenderPass() { return renderpass; }
+		VkRenderPass getRenderPass() { return renderpass; }
 	private:
 		uint32_t width{};
 		uint32_t height{};

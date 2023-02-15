@@ -1,20 +1,21 @@
 #include "frame_buffer.h"
+#include <scorch/vkapi/render_pass.h>
 
 namespace ScorchEngine{
 
-	FrameBuffer::FrameBuffer(SEDevice& device, VkRenderPass renderPass, const std::vector<FrameBufferAttachment*>& _attachments) : seDevice(device) {
-		create(device, renderPass, _attachments);
+	SEFrameBuffer::SEFrameBuffer(SEDevice& device, SERenderPass* renderPass, const std::vector<SEFrameBufferAttachment*>& _attachments) : seDevice(device) {
+		create(device, renderPass->getRenderPass(), _attachments);
 		this->attachments.reserve(_attachments.size());
-		for (FrameBufferAttachment* attachment : _attachments) {
+		for (SEFrameBufferAttachment* attachment : _attachments) {
 			this->attachments.push_back(attachment);
 		}
 	}
 
-	FrameBuffer::~FrameBuffer() {
+	SEFrameBuffer::~SEFrameBuffer() {
 		destroy();
 	}
 
-	void FrameBuffer::create(SEDevice& device, VkRenderPass renderPass, const std::vector<FrameBufferAttachment*>& newAttachments) {
+	void SEFrameBuffer::create(SEDevice& device, VkRenderPass renderPass, const std::vector<SEFrameBufferAttachment*>& newAttachments) {
 		std::vector<VkImageView> imageViews;
 		for (auto& attachment : newAttachments) {
 			imageViews.push_back(attachment->getImageView());
@@ -39,16 +40,16 @@ namespace ScorchEngine{
 		}
 	}
 
-	void FrameBuffer::destroy() {
+	void SEFrameBuffer::destroy() {
 		vkDestroyFramebuffer(seDevice.getDevice(), frameBuffer, nullptr);
 	}
 
-	void FrameBuffer::resize(glm::ivec3 newDimensions, VkRenderPass renderpass) {
-		for (FrameBufferAttachment* attachment : attachments) {
+	void SEFrameBuffer::resize(glm::ivec3 newDimensions, SERenderPass* renderPass) {
+		for (SEFrameBufferAttachment* attachment : attachments) {
 			attachment->resize(newDimensions);
 		}
 		destroy();
-		create(seDevice, renderpass, attachments);
+		create(seDevice, renderPass->getRenderPass(), attachments);
 	}
 
 }

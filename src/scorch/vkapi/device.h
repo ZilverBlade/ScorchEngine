@@ -16,6 +16,12 @@ namespace ScorchEngine {
 		uint32_t computeQueueCount = 0;
 	};
 
+	struct SwapChainSupportDetails {
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+	};
+
 	class SEDevice {
 	public:
 		const std::vector<const char*> validationLayers = {
@@ -47,8 +53,23 @@ namespace ScorchEngine {
 
 		uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
+		SwapChainSupportDetails getSwapChainSupport(VkSurfaceKHR surface);
+
+		VkCommandPool getCommandPool() {
+			return commandPool;
+		}
+
+		SEQueue* getAvailableQueue(SEQueueType type);
+		void freeAvailableQueue(SEQueue* queue);
+
 		const VkPhysicalDeviceProperties& getDeviceProperties() { return deviceProperties; }
 		const VkPhysicalDeviceFeatures& getDeviceFeatures() { return deviceFeatures; }
+		QueueFamilyIndices findPhysicalQueueFamilies() {
+			return findQueueFamilies(physicalDevice);
+		}
+
+		VkCommandBuffer beginSingleTimeCommands();
+		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 	private:
 
 		VkPhysicalDeviceProperties deviceProperties{};
@@ -57,15 +78,14 @@ namespace ScorchEngine {
 		bool checkValidationLayerSupport();
 
 		void createInstance();
-		void createPhysicalDevice();
+		void pickPhyisicalDevice();
 		void createLogicalDevice();
-
+		void createCommandPool();
 
 		VkPhysicalDeviceFeatures requestFeatures();
 		bool checkDeviceFeatureSupport(VkPhysicalDevice device);
 		bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 
-		void pickPhyisicalDevice();
 		bool isDeviceSuitable(VkPhysicalDevice device);
 
 		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
@@ -81,7 +101,8 @@ namespace ScorchEngine {
 
 		std::vector<SEQueue> graphicsQueues{};
 		std::vector<SEQueue> computeQueues{};
-		std::vector<SEQueue> presentQueues{};
+
+		VkCommandPool commandPool;
 
 		VkDebugUtilsMessengerEXT debugMessenger{};
 

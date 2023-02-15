@@ -10,7 +10,7 @@ namespace ScorchEngine {
 		Resolve
 	};
 
-	struct FrameBufferAttachmentCreateInfo {
+	struct SEFrameBufferAttachmentCreateInfo {
 		VkFormat frameBufferFormat;
 		VkImageAspectFlags imageAspect;
 		glm::ivec3 dimensions;
@@ -21,15 +21,15 @@ namespace ScorchEngine {
 		VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
 	};
 
-	class FrameBufferAttachment {
+	class SEFrameBufferAttachment {
 	public:
-		FrameBufferAttachment(SEDevice& device, const FrameBufferAttachmentCreateInfo& attachmentCreateInfo);
-		~FrameBufferAttachment();
+		SEFrameBufferAttachment(SEDevice& device, const SEFrameBufferAttachmentCreateInfo& attachmentCreateInfo);
+		~SEFrameBufferAttachment();
 
-		FrameBufferAttachment(const FrameBufferAttachment&) = delete;
-		FrameBufferAttachment& operator=(const FrameBufferAttachment&) = delete;
-		FrameBufferAttachment(FrameBufferAttachment&&) = delete;
-		FrameBufferAttachment& operator=(FrameBufferAttachment&&) = delete;
+		SEFrameBufferAttachment(const SEFrameBufferAttachment&) = delete;
+		SEFrameBufferAttachment& operator=(const SEFrameBufferAttachment&) = delete;
+		SEFrameBufferAttachment(SEFrameBufferAttachment&&) = delete;
+		SEFrameBufferAttachment& operator=(SEFrameBufferAttachment&&) = delete;
 
 		VkImage getImage() { return image; }
 		VkImageSubresourceRange getImageSubresourceRange() { return subresourceRange; }
@@ -40,12 +40,12 @@ namespace ScorchEngine {
 		glm::ivec3 getDimensions() { return dimensions; }
 		VkDescriptorImageInfo& getDescriptor() { return descriptor; }
 		FrameBufferAttachmentType getAttachmentType() { return attachmentDescription.frameBufferType; }
-		const FrameBufferAttachmentCreateInfo& getAttachmentDescription() { return attachmentDescription; }
+		const SEFrameBufferAttachmentCreateInfo& getAttachmentDescription() { return attachmentDescription; }
 
 		void resize(glm::ivec3 newDimensions);
 	private:
 		void destroy();
-		void create(SEDevice& device, const FrameBufferAttachmentCreateInfo& attachmentCreateInfo);
+		void create(SEDevice& device, const SEFrameBufferAttachmentCreateInfo& attachmentCreateInfo);
 
 		VkImage image{};
 		VkImageSubresourceRange subresourceRange{};
@@ -54,7 +54,7 @@ namespace ScorchEngine {
 		VkDeviceMemory imageMemory{};
 		VkDescriptorImageInfo descriptor{};
 
-		FrameBufferAttachmentCreateInfo attachmentDescription;
+		SEFrameBufferAttachmentCreateInfo attachmentDescription;
 
 		SEDevice& seDevice;
 

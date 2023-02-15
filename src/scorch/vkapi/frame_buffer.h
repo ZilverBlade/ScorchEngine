@@ -3,21 +3,22 @@
 #include <scorch/vkapi/frame_buffer_attachment.h>
 
 namespace ScorchEngine {
-	class FrameBuffer {
+	class SERenderPass;
+	class SEFrameBuffer {
 	public:
-		FrameBuffer(SEDevice& device, VkRenderPass renderPass, const std::vector<FrameBufferAttachment*>& attachments);
-		~FrameBuffer();
+		SEFrameBuffer(SEDevice& device, SERenderPass* renderPass, const std::vector<SEFrameBufferAttachment*>& attachments);
+		~SEFrameBuffer();
 
-		FrameBuffer(const FrameBuffer&) = delete;
-		FrameBuffer& operator=(const FrameBuffer&) = delete;
-		FrameBuffer(FrameBuffer&&) = delete;
-		FrameBuffer& operator=(FrameBuffer&&) = delete;
+		SEFrameBuffer(const SEFrameBuffer&) = delete;
+		SEFrameBuffer& operator=(const SEFrameBuffer&) = delete;
+		SEFrameBuffer(SEFrameBuffer&&) = delete;
+		SEFrameBuffer& operator=(SEFrameBuffer&&) = delete;
 
 		inline glm::ivec3 getDimensions() { return { width, height, depth }; }
 		inline VkFramebuffer getFrameBuffer() { return frameBuffer; }
-		void resize(glm::ivec3 newDimensions, VkRenderPass renderpass);
+		void resize(glm::ivec3 newDimensions, SERenderPass* renderPass);
 	private:
-		void create(SEDevice& device, VkRenderPass renderPass, const std::vector<FrameBufferAttachment*>& _attachments);
+		void create(SEDevice& device, VkRenderPass renderPass, const std::vector<SEFrameBufferAttachment*>& _attachments);
 		void destroy();
 
 		uint32_t width{};
@@ -26,7 +27,7 @@ namespace ScorchEngine {
 
 		VkFramebuffer frameBuffer{};
 
-		std::vector<FrameBufferAttachment*> attachments;
+		std::vector<SEFrameBufferAttachment*> attachments;
 		SEDevice& seDevice;
 	};
 }

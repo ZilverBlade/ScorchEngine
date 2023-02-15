@@ -12,10 +12,16 @@
     <ClInclude Include="src\scorch\apps\app.h">
       <Filter>apps</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\apps\vulkan_test.h">
+      <Filter>apps</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\apps\window_test.h">
       <Filter>apps</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\log.h" />
+    <ClInclude Include="src\scorch\vkapi\command_buffer.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\vkapi\device.h">
       <Filter>vkapi</Filter>
     </ClInclude>
@@ -31,16 +37,28 @@
     <ClInclude Include="src\scorch\vkapi\render_pass.h">
       <Filter>vkapi</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\renderer.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\swap_chain.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
       <Filter>apps</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\apps\vulkan_test.cpp">
+      <Filter>apps</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\apps\window_test.cpp">
       <Filter>apps</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\main.cpp" />
+    <ClCompile Include="src\scorch\vkapi\command_buffer.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\vkapi\device.cpp">
       <Filter>vkapi</Filter>
     </ClCompile>
@@ -51,6 +69,12 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\vkapi\render_pass.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\renderer.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\swap_chain.cpp">
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />

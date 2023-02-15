@@ -33,6 +33,7 @@ project "ScorchEngineDev"
 	  "vendor/glfw-3.3.7/include",
       "vendor/imgui/include",
 	  "vendor/stbimage/include",
+	  "vendor/simpleini/include",
 	  "vendor/GammaHUD/GHUDCore/include",
 	  "vendor/GammaHUD/GHUDVulkan/include",
    }

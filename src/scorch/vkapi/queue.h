@@ -4,14 +4,15 @@
 
 namespace ScorchEngine {
 	enum class SEQueueType {
-		Present,
 		Graphics,
 		Compute
 	};
 	class SEQueue {
 	public:
 		VkQueue queue;
+	private:
+		bool occupied = false;
 		SEQueueType type;
-		bool inUse = false;
+		friend class SEDevice;
 	};
 }

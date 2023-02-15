@@ -56,16 +56,17 @@ namespace ScorchEngine {
 	SEDevice::SEDevice() {
 		createInstance();
 		setupDebugMessenger();
-		createPhysicalDevice();
+		pickPhyisicalDevice();
 		createLogicalDevice();
-		graphicsQueues = createQueues(SEQueueType::Graphics, 2, 0);
-		presentQueues = createQueues(SEQueueType::Present, 1, 2);
+		createCommandPool();
+		graphicsQueues = createQueues(SEQueueType::Graphics, 3, 0);
 	}
 
 	SEDevice::~SEDevice() {
 		if (enableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
+		vkDestroyCommandPool(device, commandPool, nullptr);
 		vkDestroyDevice(device, nullptr);
 		vkDestroyInstance(instance, nullptr);
 	}
@@ -124,12 +125,6 @@ namespace ScorchEngine {
 		if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
 			throw std::runtime_error("failed to set up debug messenger!");
 		}
-
-	}
-	void SEDevice::createPhysicalDevice() {
-		pickPhyisicalDevice();
-		
-	
 	}
 
 	void SEDevice::pickPhyisicalDevice() {
@@ -245,9 +240,6 @@ namespace ScorchEngine {
 		case(SEQueueType::Compute):
 			queueFamilyIndex = indices.computeFamily;
 			break;
-		case(SEQueueType::Present):
-			queueFamilyIndex = indices.presentFamily;
-			break;
 		}
 
 		std::vector<SEQueue> queues{};
@@ -266,7 +258,7 @@ namespace ScorchEngine {
 		std::vector<float> queuePriorities{
 			1.0f,
 			1.0f,
-			0.9f
+			1.0f
 		};
 		VkDeviceQueueCreateInfo queueCreateInfo[1]{};
 		queueCreateInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -295,6 +287,18 @@ namespace ScorchEngine {
 		}
 	}
 
+	void SEDevice::createCommandPool() {
+		QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+
+		VkCommandPoolCreateInfo graphicsPoolInfo{};
+		graphicsPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		graphicsPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		graphicsPoolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
+		if (vkCreateCommandPool(device, &graphicsPoolInfo, nullptr, &commandPool) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create graphics command pool!");
+		}
+	}
+
 	uint32_t SEDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 		VkPhysicalDeviceMemoryProperties memProperties;
 		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
@@ -307,6 +311,83 @@ namespace ScorchEngine {
 
 		throw std::runtime_error("failed to find suitable memory type!");
 	}
+
+	SwapChainSupportDetails SEDevice::getSwapChainSupport(VkSurfaceKHR surface) {
+		SwapChainSupportDetails supportDetails{};
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &supportDetails.capabilities);
+		uint32_t formatCount;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
+
+		if (formatCount != 0) {
+			supportDetails.formats.resize(formatCount);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, supportDetails.formats.data());
+		}
+
+		uint32_t presentModeCount;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+
+		if (presentModeCount != 0) {
+			supportDetails.presentModes.resize(presentModeCount);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, supportDetails.presentModes.data());
+		}
+
+		return supportDetails;
+	}
+
+	SEQueue* SEDevice::getAvailableQueue(SEQueueType type) {
+		switch (type) {
+		case(SEQueueType::Graphics):
+			for (SEQueue& queue : graphicsQueues) {
+				if (!queue.occupied) {
+					queue.occupied = true;
+					return &queue;
+				}
+			}
+		}
+		SELOG_ERR("Ran out of GPU queues!!");
+	}
+
+	void SEDevice::freeAvailableQueue(SEQueue* queue) {
+		queue->occupied = false;
+	}
+
+	VkCommandBuffer SEDevice::beginSingleTimeCommands() {
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = commandPool;
+		allocInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+		return commandBuffer;
+	}
+
+	void SEDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		SEQueue* queue = getAvailableQueue(SEQueueType::Graphics);
+
+		if (vkQueueSubmit(queue->queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to submit queue!");
+		}
+		vkQueueWaitIdle(queue->queue);
+
+		freeAvailableQueue(queue);
+		vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+	}
+
 
 	bool SEDevice::checkValidationLayerSupport() {
 		uint32_t layerCount;

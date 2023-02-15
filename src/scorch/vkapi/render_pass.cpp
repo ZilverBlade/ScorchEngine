@@ -2,7 +2,7 @@
 #include <array>
 
 namespace ScorchEngine {
-	RenderPass::RenderPass(SEDevice& device, const std::vector<AttachmentInfo>& attachments) : seDevice(device) {
+	SERenderPass::SERenderPass(SEDevice& device, const std::vector<AttachmentInfo>& attachments) : seDevice(device) {
 		std::vector<VkAttachmentDescription> attachmentDescriptions;
 		attachmentDescriptions.resize(attachments.size());
 
@@ -109,11 +109,11 @@ namespace ScorchEngine {
 		}
 	}
 
-	RenderPass::~RenderPass() {
+	SERenderPass::~SERenderPass() {
 		vkDestroyRenderPass(seDevice.getDevice(), renderpass, nullptr);
 	}
 
-	void RenderPass::beginRenderPass(VkCommandBuffer commandbuffer, FrameBuffer* frameBuffer) {
+	void SERenderPass::beginRenderPass(VkCommandBuffer commandbuffer, SEFrameBuffer* frameBuffer) {
 		VkRenderPassBeginInfo renderPassBeginInfo{};
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassBeginInfo.renderPass = renderpass;
@@ -142,7 +142,7 @@ namespace ScorchEngine {
 		vkCmdSetScissor(commandbuffer, 0, 1, &scissor);
 	}
 
-	void RenderPass::endRenderPass(VkCommandBuffer commandbuffer) {
+	void SERenderPass::endRenderPass(VkCommandBuffer commandbuffer) {
 		vkCmdEndRenderPass(commandbuffer);
 	}
 }

@@ -1,13 +1,13 @@
 #include "frame_buffer_attachment.h"
 namespace ScorchEngine {
-	FrameBufferAttachment::FrameBufferAttachment(SEDevice& device, const FrameBufferAttachmentCreateInfo& attachmentCreateInfo) : seDevice(device), attachmentDescription(attachmentCreateInfo) {
+	SEFrameBufferAttachment::SEFrameBufferAttachment(SEDevice& device, const SEFrameBufferAttachmentCreateInfo& attachmentCreateInfo) : seDevice(device), attachmentDescription(attachmentCreateInfo) {
 		create(device, attachmentCreateInfo);
 	}
-	FrameBufferAttachment::~FrameBufferAttachment() {
+	SEFrameBufferAttachment::~SEFrameBufferAttachment() {
 		destroy();
 	}
 
-	void FrameBufferAttachment::create(SEDevice& device, const FrameBufferAttachmentCreateInfo& attachmentCreateInfo) {
+	void SEFrameBufferAttachment::create(SEDevice& device, const SEFrameBufferAttachmentCreateInfo& attachmentCreateInfo) {
 		VkImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -82,14 +82,14 @@ namespace ScorchEngine {
 		descriptor.imageView = imageView;
 		dimensions = { attachmentCreateInfo.dimensions.x, attachmentCreateInfo.dimensions.y, attachmentCreateInfo.dimensions.z };
 	}
-	void FrameBufferAttachment::destroy() {
+	void SEFrameBufferAttachment::destroy() {
 		vkDestroyImageView(seDevice.getDevice(), imageView, nullptr);
 		vkDestroyImage(seDevice.getDevice(), image, nullptr);
 		vkDestroySampler(seDevice.getDevice(), sampler, nullptr);
 		vkFreeMemory(seDevice.getDevice(), imageMemory, nullptr);
 	}
 
-	void FrameBufferAttachment::resize(glm::ivec3 newDimensions) {
+	void SEFrameBufferAttachment::resize(glm::ivec3 newDimensions) {
 		if (newDimensions == attachmentDescription.dimensions) return; // in case already been resized
 		destroy();
 		attachmentDescription.dimensions = newDimensions;
