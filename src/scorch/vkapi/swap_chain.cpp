@@ -2,7 +2,7 @@
 #include <simple_ini.h>
 
 namespace ScorchEngine {
-	SESwapChain::SESwapChain(SEDevice& device, SEWindow& window, VkExtent2D windowExtent) : seDevice(device), seWindow(window), swapChainExtent(windowExtent) {
+	SESwapChain::SESwapChain(SEDevice& device, SEWindow& window, VkExtent2D windowExtent, SESwapChain* oldSwapChain) : seDevice(device), seWindow(window), swapChainExtent(windowExtent), oldSwapChain(oldSwapChain){
 		init();
 	}
 	SESwapChain::~SESwapChain() {
@@ -122,6 +122,10 @@ namespace ScorchEngine {
 		}
 	}
 	void SESwapChain::createAttachments() {
+		std::vector<VkImage> swapChainImages{};
+		swapChainImages.resize(imageCount);
+		vkGetSwapchainImagesKHR(seDevice.getDevice(), swapChain, &imageCount, swapChainImages.data());
+
 		for (int i = 0; i < imageCount; i++) {
 			SEFrameBufferAttachmentCreateInfo createInfo{};
 			createInfo.dimensions = { swapChainExtent.width, swapChainExtent.height, 1 };
@@ -130,6 +134,7 @@ namespace ScorchEngine {
 			createInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
 			createInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 			createInfo.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			createInfo.swapchainImage = swapChainImages[i];
 			swapChainAttachments.push_back(new SEFrameBufferAttachment(seDevice, createInfo));
 		}
 	}

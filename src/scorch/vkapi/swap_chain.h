@@ -7,7 +7,7 @@
 namespace ScorchEngine {
 	class SESwapChain {
 	public:
-        SESwapChain(SEDevice& device, SEWindow& window, VkExtent2D windowExtent);
+        SESwapChain(SEDevice& device, SEWindow& window, VkExtent2D windowExtent, SESwapChain* oldSwapChain = nullptr);
         ~SESwapChain();
 
         SESwapChain(const SESwapChain&) = delete;

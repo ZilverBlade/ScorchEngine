@@ -12,7 +12,7 @@ namespace ScorchEngine {
 
 		virtual void run();
 	protected:
-		SERenderer seRenderer;
-		SESwapChain seSwapChain;
+		SERenderer* seRenderer;
+		SESwapChain* seSwapChain;
 	};
 }

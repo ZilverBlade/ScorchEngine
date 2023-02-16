@@ -1,6 +1,7 @@
 #include "frame_buffer_attachment.h"
 namespace ScorchEngine {
 	SEFrameBufferAttachment::SEFrameBufferAttachment(SEDevice& device, const SEFrameBufferAttachmentCreateInfo& attachmentCreateInfo) : seDevice(device), attachmentDescription(attachmentCreateInfo) {
+		if (attachmentCreateInfo.swapchainImage != nullptr) vkImageIsSwapChainImage = true;
 		create(device, attachmentCreateInfo);
 	}
 	SEFrameBufferAttachment::~SEFrameBufferAttachment() {
@@ -8,35 +9,40 @@ namespace ScorchEngine {
 	}
 
 	void SEFrameBufferAttachment::create(SEDevice& device, const SEFrameBufferAttachmentCreateInfo& attachmentCreateInfo) {
-		VkImageCreateInfo imageCreateInfo{};
-		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageCreateInfo.format = attachmentCreateInfo.frameBufferFormat;
-		imageCreateInfo.extent.width = attachmentCreateInfo.dimensions.x;
-		imageCreateInfo.extent.height = attachmentCreateInfo.dimensions.y;
-		imageCreateInfo.extent.depth = attachmentCreateInfo.dimensions.z;
-		imageCreateInfo.mipLevels = 1;
-		imageCreateInfo.arrayLayers = 1;
-		imageCreateInfo.samples = attachmentCreateInfo.sampleCount;
-		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-		imageCreateInfo.usage = attachmentCreateInfo.usage;
-		VkMemoryAllocateInfo memAlloc = {};
-		memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		VkMemoryRequirements memReqs;
+		if (!attachmentCreateInfo.swapchainImage) {
+			VkImageCreateInfo imageCreateInfo{};
+			imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+			imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+			imageCreateInfo.format = attachmentCreateInfo.frameBufferFormat;
+			imageCreateInfo.extent.width = attachmentCreateInfo.dimensions.x;
+			imageCreateInfo.extent.height = attachmentCreateInfo.dimensions.y;
+			imageCreateInfo.extent.depth = attachmentCreateInfo.dimensions.z;
+			imageCreateInfo.mipLevels = 1;
+			imageCreateInfo.arrayLayers = 1;
+			imageCreateInfo.samples = attachmentCreateInfo.sampleCount;
+			imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+			imageCreateInfo.usage = attachmentCreateInfo.usage;
+			VkMemoryAllocateInfo memAlloc = {};
+			memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			VkMemoryRequirements memReqs;
 
-		if (vkCreateImage(device.getDevice(), &imageCreateInfo, nullptr, &image) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to create image!");
-		}
-		vkGetImageMemoryRequirements(device.getDevice(), image, &memReqs);
-		memAlloc.allocationSize = memReqs.size;
-		memAlloc.memoryTypeIndex = device.findMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			if (vkCreateImage(device.getDevice(), &imageCreateInfo, nullptr, &image) != VK_SUCCESS) {
+				throw std::runtime_error("Failed to create image!");
+			}
+			vkGetImageMemoryRequirements(device.getDevice(), image, &memReqs);
+			memAlloc.allocationSize = memReqs.size;
+			memAlloc.memoryTypeIndex = device.findMemoryType(memReqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-		if (vkAllocateMemory(device.getDevice(), &memAlloc, nullptr, &imageMemory) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to allocate memory!");
-		}
+			if (vkAllocateMemory(device.getDevice(), &memAlloc, nullptr, &imageMemory) != VK_SUCCESS) {
+				throw std::runtime_error("Failed to allocate memory!");
+			}
 
-		if (vkBindImageMemory(device.getDevice(), image, imageMemory, 0) != VK_SUCCESS) {
-			throw std::runtime_error("Failed to bind memory!");
+			if (vkBindImageMemory(device.getDevice(), image, imageMemory, 0) != VK_SUCCESS) {
+				throw std::runtime_error("Failed to bind memory!");
+			}
+		} else {
+			image = attachmentCreateInfo.swapchainImage;
+			imageMemory = nullptr; // no need since swapchain image is stored elsewhere
 		}
 
 		VkImageViewCreateInfo imageViewCreateInfo = {};
@@ -50,7 +56,6 @@ namespace ScorchEngine {
 		subresourceRange.layerCount = 1;
 		imageViewCreateInfo.subresourceRange = subresourceRange;
 		imageViewCreateInfo.image = image;
-
 
 		if (vkCreateImageView(device.getDevice(), &imageViewCreateInfo, nullptr, &imageView) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create image view!");
@@ -84,9 +89,11 @@ namespace ScorchEngine {
 	}
 	void SEFrameBufferAttachment::destroy() {
 		vkDestroyImageView(seDevice.getDevice(), imageView, nullptr);
-		vkDestroyImage(seDevice.getDevice(), image, nullptr);
 		vkDestroySampler(seDevice.getDevice(), sampler, nullptr);
-		vkFreeMemory(seDevice.getDevice(), imageMemory, nullptr);
+		if (!vkImageIsSwapChainImage) {
+			vkDestroyImage(seDevice.getDevice(), image, nullptr);
+			vkFreeMemory(seDevice.getDevice(), imageMemory, nullptr);
+		}
 	}
 
 	void SEFrameBufferAttachment::resize(glm::ivec3 newDimensions) {

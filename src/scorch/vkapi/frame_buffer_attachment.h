@@ -17,6 +17,7 @@ namespace ScorchEngine {
 		VkImageUsageFlags usage;
 		VkImageLayout layout;
 		FrameBufferAttachmentType frameBufferType;
+		VkImage swapchainImage = nullptr;
 		bool linearFiltering = true;
 		VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
 	};
@@ -58,6 +59,7 @@ namespace ScorchEngine {
 
 		SEDevice& seDevice;
 
+		bool vkImageIsSwapChainImage = false;
 		glm::ivec3 dimensions{};
 	};
 }
