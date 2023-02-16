@@ -1,0 +1,12 @@
+{
+	"Material0": {
+		"materialLocation": "example_material.json",
+		"mapTo": "Material0"
+	},
+	
+	"Material1": {
+		"materialLocation": "example_material.json",
+		"mapTo": "Material1"
+	}
+	
+}

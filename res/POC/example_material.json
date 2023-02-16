@@ -1,0 +1,25 @@
+{
+	"Material": {
+		"name": "ExampleTranslucentMaterial",
+		"class": "Surface",
+		"config": {
+			"diffuseFactor": [ 1, 1, 1 ],
+			"diffuseMap": "diffuse.png",
+			"specularFactor": 0.5,
+			"specularMap": "specular.png",
+			"roughnessFactor": 0.5,
+			"roughnessMap": "roughness.png",
+			"metallicFactor": 0.0,
+			"metallicMap": "metallic.png",
+			"normalMap": "normal.png",
+			
+			"opacityMap": "mask.png"
+			"opacityFactor": 0.4,
+			
+			"opacityMaskMap": "mask.png"
+		},
+		"translucent": true,
+		"doubleSided": true
+	},
+	
+}

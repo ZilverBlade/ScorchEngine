@@ -21,7 +21,7 @@ namespace ScorchEngine {
 		const aiScene* scene = importer.ReadFile(filepath, processFlags);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-			SELOG_ERR("Error importing file '{0}': {1}", filepath, importer.GetErrorString());
+			SELOG_ERR("Error importing file '%s': %s", filepath, importer.GetErrorString());
 			return false;
 		}
 
