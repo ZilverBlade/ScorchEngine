@@ -159,15 +159,19 @@ namespace ScorchEngine {
 		VkPhysicalDeviceFeatures enabledFeatuers{};
 		enabledFeatuers.samplerAnisotropy = VK_TRUE;
 		enabledFeatuers.sampleRateShading = VK_TRUE;
+		enabledFeatuers.fillModeNonSolid = VK_TRUE;
+		enabledFeatuers.wideLines = VK_TRUE;
 		return enabledFeatuers;
 	}
 
 	bool SEDevice::checkDeviceFeatureSupport(VkPhysicalDevice device) {
 		VkPhysicalDeviceFeatures features{};
 		vkGetPhysicalDeviceFeatures(device, &features);
-		return 
+		return
 			features.samplerAnisotropy &
-			features.sampleRateShading
+			features.sampleRateShading &
+			features.fillModeNonSolid &
+			features.wideLines;
 			;
 	}
 	

@@ -108,9 +108,13 @@
     <ClInclude Include="src\scorch\vkapi\device.h" />
     <ClInclude Include="src\scorch\vkapi\frame_buffer.h" />
     <ClInclude Include="src\scorch\vkapi\frame_buffer_attachment.h" />
+    <ClInclude Include="src\scorch\vkapi\graphics_pipeline.h" />
+    <ClInclude Include="src\scorch\vkapi\pipeline_layout.h" />
+    <ClInclude Include="src\scorch\vkapi\push_constant.h" />
     <ClInclude Include="src\scorch\vkapi\queue.h" />
     <ClInclude Include="src\scorch\vkapi\render_pass.h" />
     <ClInclude Include="src\scorch\vkapi\renderer.h" />
+    <ClInclude Include="src\scorch\vkapi\shader.h" />
     <ClInclude Include="src\scorch\vkapi\swap_chain.h" />
     <ClInclude Include="src\scorch\window.h" />
   </ItemGroup>
@@ -123,8 +127,12 @@
     <ClCompile Include="src\scorch\vkapi\device.cpp" />
     <ClCompile Include="src\scorch\vkapi\frame_buffer.cpp" />
     <ClCompile Include="src\scorch\vkapi\frame_buffer_attachment.cpp" />
+    <ClCompile Include="src\scorch\vkapi\graphics_pipeline.cpp" />
+    <ClCompile Include="src\scorch\vkapi\pipeline_layout.cpp" />
+    <ClCompile Include="src\scorch\vkapi\push_constant.cpp" />
     <ClCompile Include="src\scorch\vkapi\render_pass.cpp" />
     <ClCompile Include="src\scorch\vkapi\renderer.cpp" />
+    <ClCompile Include="src\scorch\vkapi\shader.cpp" />
     <ClCompile Include="src\scorch\vkapi\swap_chain.cpp" />
     <ClCompile Include="src\scorch\window.cpp" />
   </ItemGroup>

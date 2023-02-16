@@ -1,6 +1,8 @@
 #include <scorch/apps/vulkan_test.h>
 #include <ghudcpp/ghud.h>
 #include <ghudvk/vk_context.h>
+#include <scorch/vkapi/graphics_pipeline.h>
+#include <scorch/vkapi/pipeline_layout.h>
 
 namespace ScorchEngine {
 	VulkanTest::VulkanTest(const char* name) : 
@@ -14,37 +16,18 @@ namespace ScorchEngine {
 		delete seSwapChain;
 	}
 	void VulkanTest::run() {
+		SEGraphicsPipelineConfigInfo pipelineConfigInfo = SEGraphicsPipelineConfigInfo();
 
-		GHUD::VulkanContextCreateInfo ghudvkCreateInfo{};
-		ghudvkCreateInfo.m_MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		ghudvkCreateInfo.m_Device = seDevice.getDevice();
-		ghudvkCreateInfo.m_PhysicalDevice = seDevice.getPhysicalDevice();
-		ghudvkCreateInfo.m_FrameBufferFormat = seSwapChain->getSwapChainImageFormat();
-		ghudvkCreateInfo.m_RenderPass = seSwapChain->getRenderPass();
-		ghudvkCreateInfo.m_SubPass = 0;
-		ghudvkCreateInfo.m_SwapChainImageCount = seSwapChain->getImageCount();
-		GHUD::VulkanContext* ghud = new GHUD::VulkanContext(ghudvkCreateInfo);
+		SEPipelineLayout* pipelineLayout = new SEPipelineLayout(seDevice);
+		pipelineConfigInfo.pipelineLayout = pipelineLayout->getPipelineLayout();
+		pipelineConfigInfo.renderPass = seSwapChain->getRenderPass();
+		//pipelineConfigInfo.wireframe(1.f);
 
-		VkCommandBuffer stc = seDevice.beginSingleTimeCommands();
-		ghud->CreateResources(stc);
-		seDevice.endSingleTimeCommands(stc);
-
-		GHUD::DrawList* drawList = ghud->GetDrawList();
-
-		GHUD::Element::Line lineA{};
-		lineA.m_Color = 0xFFFF00FF;
-		lineA.m_PointA = { 0.5f, 0.5f };
-		lineA.m_PointB = { 0.5f, 0.5f };
-		lineA.m_Width = 2.0;
-		lineA.m_Layer = 2;
-		GHUD::Element::Line lineB{};
-		lineB.m_Color = 0x00FFFFFF;
-		lineB.m_PointA = { 0.5f, 0.5f };
-		lineB.m_PointB = { 1.0f, 0.5f };
-		lineB.m_Width = 2.0;
-		lineB.m_Layer = 1;
-
-		ghud->Resize({ static_cast<float>(seWindow.getExtent().width),  static_cast<float>(seWindow.getExtent().height) });		
+		SEGraphicsPipeline* pipeline = new SEGraphicsPipeline(
+			seDevice,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/triangle.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/triangle.fsh.spv") },
+			pipelineConfigInfo
+		);
 
 		std::vector<std::unique_ptr<SECommandBuffer>> commandBuffers{};
 		commandBuffers.resize(seSwapChain->getImageCount());
@@ -54,30 +37,16 @@ namespace ScorchEngine {
 		while (!seWindow.shouldClose()) {
 			glfwPollEvents();
 			
-
 			uint32_t frameIndex = seSwapChain->getImageIndex();
 			if (VkResult result = seSwapChain->acquireNextImage(&frameIndex); result == VK_SUCCESS) {
-
-				drawList->Clear();
-				drawList->FrameStart();
-				drawList->DrawLine(lineA);
-				drawList->DrawLine(lineB);
-				drawList->FrameEnd();
-
 				commandBuffers[frameIndex]->begin();
+				VkCommandBuffer commandBuffer = commandBuffers[frameIndex]->getCommandBuffer();
+				seSwapChain->beginRenderPass(commandBuffer);
 
-				// render offscreen
+				pipeline->bind(commandBuffer);
+				vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
-				seSwapChain->beginRenderPass(commandBuffers[frameIndex]->getCommandBuffer());
-
-				// render to swapchain
-				GHUD::VulkanFrameInfo frameInfo{};
-				frameInfo.m_CommandBuffer = commandBuffers[frameIndex]->getCommandBuffer();
-				frameInfo.m_FrameIndex = frameIndex;
-
-				ghud->Render(&frameInfo);
-
-				seSwapChain->endRenderPass(commandBuffers[frameIndex]->getCommandBuffer());
+				seSwapChain->endRenderPass(commandBuffer);
 				commandBuffers[frameIndex]->end();
 
 				seRenderer->submitCommandBuffers({ commandBuffers[frameIndex].get() });	
@@ -98,7 +67,7 @@ namespace ScorchEngine {
 			}
 		}
 		vkDeviceWaitIdle(seDevice.getDevice());
-
-		delete ghud;
+		delete pipeline;
+		delete pipelineLayout;
 	}
 }

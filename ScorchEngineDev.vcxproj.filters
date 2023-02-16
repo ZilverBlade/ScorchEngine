@@ -31,6 +31,15 @@
     <ClInclude Include="src\scorch\vkapi\frame_buffer_attachment.h">
       <Filter>vkapi</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\graphics_pipeline.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\pipeline_layout.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\push_constant.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\vkapi\queue.h">
       <Filter>vkapi</Filter>
     </ClInclude>
@@ -38,6 +47,9 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\vkapi\renderer.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\shader.h">
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\vkapi\swap_chain.h">
@@ -68,10 +80,22 @@
     <ClCompile Include="src\scorch\vkapi\frame_buffer_attachment.cpp">
       <Filter>vkapi</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\graphics_pipeline.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\pipeline_layout.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\push_constant.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\vkapi\render_pass.cpp">
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\vkapi\renderer.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\shader.cpp">
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\vkapi\swap_chain.cpp">
