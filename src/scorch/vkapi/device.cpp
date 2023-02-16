@@ -156,12 +156,12 @@ namespace ScorchEngine {
 	}
 
 	VkPhysicalDeviceFeatures SEDevice::requestFeatures() {
-		VkPhysicalDeviceFeatures enabledFeatuers{};
-		enabledFeatuers.samplerAnisotropy = VK_TRUE;
-		enabledFeatuers.sampleRateShading = VK_TRUE;
-		enabledFeatuers.fillModeNonSolid = VK_TRUE;
-		enabledFeatuers.wideLines = VK_TRUE;
-		return enabledFeatuers;
+		VkPhysicalDeviceFeatures enabledFeatures{};
+		enabledFeatures.samplerAnisotropy = VK_TRUE;
+		enabledFeatures.sampleRateShading = VK_TRUE;
+		enabledFeatures.fillModeNonSolid = VK_TRUE;
+		enabledFeatures.wideLines = VK_TRUE;
+		return enabledFeatures;
 	}
 
 	bool SEDevice::checkDeviceFeatureSupport(VkPhysicalDevice device) {
@@ -172,7 +172,6 @@ namespace ScorchEngine {
 			features.sampleRateShading &
 			features.fillModeNonSolid &
 			features.wideLines;
-			;
 	}
 	
 	bool SEDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
@@ -390,6 +389,47 @@ namespace ScorchEngine {
 
 		freeAvailableQueue(queue);
 		vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+	}
+
+
+	void SEDevice::createBuffer(
+		VkDeviceSize size,
+		VkBufferUsageFlags usage,
+		VkMemoryPropertyFlags properties,
+		VkBuffer& buffer,
+		VkDeviceMemory& bufferMemory) {
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create vertex buffer!");
+		}
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+		if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate vertex buffer memory!");
+		}
+
+		vkBindBufferMemory(device, buffer, bufferMemory, 0);
+	}
+
+	void SEDevice::copyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset, VkDeviceSize dstOffset) {
+		VkBufferCopy bufferCopy{};
+		bufferCopy.size = size;
+		bufferCopy.srcOffset = srcOffset;
+		bufferCopy.dstOffset = dstOffset;
+
+		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &bufferCopy);
 	}
 
 

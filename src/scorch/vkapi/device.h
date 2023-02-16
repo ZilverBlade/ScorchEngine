@@ -70,6 +70,14 @@ namespace ScorchEngine {
 
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+		void copyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset = 0, VkDeviceSize dstOffset = 0);
+		void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset = 0, VkDeviceSize dstOffset = 0) {
+			VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+			copyBuffer(srcBuffer, dstBuffer, size, srcOffset, dstOffset);
+			endSingleTimeCommands(commandBuffer);
+		}
+
 	private:
 
 		VkPhysicalDeviceProperties deviceProperties{};

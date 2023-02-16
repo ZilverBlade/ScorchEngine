@@ -24,6 +24,8 @@ project "ScorchEngineDev"
 	  "src/scorch/**.h",
 	  
       "src/scorch/vkapi/**.*",
+      "src/scorch/renderer/**.*",
+      "src/scorch/systems/**.*",
       "src/scorch/apps/**.*"
    }
 
@@ -34,6 +36,7 @@ project "ScorchEngineDev"
       "vendor/imgui/include",
 	  "vendor/stbimage/include",
 	  "vendor/simpleini/include",
+	  "vendor/assimp/include",
 	  "vendor/GammaHUD/GHUDCore/include",
 	  "vendor/GammaHUD/GHUDVulkan/include",
    }
@@ -42,6 +45,7 @@ project "ScorchEngineDev"
       VULKAN_SDK.."/Lib",
 	  "vendor/glfw-3.3.7/lib-vc2019", 
 	  "vendor/imgui/lib",
+	  "vendor/assimp/lib",
 	  "vendor/GammaHUD/GHUDCore/lib",
 	  "vendor/GammaHUD/GHUDVulkan/lib"
    }
@@ -62,7 +66,8 @@ project "ScorchEngineDev"
 	  links {
 	  "ImGui_d",
 	  "GHUDCore_d",
-	  "GHUDVulkan_d"
+	  "GHUDVulkan_d",
+	  "assimp-vc143-mtd",
 	  }
 
    filter "configurations:Release"
@@ -72,5 +77,6 @@ project "ScorchEngineDev"
 	  links {
 	  "ImGui",
 	  "GHUDCore",
-	  "GHUDVulkan"
+	  "GHUDVulkan",
+	  "assimp-vc143-mt",
 	  }

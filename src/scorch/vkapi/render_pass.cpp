@@ -11,7 +11,7 @@ namespace ScorchEngine {
 
 		for (int i = 0; i < attachmentDescriptions.size(); i++) {
 			auto& attachmentDescription = attachmentDescriptions[i];
-			if (attachments[i].frameBufferAttachment->getAttachmentType() == FrameBufferAttachmentType::Resolve) {
+			if (attachments[i].frameBufferAttachment->getAttachmentType() == SEFrameBufferAttachmentType::Resolve) {
 				assert(attachments[i].loadOp == VK_ATTACHMENT_LOAD_OP_DONT_CARE && "Resolve attachments should have VK_ATTACHMENT_LOAD_OP_DONT_CARE set as the loadOp!");
 			}
 			attachmentDescription.format = attachments[i].frameBufferAttachment->getAttachmentDescription().frameBufferFormat;
@@ -23,9 +23,9 @@ namespace ScorchEngine {
 			attachmentDescription.initialLayout = attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD ? attachments[i].frameBufferAttachment->getImageLayout() : VK_IMAGE_LAYOUT_UNDEFINED;
 			attachmentDescription.finalLayout = attachments[i].frameBufferAttachment->getAttachmentDescription().layout;
 
-			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].frameBufferAttachment->getAttachmentType() == FrameBufferAttachmentType::Color))
+			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].frameBufferAttachment->getAttachmentType() == SEFrameBufferAttachmentType::Color))
 				colorAttachmentLoadCount ++;
-			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].frameBufferAttachment->getAttachmentType() == FrameBufferAttachmentType::Depth))
+			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].frameBufferAttachment->getAttachmentType() == SEFrameBufferAttachmentType::Depth))
 				depthAttachmentLoadCount ++;
 		}
 
@@ -41,13 +41,13 @@ namespace ScorchEngine {
 		for (uint32_t i = 0; i < attachments.size(); i++) {
 			VkAttachmentReference attachmentRef{};
 			switch(attachments[i].frameBufferAttachment->getAttachmentType()) {
-			case(FrameBufferAttachmentType::Color):
+			case(SEFrameBufferAttachmentType::Color):
 				attachmentRef = { i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, };
 				break;
-			case(FrameBufferAttachmentType::Depth):
+			case(SEFrameBufferAttachmentType::Depth):
 				attachmentRef = { i, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, };
 				break; 
-			case(FrameBufferAttachmentType::Resolve):
+			case(SEFrameBufferAttachmentType::Resolve):
 				attachmentRef = { i, attachments[i].frameBufferAttachment->getImageLayout() };
 				break;
 			}
@@ -98,10 +98,10 @@ namespace ScorchEngine {
 		clearValues.resize(attachments.size());
 		for (int i = 0; i < attachments.size(); i++) {
 			switch (attachments[i].frameBufferAttachment->getAttachmentType()) {
-			case(FrameBufferAttachmentType::Color):
+			case(SEFrameBufferAttachmentType::Color):
 				clearValues[i].color = attachments[i].clear.color;
 				break;
-			case(FrameBufferAttachmentType::Depth):
+			case(SEFrameBufferAttachmentType::Depth):
 				clearValues[i].depthStencil = attachments[i].clear.depth;
 				break;
 			// Resolve attachments should be loaded with VK_LOAD_OP_DONT_CARE

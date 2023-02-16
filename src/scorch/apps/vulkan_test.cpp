@@ -1,8 +1,8 @@
 #include <scorch/apps/vulkan_test.h>
-#include <ghudcpp/ghud.h>
-#include <ghudvk/vk_context.h>
+
 #include <scorch/vkapi/graphics_pipeline.h>
 #include <scorch/vkapi/pipeline_layout.h>
+#include <scorch/vkapi/descriptors.h>
 
 namespace ScorchEngine {
 	VulkanTest::VulkanTest(const char* name) : 

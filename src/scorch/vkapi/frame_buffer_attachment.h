@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 
 namespace ScorchEngine {
-	enum class FrameBufferAttachmentType {
+	enum class SEFrameBufferAttachmentType {
 		Depth,
 		Color,
 		Resolve
@@ -16,10 +16,10 @@ namespace ScorchEngine {
 		glm::ivec3 dimensions;
 		VkImageUsageFlags usage;
 		VkImageLayout layout;
-		FrameBufferAttachmentType frameBufferType;
-		VkImage swapchainImage = nullptr;
+		SEFrameBufferAttachmentType frameBufferType;
 		bool linearFiltering = true;
 		VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
+		VkImage swapchainImage = nullptr;
 	};
 
 	class SEFrameBufferAttachment {
@@ -40,7 +40,7 @@ namespace ScorchEngine {
 		VkDeviceMemory getDeviceMemory() { return imageMemory; }
 		glm::ivec3 getDimensions() { return dimensions; }
 		VkDescriptorImageInfo& getDescriptor() { return descriptor; }
-		FrameBufferAttachmentType getAttachmentType() { return attachmentDescription.frameBufferType; }
+		SEFrameBufferAttachmentType getAttachmentType() { return attachmentDescription.frameBufferType; }
 		const SEFrameBufferAttachmentCreateInfo& getAttachmentDescription() { return attachmentDescription; }
 
 		void resize(glm::ivec3 newDimensions);

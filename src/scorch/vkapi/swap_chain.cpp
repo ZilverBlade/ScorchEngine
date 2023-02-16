@@ -130,7 +130,7 @@ namespace ScorchEngine {
 			SEFrameBufferAttachmentCreateInfo createInfo{};
 			createInfo.dimensions = { swapChainExtent.width, swapChainExtent.height, 1 };
 			createInfo.frameBufferFormat = swapChainImageFormat;
-			createInfo.frameBufferType = FrameBufferAttachmentType::Color;
+			createInfo.frameBufferType = SEFrameBufferAttachmentType::Color;
 			createInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
 			createInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 			createInfo.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;

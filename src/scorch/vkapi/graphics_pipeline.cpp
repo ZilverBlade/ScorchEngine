@@ -80,6 +80,21 @@ namespace ScorchEngine {
 		dynamicStateInfo.pNext = nullptr;
 	}
 
+	void SEGraphicsPipelineConfigInfo::enableVertexDescriptions() {
+		attributeDescriptions = {
+			{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 }, // position
+			{ 1, 1, VK_FORMAT_R32G32_SFLOAT, 0 },    // uv
+			{ 2, 2, VK_FORMAT_R32G32B32_SFLOAT, 0 }, // normal
+			{ 3, 3, VK_FORMAT_R32G32B32_SFLOAT, 0 }, // tangent
+		};
+		bindingDescriptions = {
+			{ 0, 12, VK_VERTEX_INPUT_RATE_VERTEX }, // position
+			{ 1, 8, VK_VERTEX_INPUT_RATE_VERTEX },  // uv
+			{ 2, 12, VK_VERTEX_INPUT_RATE_VERTEX }, // normal
+			{ 3, 12, VK_VERTEX_INPUT_RATE_VERTEX }, // tangent
+		};
+	}
+
 	void SEGraphicsPipelineConfigInfo::enableAlphaBlending(uint32_t attachment, VkBlendOp blendOp) {
 		colorBlendAttachments[attachment].blendEnable = VK_TRUE;
 		colorBlendAttachments[attachment].colorWriteMask =

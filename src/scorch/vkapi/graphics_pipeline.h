@@ -22,7 +22,7 @@ namespace ScorchEngine {
 		VkPipelineLayout pipelineLayout = nullptr;
 		VkRenderPass renderPass = nullptr;
 
-		//void enableVertexDescriptions(VertexDescriptionsFlags descriptions);
+		void enableVertexDescriptions();
 
 		void enableAlphaBlending(uint32_t attachment = 0, VkBlendOp blendOp = VK_BLEND_OP_ADD);
 		void wireframe(float thickness = 1.0f);

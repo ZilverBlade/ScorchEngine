@@ -4,6 +4,21 @@
     <Filter Include="apps">
       <UniqueIdentifier>{992B947C-8562-950D-2E4F-7B101A65110F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="graphics">
+      <UniqueIdentifier>{36EF08BC-22BC-63C7-4BD5-516F37019955}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="renderer">
+      <UniqueIdentifier>{9C6AA017-8837-FB22-B150-E9CA9D7C30B1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="systems">
+      <UniqueIdentifier>{3D76CBBA-A955-4A56-B26D-D52C1ECCB0B7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="systems\post_fx">
+      <UniqueIdentifier>{6FEA678C-DB75-D550-E486-584550913151}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="systems\post_fx\fx">
+      <UniqueIdentifier>{9C5D9507-8841-565D-F1A1-50B0DDA440DF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="vkapi">
       <UniqueIdentifier>{A0A39210-0CB8-BAC1-D539-5E21410DB7F2}</UniqueIdentifier>
     </Filter>
@@ -18,8 +33,32 @@
     <ClInclude Include="src\scorch\apps\window_test.h">
       <Filter>apps</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\graphics\model.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\log.h" />
+    <ClInclude Include="src\scorch\renderer\frame_info.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\renderer\global_ubo.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\renderer\scene_ssbo.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_base.h">
+      <Filter>systems\post_fx\fx</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\post_fx\post_processing_fx.h">
+      <Filter>systems\post_fx</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\buffer.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\vkapi\command_buffer.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\descriptors.h">
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\vkapi\device.h">
@@ -67,8 +106,20 @@
     <ClCompile Include="src\scorch\apps\window_test.cpp">
       <Filter>apps</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\graphics\model.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\main.cpp" />
+    <ClCompile Include="src\scorch\systems\post_fx\post_processing_fx.cpp">
+      <Filter>systems\post_fx</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\buffer.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\vkapi\command_buffer.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\descriptors.cpp">
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\vkapi\device.cpp">
