@@ -21,6 +21,9 @@ class SEWindow {
   GLFWwindow *getGLFWwindow() const { return window; }
   void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface);
 
+  bool isKeyDown(int keyCode) { return glfwGetKey(window, keyCode) == GLFW_PRESS; }
+  bool isMouseButtonDown(int button) { return glfwGetMouseButton(window, button) == GLFW_PRESS; }
+
   VkSurfaceKHR getSurface() {
 	  return surface;
   }

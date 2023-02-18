@@ -4,7 +4,7 @@
 #include <scorch/vkapi/swap_chain.h>
 #include <scorch/vkapi/renderer.h>
 
-namespace ScorchEngine {
+namespace ScorchEngine::Apps {
 	class VulkanTest : public App {
 	public:
 		VulkanTest(const char* name);

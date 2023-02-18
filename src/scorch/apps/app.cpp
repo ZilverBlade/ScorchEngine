@@ -1,6 +1,6 @@
 #include "app.h"
 
-namespace ScorchEngine {
+namespace ScorchEngine::Apps {
 	App::App(const char* name) : seWindow{ seDevice.getInstance(), 1280, 720, name } {
 		
 	}

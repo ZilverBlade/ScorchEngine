@@ -4,7 +4,7 @@
 #include <scorch/vkapi/pipeline_layout.h>
 #include <scorch/vkapi/descriptors.h>
 
-namespace ScorchEngine {
+namespace ScorchEngine::Apps {
 	VulkanTest::VulkanTest(const char* name) : 
 		App(name), 
 		seRenderer(new SERenderer(seDevice)), 

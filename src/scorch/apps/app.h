@@ -6,7 +6,7 @@
 #include <scorch/vkapi/device.h>
 //#include <scorch/vkapi/renderer.h>
 
-namespace ScorchEngine {
+namespace ScorchEngine::Apps {
 	class App {
 	public:
 		App(const char* name);

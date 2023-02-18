@@ -26,6 +26,9 @@ project "ScorchEngineDev"
       "src/scorch/vkapi/**.*",
       "src/scorch/renderer/**.*",
       "src/scorch/systems/**.*",
+      "src/scorch/graphics/**.*",
+      "src/scorch/ecs/**.*",
+      "src/scorch/utils/**.*",
       "src/scorch/apps/**.*"
    }
 
@@ -37,6 +40,7 @@ project "ScorchEngineDev"
 	  "vendor/stbimage/include",
 	  "vendor/simpleini/include",
 	  "vendor/assimp/include",
+	  "vendor/entt/include",
 	  "vendor/GammaHUD/GHUDCore/include",
 	  "vendor/GammaHUD/GHUDVulkan/include",
    }

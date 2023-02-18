@@ -2,7 +2,7 @@
 
 #include <scorch/apps/app.h>
 
-namespace ScorchEngine {
+namespace ScorchEngine::Apps {
 	class WindowTest : public App {
 	public:
 		WindowTest(const char* name);
