@@ -2,7 +2,7 @@
 #include <array>
 
 namespace ScorchEngine {
-	SERenderPass::SERenderPass(SEDevice& device, const std::vector<AttachmentInfo>& attachments) : seDevice(device) {
+	SERenderPass::SERenderPass(SEDevice& device, const std::vector<SEAttachmentInfo>& attachments) : seDevice(device) {
 		std::vector<VkAttachmentDescription> attachmentDescriptions;
 		attachmentDescriptions.resize(attachments.size());
 

@@ -15,6 +15,8 @@ namespace ScorchEngine {
 		Actor createActor(const std::string& name, UUID uuid = UUID());
 		Actor getActor(UUID uuid);
 		//Actor getActor(std::string tag);
+
+		entt::registry& getRegistry() { return registry; }
 	private:
 		std::unordered_map<UUID, entt::entity> actorUUIDMap{};
 

@@ -3,7 +3,7 @@
 #include <cstdint>
 namespace ScorchEngine {
     namespace Math {
-        glm::mat4 calculateYXZ(glm::vec3 translation, glm::vec3 rotation, glm::vec3 scale) {
+        static glm::mat4 calculateYXZ(glm::vec3 translation, glm::vec3 rotation, glm::vec3 scale) {
 			const float c3 = glm::cos(rotation.y);
 			const float s3 = glm::sin(rotation.y);
 			const float c2 = glm::cos(rotation.x);

@@ -105,7 +105,7 @@ namespace ScorchEngine {
 			}
 		);
 
-		ppfxRenderPass = new SERenderPass(seDevice, { AttachmentInfo{ppfxRenderTarget, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE }});
+		ppfxRenderPass = new SERenderPass(seDevice, { SEAttachmentInfo{ppfxRenderTarget, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE }});
 		ppfxFrameBuffer = new SEFrameBuffer(seDevice, ppfxRenderPass, { ppfxRenderTarget });
 	}
 }

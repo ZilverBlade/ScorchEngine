@@ -3,20 +3,20 @@
 #include <scorch/vkapi/frame_buffer.h>
 
 namespace ScorchEngine {
-	struct AttachmentClearColor {
+	struct SEAttachmentClearColor {
 		VkClearColorValue color{{0.f, 0.f, 0.f, 1.f}};
 		VkClearDepthStencilValue depth{ 1.f, 0 };
 	};
-	struct AttachmentInfo {
+	struct SEAttachmentInfo {
 		SEFrameBufferAttachment* frameBufferAttachment;
 		VkAttachmentLoadOp loadOp;
 		VkAttachmentStoreOp storeOp;
-		AttachmentClearColor clear = AttachmentClearColor{};
+		SEAttachmentClearColor clear = SEAttachmentClearColor{};
 	};
 
 	class SERenderPass {
 	public:
-		SERenderPass(SEDevice& device, const std::vector<AttachmentInfo>& attachments);
+		SERenderPass(SEDevice& device, const std::vector<SEAttachmentInfo>& attachments);
 		~SERenderPass();
 
 		SERenderPass(const SERenderPass&) = delete;

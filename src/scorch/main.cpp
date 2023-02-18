@@ -1,8 +1,9 @@
 #include <scorch/apps/window_test.h>
 #include <scorch/apps/vulkan_test.h>
+#include <scorch/apps/model_test.h>
 
 int main() {
-	ScorchEngine::App* app = new ScorchEngine::VulkanTest("ScorchEngine v1.0");
+	ScorchEngine::Apps::App* app = new ScorchEngine::Apps::ModelTest("ScorchEngine v1.0");
 
 	try {
 		app->run();

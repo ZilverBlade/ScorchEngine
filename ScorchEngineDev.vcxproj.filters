@@ -34,6 +34,9 @@
     <Filter Include="vkapi">
       <UniqueIdentifier>{A0A39210-0CB8-BAC1-D539-5E21410DB7F2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="systems\rendering">
+      <UniqueIdentifier>{60bcaa0f-23d2-454a-b780-763a6bac22d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\scorch\apps\app.h">
@@ -97,7 +100,13 @@
     <ClInclude Include="src\scorch\systems\post_fx\post_processing_fx.h">
       <Filter>systems\post_fx</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\systems\resource_system.h">
+      <Filter>systems</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\utils\matrix_math.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\utils\resid.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\utils\uuid.h">
@@ -146,6 +155,12 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
+    <ClInclude Include="src\scorch\systems\rendering\forward_render_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\render_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
@@ -184,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="src\scorch\systems\post_fx\post_processing_fx.cpp">
       <Filter>systems\post_fx</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\utils\resid.cpp">
+      <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\utils\uuid.cpp">
       <Filter>utils</Filter>
@@ -228,5 +246,17 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />
+    <ClCompile Include="src\scorch\systems\resource_system.cpp" />
+    <ClCompile Include="src\scorch\systems\rendering\forward_render_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\render_system.cpp">
+      <Filter>renderer</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\scorch\systems\resouce_system.cpp">
+      <Filter>systems</Filter>
+    </None>
   </ItemGroup>
 </Project>

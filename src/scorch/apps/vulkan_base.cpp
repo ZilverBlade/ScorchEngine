@@ -43,7 +43,7 @@ namespace ScorchEngine::Apps {
 			SEDescriptorWriter(*sceneSSBODescriptorLayout, *inFlightPool)
 				.writeBuffer(0, &data.ssboBuffer->getDescriptorInfo())
 				.build(data.ssboDescriptorSet);
-			renderData.push_back(data);
+			renderData.push_back(std::move(data));
 		}
 	}
 	VulkanBaseApp::~VulkanBaseApp() {

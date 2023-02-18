@@ -20,6 +20,18 @@ namespace ScorchEngine {
 		}
 		vkDestroySwapchainKHR(seDevice.getDevice(), swapChain, nullptr);
 	}
+	void SESwapChain::init() {
+		SwapChainSupportDetails details = seDevice.getSwapChainSupport(seWindow.getSurface());
+		setImageCount(details.capabilities);
+		VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(details.formats);
+		swapChainImageFormat = surfaceFormat.format;
+		createSwapChain(details.capabilities, getSwapChainExtent(), surfaceFormat, chooseSwapPresentMode(details.presentModes));
+
+		createAttachments();
+		createRenderPass();
+		createFrameBuffers();
+		createSyncObjects();
+	}
 	VkResult SESwapChain::acquireNextImage(uint32_t* imageIndex) {
 		vkWaitForFences(
 			seDevice.getDevice(),
@@ -74,18 +86,6 @@ namespace ScorchEngine {
 		currentFrame = (currentFrame + 1) % imageCount;
 		return result;
 	}
-	void SESwapChain::init() {
-		SwapChainSupportDetails details = seDevice.getSwapChainSupport(seWindow.getSurface());
-		setImageCount(details.capabilities);
-		VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(details.formats);
-		swapChainImageFormat = surfaceFormat.format;
-		createSwapChain(details.capabilities, getSwapChainExtent(), surfaceFormat, chooseSwapPresentMode(details.presentModes));
-
-		createAttachments();
-		createRenderPass();
-		createFrameBuffers();
-		createSyncObjects();
-	}
 	void SESwapChain::createSwapChain(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D extent, VkSurfaceFormatKHR surfaceFormat, VkPresentModeKHR presentMode) {
 		VkSwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -139,7 +139,7 @@ namespace ScorchEngine {
 		}
 	}
 	void SESwapChain::createRenderPass() {
-		AttachmentInfo attachmentInfo{};
+		SEAttachmentInfo attachmentInfo{};
 		attachmentInfo.frameBufferAttachment = swapChainAttachments[0];
 		attachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		attachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
