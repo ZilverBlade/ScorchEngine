@@ -128,6 +128,6 @@ namespace ScorchEngine {
 
 		seDevice.copyBuffer(stagingBuffer->getBuffer(), dstBuffer->getBuffer(), stagingBuffer->getBufferSize());
 
-		return std::move(stagingBuffer);
+		return dstBuffer;
 	}
 }
