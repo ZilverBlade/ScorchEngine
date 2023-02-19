@@ -24,7 +24,7 @@ void main() {
 	fragPosWorld = worldPosition.xyz;
 	fragUV = uv;
 	
-	mat3 normalMatrix = inverse(transpose(mat3(push.modelMatrix)) // figure out why push.normalMatrix is broken
+	mat3 normalMatrix = inverse(transpose(mat3(push.modelMatrix))); // figure out why push.normalMatrix is broken
 	fragNormal = normalize(normalMatrix * normal); 
 	fragTangent = normalize(normalMatrix * tangent);
 }

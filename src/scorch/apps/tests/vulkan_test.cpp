@@ -1,4 +1,4 @@
-#include <scorch/apps/vulkan_test.h>
+#include "vulkan_test.h"
 
 #include <scorch/vkapi/graphics_pipeline.h>
 #include <scorch/vkapi/pipeline_layout.h>

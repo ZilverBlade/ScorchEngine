@@ -4,6 +4,9 @@
     <Filter Include="apps">
       <UniqueIdentifier>{992B947C-8562-950D-2E4F-7B101A65110F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="apps\tests">
+      <UniqueIdentifier>{3BA5651B-275D-A768-9064-80C47C3B4259}</UniqueIdentifier>
+    </Filter>
     <Filter Include="controllers">
       <UniqueIdentifier>{9CC960AC-087F-D9A1-9173-D378FD27D0A5}</UniqueIdentifier>
     </Filter>
@@ -42,16 +45,19 @@
     <ClInclude Include="src\scorch\apps\app.h">
       <Filter>apps</Filter>
     </ClInclude>
-    <ClInclude Include="src\scorch\apps\model_test.h">
-      <Filter>apps</Filter>
+    <ClInclude Include="src\scorch\apps\tests\lighting_test.h">
+      <Filter>apps\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\tests\model_test.h">
+      <Filter>apps\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\tests\vulkan_test.h">
+      <Filter>apps\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\tests\window_test.h">
+      <Filter>apps\tests</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\apps\vulkan_base.h">
-      <Filter>apps</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scorch\apps\vulkan_test.h">
-      <Filter>apps</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scorch\apps\window_test.h">
       <Filter>apps</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\controllers\camera_controller.h">
@@ -97,10 +103,16 @@
     <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_base.h">
       <Filter>systems\post_fx\fx</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.h">
+      <Filter>systems\post_fx\fx</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\systems\post_fx\post_processing_fx.h">
       <Filter>systems\post_fx</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\rendering\forward_render_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\light_system.h">
       <Filter>systems\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\rendering\render_system.h">
@@ -161,24 +173,24 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
-    <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.h">
-      <Filter>systems\post_fx\fx</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
       <Filter>apps</Filter>
     </ClCompile>
-    <ClCompile Include="src\scorch\apps\model_test.cpp">
-      <Filter>apps</Filter>
+    <ClCompile Include="src\scorch\apps\tests\lighting_test.cpp">
+      <Filter>apps\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\apps\tests\model_test.cpp">
+      <Filter>apps\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\apps\tests\vulkan_test.cpp">
+      <Filter>apps\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\apps\tests\window_test.cpp">
+      <Filter>apps\tests</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\apps\vulkan_base.cpp">
-      <Filter>apps</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\apps\vulkan_test.cpp">
-      <Filter>apps</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\apps\window_test.cpp">
       <Filter>apps</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\controllers\camera_controller.cpp">
@@ -200,10 +212,16 @@
     <ClCompile Include="src\scorch\renderer\camera.cpp">
       <Filter>renderer</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.cpp">
+      <Filter>systems\post_fx\fx</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\systems\post_fx\post_processing_fx.cpp">
       <Filter>systems\post_fx</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\systems\rendering\forward_render_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\light_system.cpp">
       <Filter>systems\rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\systems\rendering\render_system.cpp">
@@ -258,8 +276,5 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />
-    <ClCompile Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.cpp">
-      <Filter>systems\post_fx\fx</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

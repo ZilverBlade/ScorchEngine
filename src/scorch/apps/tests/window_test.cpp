@@ -1,4 +1,4 @@
-#include <scorch/apps/window_test.h>
+#include "window_test.h"
 
 namespace ScorchEngine::Apps {
 	WindowTest::WindowTest(const char* name) : App(name) {

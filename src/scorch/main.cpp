@@ -1,9 +1,10 @@
-#include <scorch/apps/window_test.h>
-#include <scorch/apps/vulkan_test.h>
-#include <scorch/apps/model_test.h>
+#include <scorch/apps/tests/window_test.h>
+#include <scorch/apps/tests/vulkan_test.h>
+#include <scorch/apps/tests/model_test.h>
+#include <scorch/apps/tests/lighting_test.h>
 
 int main() {
-	ScorchEngine::Apps::App* app = new ScorchEngine::Apps::ModelTest("ScorchEngine v1.0");
+	ScorchEngine::Apps::App* app = new ScorchEngine::Apps::LightingTest("ScorchEngine v1.0");
 
 	try {
 		app->run();

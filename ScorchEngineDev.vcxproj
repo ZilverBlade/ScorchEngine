@@ -101,10 +101,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\scorch\apps\app.h" />
-    <ClInclude Include="src\scorch\apps\model_test.h" />
+    <ClInclude Include="src\scorch\apps\tests\lighting_test.h" />
+    <ClInclude Include="src\scorch\apps\tests\model_test.h" />
+    <ClInclude Include="src\scorch\apps\tests\vulkan_test.h" />
+    <ClInclude Include="src\scorch\apps\tests\window_test.h" />
     <ClInclude Include="src\scorch\apps\vulkan_base.h" />
-    <ClInclude Include="src\scorch\apps\vulkan_test.h" />
-    <ClInclude Include="src\scorch\apps\window_test.h" />
     <ClInclude Include="src\scorch\controllers\camera_controller.h" />
     <ClInclude Include="src\scorch\ecs\actor.h" />
     <ClInclude Include="src\scorch\ecs\components.h" />
@@ -123,6 +124,7 @@
     <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.h" />
     <ClInclude Include="src\scorch\systems\post_fx\post_processing_fx.h" />
     <ClInclude Include="src\scorch\systems\rendering\forward_render_system.h" />
+    <ClInclude Include="src\scorch\systems\rendering\light_system.h" />
     <ClInclude Include="src\scorch\systems\rendering\render_system.h" />
     <ClInclude Include="src\scorch\systems\resource_system.h" />
     <ClInclude Include="src\scorch\utils\matrix_math.h" />
@@ -146,10 +148,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp" />
-    <ClCompile Include="src\scorch\apps\model_test.cpp" />
+    <ClCompile Include="src\scorch\apps\tests\lighting_test.cpp" />
+    <ClCompile Include="src\scorch\apps\tests\model_test.cpp" />
+    <ClCompile Include="src\scorch\apps\tests\vulkan_test.cpp" />
+    <ClCompile Include="src\scorch\apps\tests\window_test.cpp" />
     <ClCompile Include="src\scorch\apps\vulkan_base.cpp" />
-    <ClCompile Include="src\scorch\apps\vulkan_test.cpp" />
-    <ClCompile Include="src\scorch\apps\window_test.cpp" />
     <ClCompile Include="src\scorch\controllers\camera_controller.cpp" />
     <ClCompile Include="src\scorch\ecs\actor.cpp" />
     <ClCompile Include="src\scorch\ecs\components\transform_component.cpp" />
@@ -160,6 +163,7 @@
     <ClCompile Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.cpp" />
     <ClCompile Include="src\scorch\systems\post_fx\post_processing_fx.cpp" />
     <ClCompile Include="src\scorch\systems\rendering\forward_render_system.cpp" />
+    <ClCompile Include="src\scorch\systems\rendering\light_system.cpp" />
     <ClCompile Include="src\scorch\systems\rendering\render_system.cpp" />
     <ClCompile Include="src\scorch\systems\resouce_system.cpp" />
     <ClCompile Include="src\scorch\utils\resid.cpp" />

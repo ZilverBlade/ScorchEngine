@@ -1,3 +1,5 @@
+#ifndef GLOBAL_UBO_GLSL
+#define GLOBAL_UBO_GLSL
 layout (set = 0, binding = 0) uniform GlobalUBO {
 	mat4 viewMatrix;
 	mat4 invViewMatrix;
@@ -10,3 +12,4 @@ layout (set = 0, binding = 0) uniform GlobalUBO {
 	float gamma;
 	float aspectRatio;
 } ubo;
+#endif
