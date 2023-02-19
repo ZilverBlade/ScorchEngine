@@ -17,8 +17,8 @@ namespace ScorchEngine {
         VkFramebuffer getFrameBuffer(int index) {
             return swapChainFrameBuffers[index]->getFrameBuffer();
         }
-        VkRenderPass getRenderPass() {
-            return swapChainRenderPass->getRenderPass();
+        SERenderPass* getRenderPass() {
+            return swapChainRenderPass;
         }
         VkImageView getImageView(int index) {
             return swapChainAttachments[index]->getImageView();

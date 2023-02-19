@@ -7,7 +7,7 @@ namespace ScorchEngine::Components {
 		return Math::calculateYXZ(translation, rotation, scale);
 	}
 	
-	glm::mat3 TransformComponent::getNormalMatrix() {
+	glm::mat3 TransformComponent::getNormalMatrix() { // fix why this is broken
 		const float c3 = glm::cos(rotation.y);
 		const float s3 = glm::sin(rotation.y);
 		const float c2 = glm::cos(rotation.x);
@@ -16,7 +16,7 @@ namespace ScorchEngine::Components {
 		const float s1 = glm::sin(rotation.z);
 
 		glm::vec3 invScale = 1.0f / scale;
-		return glm::mat3(
+		return glm::mat3{
 			{
 				invScale.x * (c1 * c3 + s1 * s2 * s3),
 				invScale.x * (c2 * s3),
@@ -31,7 +31,7 @@ namespace ScorchEngine::Components {
 				invScale.y * (c2 * s1),
 				invScale.y * (-s2),
 				invScale.y * (c1 * c2),
-			}
-		);
+			},
+		};
 	}
 }

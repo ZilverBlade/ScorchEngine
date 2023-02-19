@@ -23,6 +23,8 @@ void main() {
 	
 	fragPosWorld = worldPosition.xyz;
 	fragUV = uv;
-	fragNormal = push.normalMatrix * normal;
-	fragTangent = push.normalMatrix * tangent;
+	
+	mat3 normalMatrix = inverse(transpose(mat3(push.modelMatrix)) // figure out why push.normalMatrix is broken
+	fragNormal = normalize(normalMatrix * normal); 
+	fragTangent = normalize(normalMatrix * tangent);
 }

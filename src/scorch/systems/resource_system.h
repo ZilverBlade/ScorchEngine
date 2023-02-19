@@ -7,9 +7,12 @@
 namespace ScorchEngine {
 	class ResourceSystem {
 	public:
-		ResourceID loadModel(SEDevice& device, std::string path);
+		ResourceSystem(SEDevice& device);
+		~ResourceSystem();
+		ResourceID loadModel(std::string path);
 		SEModel* getModel(ResourceID id);
 	private:
+		SEDevice& seDevice;
 		std::unordered_map<ResourceID, SEModel*> modelAssets;
 	};
 }

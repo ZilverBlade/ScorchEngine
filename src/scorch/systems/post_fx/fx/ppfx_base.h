@@ -9,9 +9,13 @@ namespace ScorchEngine {
 				SEDevice& device
 			) : seDevice(device) {}
 			virtual ~Effect() {}
+
+			Effect(const Effect&) = delete;
+			Effect& operator=(const Effect&) = delete;
+
 			virtual void render(FrameInfo& frameInfo) {}
 			virtual void resize(glm::vec2 size, const std::vector<SEFrameBufferAttachment*>& newInputAttachments) {}
-			// derived classes must implement this //virtual SceneBufferInputData getNext();
+			virtual SEFrameBufferAttachment* getAttachment() { return nullptr; }
 		protected:
 			SEDevice& seDevice;
 		};

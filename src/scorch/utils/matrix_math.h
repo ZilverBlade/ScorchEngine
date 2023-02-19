@@ -17,18 +17,18 @@ namespace ScorchEngine {
 					scale.x * (c1 * s2 * s3 - c3 * s1),
 					0.0f,
 				},
-			{
-				scale.z * (c3 * s1 * s2 - c1 * s3),
-				scale.z * (c2 * c3),
-				scale.z * (c1 * c3 * s2 + s1 * s3),
-				0.0f,
-			},
-			{
-				scale.y * (c2 * s1),
-				scale.y * (-s2),
-				scale.y * (c1 * c2),
-				0.0f,
-			},
+				{
+					scale.z * (c3 * s1 * s2 - c1 * s3),
+					scale.z * (c2 * c3),
+					scale.z * (c1 * c3 * s2 + s1 * s3),
+					0.0f,
+				},
+				{
+					scale.y * (c2 * s1),
+					scale.y * (-s2),
+					scale.y * (c1 * c2),
+					0.0f,
+				},
 				{ translation.x, translation.z, translation.y, 1.0f }
 			);
         }

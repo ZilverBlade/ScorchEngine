@@ -30,6 +30,7 @@ namespace ScorchEngine::Apps {
 		SERenderer* seRenderer;
 		SESwapChain* seSwapChain;
 		std::unique_ptr<SEDescriptorPool> inFlightPool{};
+		std::unique_ptr<SEDescriptorPool> staticPool{};
 		std::vector<InFlightRenderData> renderData{};
 		std::unique_ptr<SEDescriptorSetLayout> globalUBODescriptorLayout{};
 		std::unique_ptr<SEDescriptorSetLayout> sceneSSBODescriptorLayout{};

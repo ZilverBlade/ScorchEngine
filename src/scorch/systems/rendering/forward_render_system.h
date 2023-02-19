@@ -4,8 +4,7 @@
 namespace ScorchEngine {
 	class ForwardRenderSystem final : public RenderSystem {
 	public:
-		ForwardRenderSystem(SEDevice& device, glm::ivec3 size, VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout, VkSampleCountFlagBits msaaSamples,
-			VkRenderPass real);
+		ForwardRenderSystem(SEDevice& device, glm::vec2 size, VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout, VkSampleCountFlagBits msaaSamples);
 		virtual ~ForwardRenderSystem();
 
 		virtual void renderEarlyDepth(FrameInfo& frameInfo) override;
@@ -14,20 +13,24 @@ namespace ScorchEngine {
 		virtual void beginOpaquePass(FrameInfo& frameInfo) override;
 		virtual void endOpaquePass(FrameInfo& frameInfo) override;
 
-		virtual SEFrameBufferAttachment* getColorAttachment() override { 
-			return sampleCount == VK_SAMPLE_COUNT_1_BIT ? opaqueColorAttachment : opaqueColorResolveAttachment;
-		}
-		virtual SEFrameBufferAttachment* getDepthAttachment() override { return depthAttachment; }
-		virtual void resize(glm::ivec3 newSize) override;
-
-		virtual SERenderPass* getOpaqueRenderPass() override { return opaqueRenderPass; }
-		
+		virtual void resize(glm::vec2 size) override;	
 	protected:
+		virtual void getColorAttachment(SEFrameBufferAttachment** out) override {
+			*out = sampleCount == VK_SAMPLE_COUNT_1_BIT ? opaqueColorAttachment : opaqueColorResolveAttachment;
+		}
+		virtual void getDepthAttachment(SEFrameBufferAttachment** out) override { 
+			*out = depthAttachment;
+		}
+		virtual void getOpaqueRenderPass(SERenderPass** out) override {
+			*out = opaqueRenderPass;
+		}
+
+
 		void iterateOpaqueObjects(FrameInfo& frameInfo);
-		virtual void init(glm::ivec3 size) override;
+		virtual void init(glm::vec2 size) override;
 		virtual void destroy() override;
 
-		virtual void createFrameBufferAttachments(glm::ivec3 size) override;
+		virtual void createFrameBufferAttachments(glm::vec2 size) override;
 		virtual void createRenderPasses() override;
 		virtual void createFrameBuffers() override;
 		virtual void createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) override;
@@ -43,8 +46,6 @@ namespace ScorchEngine {
 		SEPushConstant push{};
 		SEPipelineLayout* opaquePipelineLayout{};
 		SEGraphicsPipeline* opaquePipeline{};
-
-		VkRenderPass real;
 
 		SEPipelineLayout* earlyDepthPipelineLayout{};
 		SEGraphicsPipeline* earlyDepthPipeline{};

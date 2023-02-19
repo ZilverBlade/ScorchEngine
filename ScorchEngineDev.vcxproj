@@ -120,6 +120,7 @@
     <ClInclude Include="src\scorch\renderer\global_ubo.h" />
     <ClInclude Include="src\scorch\renderer\scene_ssbo.h" />
     <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_base.h" />
+    <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.h" />
     <ClInclude Include="src\scorch\systems\post_fx\post_processing_fx.h" />
     <ClInclude Include="src\scorch\systems\rendering\forward_render_system.h" />
     <ClInclude Include="src\scorch\systems\rendering\render_system.h" />
@@ -156,10 +157,11 @@
     <ClCompile Include="src\scorch\graphics\model.cpp" />
     <ClCompile Include="src\scorch\main.cpp" />
     <ClCompile Include="src\scorch\renderer\camera.cpp" />
+    <ClCompile Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.cpp" />
     <ClCompile Include="src\scorch\systems\post_fx\post_processing_fx.cpp" />
     <ClCompile Include="src\scorch\systems\rendering\forward_render_system.cpp" />
     <ClCompile Include="src\scorch\systems\rendering\render_system.cpp" />
-    <ClCompile Include="src\scorch\systems\resource_system.cpp" />
+    <ClCompile Include="src\scorch\systems\resouce_system.cpp" />
     <ClCompile Include="src\scorch\utils\resid.cpp" />
     <ClCompile Include="src\scorch\utils\uuid.cpp" />
     <ClCompile Include="src\scorch\vkapi\buffer.cpp" />
@@ -176,9 +178,6 @@
     <ClCompile Include="src\scorch\vkapi\shader.cpp" />
     <ClCompile Include="src\scorch\vkapi\swap_chain.cpp" />
     <ClCompile Include="src\scorch\window.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\scorch\systems\resouce_system.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

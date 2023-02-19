@@ -10,5 +10,5 @@ layout (location = 2) in vec3 fragNormal;
 layout (location = 3) in vec3 fragTangent;
 
 void main() {
-	outColor = vec4(fragPosWorld, 1.0);
+	outColor = vec4(fragUV, 0.0, 1.0);
 }

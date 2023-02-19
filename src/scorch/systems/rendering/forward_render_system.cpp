@@ -11,20 +11,27 @@ namespace ScorchEngine {
 
 	ForwardRenderSystem::ForwardRenderSystem(
 		SEDevice& device, 
-		glm::ivec3 size,
+		glm::vec2 size,
 		VkDescriptorSetLayout uboLayout, 
 		VkDescriptorSetLayout ssboLayout, 
-		VkSampleCountFlagBits msaaSamples,
-		VkRenderPass real
-	) : RenderSystem(device, size, uboLayout, ssboLayout), sampleCount(msaaSamples), real(real)
+		VkSampleCountFlagBits msaaSamples
+	) : RenderSystem(device, size, uboLayout, ssboLayout), sampleCount(msaaSamples)
 	{
+		init(size);
+		createGraphicsPipelines(uboLayout, ssboLayout);
 	}
 	ForwardRenderSystem::~ForwardRenderSystem() {
+		destroy();
 		delete opaquePipeline;
 		delete opaquePipelineLayout;
+		delete earlyDepthPipeline;
+		delete earlyDepthPipelineLayout;
 	}
 
-	void ForwardRenderSystem::init(glm::ivec3 size) {
+	void ForwardRenderSystem::init(glm::vec2 size) {
+		createFrameBufferAttachments(size);
+		createRenderPasses();
+		createFrameBuffers();
 	}
 
 	void ForwardRenderSystem::destroy() {
@@ -99,42 +106,42 @@ namespace ScorchEngine {
 		opaqueRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
 
-	void ForwardRenderSystem::resize(glm::ivec3 newSize) {
-		destroy();
-		init(newSize);
+	void ForwardRenderSystem::resize(glm::vec2 size) {
+		earlyDepthFrameBuffer->resize(glm::ivec3(size, 1), earlyDepthRenderPass);
+		opaqueFrameBuffer->resize(glm::ivec3(size, 1), opaqueRenderPass);
 	}
 
-	void ForwardRenderSystem::createFrameBufferAttachments(glm::ivec3 size) {
+	void ForwardRenderSystem::createFrameBufferAttachments(glm::vec2 size) {
 		SEFrameBufferAttachmentCreateInfo depthAttachmentCreateInfo{};
-		depthAttachmentCreateInfo.dimensions = size;
+		depthAttachmentCreateInfo.dimensions = glm::ivec3(size, 1);
 		depthAttachmentCreateInfo.frameBufferFormat = VK_FORMAT_D32_SFLOAT;
 		depthAttachmentCreateInfo.frameBufferType = SEFrameBufferAttachmentType::Depth;
 		depthAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-		depthAttachmentCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		depthAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		depthAttachmentCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		depthAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		depthAttachmentCreateInfo.sampleCount = sampleCount;
 		depthAttachmentCreateInfo.linearFiltering = false;
 		depthAttachment = new SEFrameBufferAttachment(seDevice, depthAttachmentCreateInfo);
 
 		SEFrameBufferAttachmentCreateInfo colorAttachmentCreateInfo{};
-		colorAttachmentCreateInfo.dimensions = size;
+		colorAttachmentCreateInfo.dimensions = glm::ivec3(size, 1);
 		colorAttachmentCreateInfo.frameBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 		colorAttachmentCreateInfo.frameBufferType = SEFrameBufferAttachmentType::Color;
 		colorAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
-		colorAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		colorAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		colorAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		colorAttachmentCreateInfo.sampleCount = sampleCount;
 		colorAttachmentCreateInfo.linearFiltering = false;
 		opaqueColorAttachment = new SEFrameBufferAttachment(seDevice, colorAttachmentCreateInfo);
 
 		if (sampleCount != VK_SAMPLE_COUNT_1_BIT) {
 			SEFrameBufferAttachmentCreateInfo colorResolveAttachmentCreateInfo{};
-			colorResolveAttachmentCreateInfo.dimensions = size;
+			colorResolveAttachmentCreateInfo.dimensions = glm::ivec3(size, 1);
 			colorResolveAttachmentCreateInfo.frameBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-			colorResolveAttachmentCreateInfo.frameBufferType = SEFrameBufferAttachmentType::Color;
+			colorResolveAttachmentCreateInfo.frameBufferType = SEFrameBufferAttachmentType::Resolve;
 			colorResolveAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
-			colorResolveAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-			colorResolveAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			colorResolveAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+			colorResolveAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			colorResolveAttachmentCreateInfo.sampleCount = VK_SAMPLE_COUNT_1_BIT;
 			colorResolveAttachmentCreateInfo.linearFiltering = false;
 			opaqueColorResolveAttachment = new SEFrameBufferAttachment(seDevice, colorResolveAttachmentCreateInfo);
@@ -189,17 +196,17 @@ namespace ScorchEngine {
 	}
 
 	void ForwardRenderSystem::createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) {
-		push = SEPushConstant(sizeof(ModelMatrixPush), VK_SHADER_STAGE_VERTEX_BIT);
+		push = SEPushConstant(sizeof(ModelMatrixPush), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, { uboLayout, ssboLayout });
 
 		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
 		pipelineConfigInfo.enableVertexDescriptions();
 		pipelineConfigInfo.setSampleCount(sampleCount);
-		pipelineConfigInfo.renderPass = real;
+		pipelineConfigInfo.renderPass = opaqueRenderPass->getRenderPass();
 		pipelineConfigInfo.pipelineLayout = opaquePipelineLayout->getPipelineLayout();
 		opaquePipeline = new SEGraphicsPipeline(
 			seDevice,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward.vsh.spv") },
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward.fsh.spv") },
 			pipelineConfigInfo
 		);
 

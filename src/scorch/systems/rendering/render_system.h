@@ -14,7 +14,7 @@
 namespace ScorchEngine {
 	class RenderSystem {
 	public:
-		RenderSystem(SEDevice& device, glm::ivec3 size, VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout);
+		RenderSystem(SEDevice& device, glm::vec2 size, VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout);
 		virtual ~RenderSystem();
 
 		RenderSystem(const RenderSystem&) = delete;
@@ -36,19 +36,35 @@ namespace ScorchEngine {
 		virtual void beginCompositionPass(FrameInfo& frameInfo) {}
 		virtual void endCompositionPass(FrameInfo& frameInfo){}
 
-		virtual SEFrameBufferAttachment* getColorAttachment() { return nullptr; }
-		virtual SEFrameBufferAttachment* getDepthAttachment() { return nullptr; }
-		virtual void resize(glm::ivec3 newSize) {}
+		SEFrameBufferAttachment* getColorAttachment() {
+			SEFrameBufferAttachment* attachment{};
+			getColorAttachment(&attachment);
+			return attachment;
+		}
+		SEFrameBufferAttachment* getDepthAttachment() {
+			SEFrameBufferAttachment* attachment{};
+			getDepthAttachment(&attachment);
+			return attachment;
+		}
+		virtual void resize(glm::vec2 size) {}
 
-		virtual SERenderPass* getOpaqueRenderPass() { return nullptr; }
-		virtual SERenderPass* getTransparencyRenderPass() { return nullptr; }
-		virtual SERenderPass* getCompositionRenderPass() { return nullptr; }
+		SERenderPass* getOpaqueRenderPass() {
+			SERenderPass* pass{};
+			getOpaqueRenderPass(&pass);
+			return pass;
+		}
+		SERenderPass* getTransparencyRenderPass() { return nullptr; }
+		SERenderPass* getCompositionRenderPass() { return nullptr; }
 
 	protected:
-		virtual void init(glm::ivec3 size);
+		virtual void getColorAttachment(SEFrameBufferAttachment** out) {}
+		virtual void getDepthAttachment(SEFrameBufferAttachment** out) {}
+		virtual void getOpaqueRenderPass(SERenderPass** out) {}
+
+		virtual void init(glm::vec2 size);
 		virtual void destroy();
 
-		virtual void createFrameBufferAttachments(glm::ivec3 size) {}
+		virtual void createFrameBufferAttachments(glm::vec2 size) {}
 		virtual void createRenderPasses() {}
 		virtual void createFrameBuffers() {}
 		virtual void createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) {}

@@ -51,8 +51,8 @@ namespace ScorchEngine {
 				factor * mesh->mVertices[i].y
 			});
 			vertexUVs.push_back({
-				mesh->mTextureCoords[i][0].x,
-				mesh->mTextureCoords[i][0].y
+				mesh->mTextureCoords[0][i].x,
+				mesh->mTextureCoords[0][i].y
 			});
 			vertexNormals.push_back({
 				mesh->mNormals[i].x,
@@ -115,7 +115,7 @@ namespace ScorchEngine {
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
 		);
-
+		stagingBuffer->map();
 		stagingBuffer->writeToBuffer(data.data());
 
 		std::unique_ptr<SEBuffer> dstBuffer = std::make_unique<SEBuffer>(

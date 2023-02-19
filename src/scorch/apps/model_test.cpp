@@ -1,8 +1,13 @@
 #include "model_test.h"
 
+#include <chrono>
+#include <scorch/renderer/camera.h>
 #include <scorch/systems/rendering/forward_render_system.h>
 #include <scorch/systems/resource_system.h>
-#include <scorch/renderer/camera.h>
+
+#include <scorch/systems/post_fx/fx/ppfx_screen_correct.h>
+
+#include <scorch/controllers/camera_controller.h>
 
 namespace ScorchEngine::Apps {
 	ModelTest::ModelTest(const char* name) : VulkanBaseApp(name)
@@ -12,19 +17,32 @@ namespace ScorchEngine::Apps {
 	{
 	}
 	void ModelTest::run() {
-		ResourceSystem* resourceSystem = new ResourceSystem();
+		glm::vec2 resolution = { 1280, 720 };
+		ResourceSystem* resourceSystem = new ResourceSystem(seDevice);
 
 		level = std::make_shared<Level>();
 		Actor actor = level->createActor("mesh");
-		actor.addComponent<Components::MeshComponent>().mesh = resourceSystem->loadModel(seDevice, "res/models/cube.fbx");
+		actor.addComponent<Components::MeshComponent>().mesh = resourceSystem->loadModel("res/models/cube.fbx");
+		Actor cameraActor = level->createActor("camera actor");
 
+		RenderSystem* renderSystem = new ForwardRenderSystem(
+			seDevice, 
+			resolution, 
+			globalUBODescriptorLayout->getDescriptorSetLayout(), 
+			sceneSSBODescriptorLayout->getDescriptorSetLayout(), 
+			VK_SAMPLE_COUNT_8_BIT
+		);
 
-		RenderSystem* renderSystem = new ForwardRenderSystem(seDevice, { 1280, 720, 1 }, globalUBODescriptorLayout->getDescriptorSetLayout(), sceneSSBODescriptorLayout->getDescriptorSetLayout(), VK_SAMPLE_COUNT_1_BIT, seSwapChain->getRenderPass());
-		
-
+		PostFX::Effect* screenCorrection = new PostFX::ScreenCorrection(
+			seDevice, 
+			resolution, 
+			*staticPool, 
+			renderSystem->getColorAttachment(), 
+			seSwapChain
+		);
 
 		SECamera camera{};
-		camera.setPerspectiveProjection(70, 1.0f, 0.1f, 32.f);
+		camera.setPerspectiveProjection(70.0f, 1.0f, 0.1f, 32.f);
 		camera.setViewYXZ({ 0.f, -1.f, 0.0f }, {});
 
 		std::vector<std::unique_ptr<SECommandBuffer>> commandBuffers{};
@@ -32,14 +50,32 @@ namespace ScorchEngine::Apps {
 		for (auto& cb : commandBuffers) {
 			cb = std::make_unique<SECommandBuffer>(seDevice);
 		}
+
+		Controllers::CameraController controller{};
+
+		auto oldTime = std::chrono::high_resolution_clock::now();
 		while (!seWindow.shouldClose()) {
+			auto newTime = std::chrono::high_resolution_clock::now();
+			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - oldTime).count();
+			oldTime = newTime;
 			glfwPollEvents();
+
+			controller.moveTranslation(seWindow, frameTime, cameraActor);
+			controller.moveOrientation(seWindow, frameTime, cameraActor);
+
+			actor.getTransform().rotation.z += frameTime;
+
+			camera.setViewYXZ(cameraActor.getTransform().translation, cameraActor.getTransform().rotation);
+			camera.setPerspectiveProjection(70.0f, seSwapChain->extentAspectRatio(), 0.01f, 128.f);
 
 			uint32_t frameIndex = seSwapChain->getImageIndex();
 			if (VkResult result = seSwapChain->acquireNextImage(&frameIndex); result == VK_SUCCESS) {
 				VkCommandBuffer commandBuffer = commandBuffers[frameIndex]->getCommandBuffer();
+				commandBuffers[frameIndex]->begin();
+
 				FrameInfo frameInfo{};
 				frameInfo.level = level;
+				frameInfo.frameTime = frameTime;
 				frameInfo.frameIndex = frameIndex;
 				frameInfo.globalUBO = renderData[frameIndex].uboDescriptorSet;
 				frameInfo.sceneSSBO = renderData[frameIndex].ssboDescriptorSet;
@@ -51,14 +87,21 @@ namespace ScorchEngine::Apps {
 				ubo.invViewMatrix = camera.getInverseView();
 				ubo.projMatrix = camera.getProjection();
 				ubo.invProjMatrix = camera.getInverseProjection();
+				ubo.viewProjMatrix = ubo.projMatrix * ubo.viewMatrix;
 
 				renderData[frameIndex].uboBuffer->writeToBuffer(&ubo);
 				renderData[frameIndex].uboBuffer->flush();
 
-				commandBuffers[frameIndex]->begin();
-				seSwapChain->beginRenderPass(commandBuffer);
+				renderSystem->renderEarlyDepth(frameInfo);
+
+				renderSystem->beginOpaquePass(frameInfo);
 				renderSystem->renderOpaque(frameInfo);
+				renderSystem->endOpaquePass(frameInfo);
+
+				seSwapChain->beginRenderPass(commandBuffer);
+				screenCorrection->render(frameInfo);
 				seSwapChain->endRenderPass(commandBuffer);
+
 				commandBuffers[frameIndex]->end();
 
 				seRenderer->submitCommandBuffers({ commandBuffers[frameIndex].get() });
@@ -75,12 +118,16 @@ namespace ScorchEngine::Apps {
 				SESwapChain* oldSwapChain = seSwapChain;
 				seSwapChain = new SESwapChain(seDevice, seWindow, extent, oldSwapChain);
 				delete oldSwapChain;
-				renderSystem->resize(glm::ivec3(extent.width, extent.height, 1));
+				renderSystem->resize({ extent.width, extent.height });
+				screenCorrection->resize({ extent.width, extent.height }, {renderSystem->getColorAttachment()});
 				seWindow.resetWindowResizedFlag();
 			}
 		}
 		vkDeviceWaitIdle(seDevice.getDevice());
-		delete resourceSystem;
+
 		delete renderSystem;
+		delete screenCorrection;
+
+		delete resourceSystem;
 	}
 }

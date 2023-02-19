@@ -17,8 +17,16 @@ namespace ScorchEngine {
 			glm::vec2 resolution,
 			const SEShader& fragmentShader,
 			SEDescriptorPool& descriptorPool,
-			const std::vector<SEFrameBufferAttachment*>& inputTargets = std::vector<SEFrameBufferAttachment*>(),
-			VkFormat frameBufferFormat = VK_FORMAT_R16G16B16A16_SFLOAT
+			const std::vector<SEFrameBufferAttachment*>& inputTargets,
+			VkFormat frameBufferFormat
+		);
+		SEPostProcessingEffect(
+			SEDevice& device,
+			glm::vec2 resolution,
+			const SEShader& fragmentShader,
+			SEDescriptorPool& descriptorPool,
+			const std::vector<SEFrameBufferAttachment*>& inputTargets,
+			SERenderPass* renderPass // in case to render to an existing renderpass e.g. swapchain
 		);
 		~SEPostProcessingEffect();
 
@@ -26,7 +34,7 @@ namespace ScorchEngine {
 		SEPostProcessingEffect& operator= (const SEPostProcessingEffect&) = delete;
 
 		void render(FrameInfo& frameInfo, const void* pushData);
-		void resize(glm::vec2 newResolution, const std::vector<SEFrameBufferAttachment*>& inputTargets = std::vector<SEFrameBufferAttachment*>());
+		void resize(glm::vec2 newResolution, const std::vector<SEFrameBufferAttachment*>& inputTargets);
 
 		SEFrameBufferAttachment* getAttachment() {
 			return ppfxRenderTarget;
@@ -39,6 +47,8 @@ namespace ScorchEngine {
 
 		SEDevice& seDevice;
 		SEDescriptorPool& descriptorPool;
+
+		bool overridesRenderPass = false;
 
 		SEFrameBuffer* ppfxFrameBuffer{};
 		SERenderPass* ppfxRenderPass{};

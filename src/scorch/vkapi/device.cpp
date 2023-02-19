@@ -18,7 +18,7 @@ namespace ScorchEngine {
 		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
 			SELOG_WRN("validation layer: %s", pCallbackData->pMessage);
 		}
-		else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+		else if (messageSeverity & (VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)) {
 			SELOG_INF("validation layer: %s", pCallbackData->pMessage);
 		}
 

@@ -39,7 +39,7 @@ namespace ScorchEngine {
 		VkImageLayout getImageLayout() { return attachmentDescription.layout; }
 		VkDeviceMemory getDeviceMemory() { return imageMemory; }
 		glm::ivec3 getDimensions() { return dimensions; }
-		VkDescriptorImageInfo& getDescriptor() { return descriptor; }
+		VkDescriptorImageInfo getDescriptor() { return descriptor; }
 		SEFrameBufferAttachmentType getAttachmentType() { return attachmentDescription.frameBufferType; }
 		const SEFrameBufferAttachmentCreateInfo& getAttachmentDescription() { return attachmentDescription; }
 

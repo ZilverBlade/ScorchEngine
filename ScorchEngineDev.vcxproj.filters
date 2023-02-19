@@ -28,14 +28,14 @@
     <Filter Include="systems\post_fx\fx">
       <UniqueIdentifier>{9C5D9507-8841-565D-F1A1-50B0DDA440DF}</UniqueIdentifier>
     </Filter>
+    <Filter Include="systems\rendering">
+      <UniqueIdentifier>{EA0FB04E-5626-AEE4-9F9D-39060BF37E6C}</UniqueIdentifier>
+    </Filter>
     <Filter Include="utils">
       <UniqueIdentifier>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</UniqueIdentifier>
     </Filter>
     <Filter Include="vkapi">
       <UniqueIdentifier>{A0A39210-0CB8-BAC1-D539-5E21410DB7F2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="systems\rendering">
-      <UniqueIdentifier>{60bcaa0f-23d2-454a-b780-763a6bac22d6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +100,12 @@
     <ClInclude Include="src\scorch\systems\post_fx\post_processing_fx.h">
       <Filter>systems\post_fx</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\forward_render_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\render_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\systems\resource_system.h">
       <Filter>systems</Filter>
     </ClInclude>
@@ -155,11 +161,8 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
-    <ClInclude Include="src\scorch\systems\rendering\forward_render_system.h">
-      <Filter>systems\rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scorch\systems\rendering\render_system.h">
-      <Filter>systems\rendering</Filter>
+    <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.h">
+      <Filter>systems\post_fx\fx</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -199,6 +202,15 @@
     </ClCompile>
     <ClCompile Include="src\scorch\systems\post_fx\post_processing_fx.cpp">
       <Filter>systems\post_fx</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\forward_render_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\render_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\resouce_system.cpp">
+      <Filter>systems</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\utils\resid.cpp">
       <Filter>utils</Filter>
@@ -246,17 +258,8 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />
-    <ClCompile Include="src\scorch\systems\resource_system.cpp" />
-    <ClCompile Include="src\scorch\systems\rendering\forward_render_system.cpp">
-      <Filter>systems\rendering</Filter>
+    <ClCompile Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.cpp">
+      <Filter>systems\post_fx\fx</Filter>
     </ClCompile>
-    <ClCompile Include="src\scorch\systems\rendering\render_system.cpp">
-      <Filter>renderer</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="src\scorch\systems\resouce_system.cpp">
-      <Filter>systems</Filter>
-    </None>
   </ItemGroup>
 </Project>

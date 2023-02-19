@@ -25,14 +25,38 @@ namespace ScorchEngine {
 		createPipeline(fragmentShader);
 	}
 
+	SEPostProcessingEffect::SEPostProcessingEffect(
+		SEDevice& device,
+		glm::vec2 resolution,
+		const SEShader& fragmentShader,
+		SEDescriptorPool& descriptorPool,
+		const std::vector<SEFrameBufferAttachment*>& inputAttachments,
+		SERenderPass* renderPass
+	) : seDevice(device), inputAttachments(inputAttachments), ppfxFrameBufferFormat(VK_FORMAT_MAX_ENUM), descriptorPool(descriptorPool), ppfxRenderPass(renderPass), overridesRenderPass(true){
+		SEDescriptorSetLayout::Builder builder = SEDescriptorSetLayout::Builder(seDevice);
+
+		for (int i = 0; i < inputAttachments.size(); i++) {
+			builder.addBinding(i, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+		}
+
+		ppfxSceneDescriptorLayout = builder.build();
+
+		createSceneDescriptors();
+		createPipelineLayout();
+		createPipeline(fragmentShader);
+	}
 	SEPostProcessingEffect::~SEPostProcessingEffect() {
 		delete ppfxRenderTarget;
-		delete ppfxRenderPass;
-		delete ppfxFrameBuffer;
+
+		if (!overridesRenderPass)
+			delete ppfxRenderPass;
+		if (!overridesRenderPass)
+			delete ppfxFrameBuffer;
 	}
 
 	void SEPostProcessingEffect::render(FrameInfo& frameInfo, const void* pushData) {
-		ppfxRenderPass->beginRenderPass(frameInfo.commandBuffer, ppfxFrameBuffer);
+		if (!overridesRenderPass)
+			ppfxRenderPass->beginRenderPass(frameInfo.commandBuffer, ppfxFrameBuffer);
 		ppfxPipeline->bind(frameInfo.commandBuffer);
 		vkCmdBindDescriptorSets(frameInfo.commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -45,12 +69,14 @@ namespace ScorchEngine {
 		);
 		ppfxPush.push(frameInfo.commandBuffer, ppfxPipelineLayout->getPipelineLayout(), pushData);
 		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
-		ppfxRenderPass->endRenderPass(frameInfo.commandBuffer);
+		if (!overridesRenderPass)
+			ppfxRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
 
 	void SEPostProcessingEffect::resize(glm::vec2 newResolution, const std::vector<SEFrameBufferAttachment*>& newInputAttachments) {
 		inputAttachments = newInputAttachments;
-		createRenderPass(newResolution);
+		if (!overridesRenderPass)
+			createRenderPass(newResolution);
 		createSceneDescriptors();
 	}
 
@@ -67,7 +93,7 @@ namespace ScorchEngine {
 
 	void SEPostProcessingEffect::createPipeline(const SEShader& fragmentShader) {
 		SEGraphicsPipelineConfigInfo pipelineConfig{};
-		pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
+		//pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
 		pipelineConfig.disableDepthTest();
 
 		pipelineConfig.pipelineLayout = ppfxPipelineLayout->getPipelineLayout();
@@ -83,8 +109,11 @@ namespace ScorchEngine {
 
 	void SEPostProcessingEffect::createSceneDescriptors() {
 		auto writer = SEDescriptorWriter(*ppfxSceneDescriptorLayout, descriptorPool);
+		std::vector<VkDescriptorImageInfo> imageDescriptors{};
+		imageDescriptors.resize(inputAttachments.size());
 		for (int i = 0; i < inputAttachments.size(); i++) {
-			writer.writeImage(i, &inputAttachments[i]->getDescriptor());
+			imageDescriptors[i] = inputAttachments[i]->getDescriptor();
+			writer.writeImage(i, &imageDescriptors[i]);
 		}
 
 		writer.build(ppfxSceneDescriptorSet);

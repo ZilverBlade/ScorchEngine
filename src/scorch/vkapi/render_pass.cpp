@@ -43,15 +43,17 @@ namespace ScorchEngine {
 			switch(attachments[i].frameBufferAttachment->getAttachmentType()) {
 			case(SEFrameBufferAttachmentType::Color):
 				attachmentRef = { i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, };
+				colorAttachments.push_back(attachmentRef);
 				break;
 			case(SEFrameBufferAttachmentType::Depth):
 				attachmentRef = { i, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, };
+				depthAttachments.push_back(attachmentRef);
 				break; 
 			case(SEFrameBufferAttachmentType::Resolve):
 				attachmentRef = { i, attachments[i].frameBufferAttachment->getImageLayout() };
+				resolveAttachments.push_back(attachmentRef);
 				break;
 			}
-			colorAttachments.push_back(attachmentRef);
 		}
 
 		subpassDescription.colorAttachmentCount = static_cast<uint32_t>(colorAttachments.size());

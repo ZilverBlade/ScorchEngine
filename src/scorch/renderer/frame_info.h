@@ -8,6 +8,7 @@ namespace ScorchEngine {
 	struct FrameInfo {
 		VkCommandBuffer commandBuffer;
 		uint32_t frameIndex;
+		float frameTime;
 		VkDescriptorSet globalUBO;
 		VkDescriptorSet sceneSSBO;
 		std::shared_ptr<Level> level;

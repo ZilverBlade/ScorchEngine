@@ -91,10 +91,12 @@ namespace ScorchEngine {
 		viewMatrix[1][2] = w.y;
 		viewMatrix[2][2] = w.z;
 
+		glm::vec3 yUpPos = { position.x, position.z, position.y };
+		
 		// not sure if this works
-		viewMatrix[3][0] = -glm::dot(u, position);
-		viewMatrix[3][1] = -glm::dot(v, position);
-		viewMatrix[3][2] = -glm::dot(w, position);
+		viewMatrix[3][0] = -glm::dot(u, yUpPos);
+		viewMatrix[3][1] = -glm::dot(v, yUpPos);
+		viewMatrix[3][2] = -glm::dot(w, yUpPos);
 	}
 	void SECamera::setViewYXZ(glm::mat4 transformMatrix) {
 		inverseViewMatrix = transformMatrix;
