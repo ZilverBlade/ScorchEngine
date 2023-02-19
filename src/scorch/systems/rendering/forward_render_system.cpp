@@ -196,19 +196,7 @@ namespace ScorchEngine {
 	}
 
 	void ForwardRenderSystem::createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) {
-		push = SEPushConstant(sizeof(ModelMatrixPush), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
-		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, { uboLayout, ssboLayout });
-
-		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
-		pipelineConfigInfo.enableVertexDescriptions();
-		pipelineConfigInfo.setSampleCount(sampleCount);
-		pipelineConfigInfo.renderPass = opaqueRenderPass->getRenderPass();
-		pipelineConfigInfo.pipelineLayout = opaquePipelineLayout->getPipelineLayout();
-		opaquePipeline = new SEGraphicsPipeline(
-			seDevice,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward.fsh.spv") },
-			pipelineConfigInfo
-		);
+		push = SEPushConstant(sizeof(ModelMatrixPush), VK_SHADER_STAGE_VERTEX_BIT);
 
 		earlyDepthPipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, { uboLayout });
 
@@ -219,8 +207,24 @@ namespace ScorchEngine {
 		earlyDepthPipelineConfigInfo.pipelineLayout = earlyDepthPipelineLayout->getPipelineLayout();
 		earlyDepthPipeline = new SEGraphicsPipeline(
 			seDevice,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv") },
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/depth.fsh.spv") },
 			earlyDepthPipelineConfigInfo
 		);
+
+		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, { uboLayout, ssboLayout });
+
+		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
+		pipelineConfigInfo.enableVertexDescriptions();
+		pipelineConfigInfo.setSampleCount(sampleCount);
+		pipelineConfigInfo.disableDepthWrite(); // early depth pass already takes care of depth writing
+		pipelineConfigInfo.renderPass = opaqueRenderPass->getRenderPass();
+		pipelineConfigInfo.pipelineLayout = opaquePipelineLayout->getPipelineLayout();
+		opaquePipeline = new SEGraphicsPipeline(
+			seDevice,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") },
+			pipelineConfigInfo
+		);
+
+		
 	}
 }

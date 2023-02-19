@@ -9,6 +9,7 @@
 #include <scorch/systems/post_fx/fx/ppfx_screen_correct.h>
 
 #include <scorch/controllers/camera_controller.h>
+#include <scorch/graphics/surface_material.h>
 
 namespace ScorchEngine::Apps {
 	LightingTest::LightingTest(const char* name) : VulkanBaseApp(name)
@@ -20,6 +21,10 @@ namespace ScorchEngine::Apps {
 	void LightingTest::run() {
 		glm::vec2 resolution = { 1280, 720 };
 		ResourceSystem* resourceSystem = new ResourceSystem(seDevice);
+
+		SESurfaceMaterial* exampleMaterial = new SESurfaceMaterial(seDevice, *staticPool, resourceSystem);
+		exampleMaterial->load("res/POC/example_material.json");
+
 
 		level = std::make_shared<Level>();
 		Actor actor = level->createActor("mesh");
@@ -59,6 +64,7 @@ namespace ScorchEngine::Apps {
 		}
 
 		Controllers::CameraController controller{};
+
 
 		auto oldTime = std::chrono::high_resolution_clock::now();
 		while (!seWindow.shouldClose()) {

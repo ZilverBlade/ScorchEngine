@@ -11,6 +11,10 @@ namespace ScorchEngine {
 		uint64_t getID() const { return id; }
 		std::string getAsset() const { return file; }
 		operator ResourceKey() const { return getID(); }
+		operator bool() const { return id != 0; }
+		bool operator==(const ResourceID & other) const {
+			return id == other.id;
+		}
 	private:
 		std::string file;
 		uint64_t id;

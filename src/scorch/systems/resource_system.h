@@ -3,6 +3,25 @@
 #include <unordered_map>
 #include <scorch/utils/resid.h>
 #include <scorch/graphics/model.h>
+#include <scorch/graphics/texture2d.h>
+namespace ScorchEngine {
+	struct TextureResourceIDAttributes {
+		ResourceID id{};
+		bool srgb{};
+		bool linearSampler{};
+		bool operator==(ScorchEngine::TextureResourceIDAttributes const& other) const {
+			return id.getID() == other.id.getID() && srgb == other.srgb && linearSampler == other.linearSampler;
+		}
+	};
+}
+namespace std {
+	template<>
+	struct hash<ScorchEngine::TextureResourceIDAttributes> {
+		size_t operator()(ScorchEngine::TextureResourceIDAttributes const& attribid) const {
+			return attribid.id.getID() << 2 || attribid.srgb << 1 || attribid.linearSampler;
+		}
+	};
+}
 
 namespace ScorchEngine {
 	class ResourceSystem {
@@ -11,8 +30,12 @@ namespace ScorchEngine {
 		~ResourceSystem();
 		ResourceID loadModel(std::string path);
 		SEModel* getModel(ResourceID id);
+
+		TextureResourceIDAttributes loadTexture2D(std::string path, bool srgb, bool linearSampler);
+		SETexture2D* getTexture2D(TextureResourceIDAttributes id);
 	private:
 		SEDevice& seDevice;
 		std::unordered_map<ResourceID, SEModel*> modelAssets;
+		std::unordered_map<TextureResourceIDAttributes, SETexture2D*> texture2DAssets;
 	};
 }

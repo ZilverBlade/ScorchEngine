@@ -60,7 +60,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>26812;4244;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\assimp\include;vendor\entt\include;vendor\GammaHUD\GHUDCore\include;vendor\GammaHUD\GHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\GammaHUD\GHUDCore\include;vendor\GammaHUD\GHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -71,8 +71,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui_d.lib;GHUDCore_d.lib;GHUDVulkan_d.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\GammaHUD\GHUDCore\lib;vendor\GammaHUD\GHUDVulkan\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui_d.lib;GHUDCore_d.lib;GHUDVulkan_d.lib;assimp-vc143-mtd.lib;simdjson_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\GammaHUD\GHUDCore\lib;vendor\GammaHUD\GHUDVulkan\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -81,7 +81,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>26812;4244;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\assimp\include;vendor\entt\include;vendor\GammaHUD\GHUDCore\include;vendor\GammaHUD\GHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\GammaHUD\GHUDCore\include;vendor\GammaHUD\GHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -95,8 +95,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui.lib;GHUDCore.lib;GHUDVulkan.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\GammaHUD\GHUDCore\lib;vendor\GammaHUD\GHUDVulkan\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui.lib;GHUDCore.lib;GHUDVulkan.lib;assimp-vc143-mt.lib;simdjson.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\GammaHUD\GHUDCore\lib;vendor\GammaHUD\GHUDVulkan\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -115,6 +115,9 @@
     <ClInclude Include="src\scorch\ecs\components\transform_component.h" />
     <ClInclude Include="src\scorch\ecs\level.h" />
     <ClInclude Include="src\scorch\graphics\model.h" />
+    <ClInclude Include="src\scorch\graphics\surface_material.h" />
+    <ClInclude Include="src\scorch\graphics\texture.h" />
+    <ClInclude Include="src\scorch\graphics\texture2d.h" />
     <ClInclude Include="src\scorch\log.h" />
     <ClInclude Include="src\scorch\renderer\camera.h" />
     <ClInclude Include="src\scorch\renderer\frame_info.h" />
@@ -158,6 +161,9 @@
     <ClCompile Include="src\scorch\ecs\components\transform_component.cpp" />
     <ClCompile Include="src\scorch\ecs\level.cpp" />
     <ClCompile Include="src\scorch\graphics\model.cpp" />
+    <ClCompile Include="src\scorch\graphics\surface_material.cpp" />
+    <ClCompile Include="src\scorch\graphics\texture.cpp" />
+    <ClCompile Include="src\scorch\graphics\texture2d.cpp" />
     <ClCompile Include="src\scorch\main.cpp" />
     <ClCompile Include="src\scorch\renderer\camera.cpp" />
     <ClCompile Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.cpp" />

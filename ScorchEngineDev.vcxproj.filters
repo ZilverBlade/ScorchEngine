@@ -87,6 +87,9 @@
     <ClInclude Include="src\scorch\graphics\model.h">
       <Filter>graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\graphics\surface_material.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\log.h" />
     <ClInclude Include="src\scorch\renderer\camera.h">
       <Filter>renderer</Filter>
@@ -173,6 +176,12 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
+    <ClInclude Include="src\scorch\graphics\texture.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\graphics\texture2d.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
@@ -276,5 +285,14 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />
+    <ClCompile Include="src\scorch\graphics\surface_material.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\graphics\texture.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\graphics\texture2d.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

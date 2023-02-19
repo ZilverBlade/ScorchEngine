@@ -39,6 +39,7 @@ project "ScorchEngineDev"
       "vendor/imgui/include",
 	  "vendor/stbimage/include",
 	  "vendor/simpleini/include",
+	  "vendor/simdjson/include",
 	  "vendor/assimp/include",
 	  "vendor/entt/include",
 	  "vendor/GammaHUD/GHUDCore/include",
@@ -50,6 +51,7 @@ project "ScorchEngineDev"
 	  "vendor/glfw-3.3.7/lib-vc2019", 
 	  "vendor/imgui/lib",
 	  "vendor/assimp/lib",
+	  "vendor/simdjson/lib",
 	  "vendor/GammaHUD/GHUDCore/lib",
 	  "vendor/GammaHUD/GHUDVulkan/lib"
    }
@@ -72,6 +74,7 @@ project "ScorchEngineDev"
 	  "GHUDCore_d",
 	  "GHUDVulkan_d",
 	  "assimp-vc143-mtd",
+	  "simdjson_d",
 	  }
 
    filter "configurations:Release"
@@ -83,4 +86,5 @@ project "ScorchEngineDev"
 	  "GHUDCore",
 	  "GHUDVulkan",
 	  "assimp-vc143-mt",
+	  "simdjson",
 	  }
