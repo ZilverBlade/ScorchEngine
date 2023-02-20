@@ -19,11 +19,11 @@ void main() {
 
 	vec3 color = textureLod(inputImage, flippedCoord, 0.0).rgb;
 
-	vec3 gammaCorrected = pow(color, vec3(push.invGamma));
+	color.r += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
+	color.g += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
+	color.b += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
 	
-	gammaCorrected.r += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
-	gammaCorrected.g += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
-	gammaCorrected.b += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
+	vec3 gammaCorrected = pow(color, vec3(push.invGamma));
 	
 	outColor = vec4(gammaCorrected, 1.0);
 }

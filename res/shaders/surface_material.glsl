@@ -18,8 +18,8 @@ const uint SURFACE_MATERIAL_TEXTURE_MASK_BIT = 0x80;
 const uint SURFACE_MATERIAL_TEXTURE_OPACITY_BIT = 0x100;
 
 layout(set = SURFACE_MATERIAL_DESCRIPTOR_SET, binding = 0) uniform Params {
-	vec3 diffuse;
-	vec3 emission;
+	vec4 diffuse;
+	vec4 emission;
 	float specular;
 	float roughness;
 	float metallic;
@@ -40,39 +40,39 @@ layout(set = SURFACE_MATERIAL_DESCRIPTOR_SET, binding = 7) uniform sampler2D sfA
 layout(set = SURFACE_MATERIAL_DESCRIPTOR_SET, binding = 8) uniform sampler2D sfMaskTexture;
 //layout(set = SURFACE_MATERIAL_DESCRIPTOR_SET, binding = 9) uniform sampler2D sfOpacityTexture;
 
-const bool sfHasDiffuseTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_DIFFUSE_BIT;
+bool sfHasDiffuseTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_DIFFUSE_BIT) != 0);
 }
-const bool sfHasEmissiveTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_EMISSIVE_BIT
+bool sfHasEmissiveTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_EMISSIVE_BIT) != 0);
 }
-const bool sfHasNormalTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_NORMAL_BIT;
+bool sfHasNormalTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_NORMAL_BIT) != 0);
 }
-const bool sfHasSpecularTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_SPECULAR_BIT;
+bool sfHasSpecularTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_SPECULAR_BIT) != 0);
 }
-const bool sfHasRoughnessTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_ROUGHNESS_BIT
+bool sfHasRoughnessTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_ROUGHNESS_BIT) != 0);
 }
-const bool sfHasMetallicTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_METALLIC_BIT;
+bool sfHasMetallicTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_METALLIC_BIT) != 0);
 }
-const bool sfHasAmbientOcclusionTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_AMBIENTOCCLUSION_BIT;
+bool sfHasAmbientOcclusionTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_AMBIENTOCCLUSION_BIT) != 0);
 }
-const bool sfHasMaskTexture() {
-	return surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_MASK_BIT;
+bool sfHasMaskTexture() {
+	return bool((surfaceMaterialParams.textureFlags & SURFACE_MATERIAL_TEXTURE_MASK_BIT) != 0);
 }
 
-const bool sfShadingModelLit() {
-	return surfaceMaterialParams.shadingModelFlag & SURFACE_MATERIAL_SHADING_MODEL_LIT;
+bool sfShadingModelLit() {
+	return (surfaceMaterialParams.shadingModelFlag == SURFACE_MATERIAL_SHADING_MODEL_LIT);
 }
-const bool sfShadingModelUnlit() {
-	return surfaceMaterialParams.shadingModelFlag & SURFACE_MATERIAL_SHADING_MODEL_UNLIT;
+bool sfShadingModelUnlit() {
+	return (surfaceMaterialParams.shadingModelFlag == SURFACE_MATERIAL_SHADING_MODEL_UNLIT);
 }
-const bool sfShadingModelClearCoat() {
-	return surfaceMaterialParams.shadingModelFlag & SURFACE_MATERIAL_SHADING_MODEL_CLEARCOAT;
+bool sfShadingModelClearCoat() {
+	return (surfaceMaterialParams.shadingModelFlag == SURFACE_MATERIAL_SHADING_MODEL_CLEARCOAT);
 }
 
 vec2 sfSampleUV(vec2 uv) {

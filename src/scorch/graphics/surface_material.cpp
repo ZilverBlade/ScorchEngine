@@ -2,6 +2,8 @@
 
 #include "surface_material.h"
 #include <scorch/systems/resource_system.h>
+#include <scorch/systems/material_system.h>
+#include <numeric>
 #include <simdjson.h>
 
 namespace ScorchEngine {
@@ -16,8 +18,8 @@ namespace ScorchEngine {
 	const uint32_t SURFACE_MATERIAL_TEXTURE_MASK_BIT = 0x80;
 	const uint32_t SURFACE_MATERIAL_TEXTURE_OPACITY_BIT = 0x100;
 	struct SurfaceMaterialBufferInfo {
-		alignas(16)glm::vec3 diffuse;
-		alignas(16)glm::vec3 emission;
+		glm::vec4 diffuse;
+		glm::vec4 emission;
 		float specular;
 		float roughness;
 		float metallic;
@@ -39,18 +41,17 @@ namespace ScorchEngine {
 		);
 		paramBuffer->map();
 
-		descriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
-			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_FRAGMENT_BIT) // params
-			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // diffuse
-			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // emissive
-			.addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // normal
-			.addBinding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // specular
-			.addBinding(5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // roughness
-			.addBinding(6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // metallic
-			.addBinding(7, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // ambientOcclusion
-			.addBinding(8, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // (discard) mask
-			.build();
-		writeDescriptor();
+		SEDescriptorWriter::SEDescriptorWriter(*MaterialSystem::getMaterialDescriptorSetLayout(), seDescriptorPool)
+			.writeBuffer(0, &paramBuffer->getDescriptorInfo())
+			.writeImage(1, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(2, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(3, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(4, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(5, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(6, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(7, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(8, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.build(descriptorSet);
 	}
 	SESurfaceMaterial::~SESurfaceMaterial() {
 
@@ -70,6 +71,7 @@ namespace ScorchEngine {
 			this->shadingModel = SESurfaceShadingModel::ClearCoat;
 
 		this->doubleSided = material["doubleSided"].get_bool().value();
+		this->translucent = material["translucent"].get_bool().value();
 		
 		const auto& config = material["config"];
 		if (config["diffuseFactor"].error() == simdjson::error_code::SUCCESS)
@@ -129,12 +131,12 @@ namespace ScorchEngine {
 }
 	*/
 	}
-	void SESurfaceMaterial::bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t setOffset) {
+	void SESurfaceMaterial::bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t descriptorOffset) {
 		vkCmdBindDescriptorSets(
 			commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			pipelineLayout,
-			setOffset,
+			descriptorOffset,
 			1,
 			&descriptorSet,
 			0,
@@ -143,8 +145,8 @@ namespace ScorchEngine {
 	}
 	void SESurfaceMaterial::updateParams() {
 		SurfaceMaterialBufferInfo bufferInfo{};
-		bufferInfo.diffuse = this->diffuseFactor;
-		bufferInfo.emission = this->emissiveFactor;
+		bufferInfo.diffuse = { this->diffuseFactor, 0 };
+		bufferInfo.emission = { this->emissiveFactor, 0 };
 		bufferInfo.specular = this->specularFactor;
 		bufferInfo.roughness = this->roughnessFactor;
 		bufferInfo.metallic = this->metallicFactor;
@@ -154,7 +156,19 @@ namespace ScorchEngine {
 		bufferInfo.uvScale = this->uvScale;
 		bufferInfo.shadingModelFlag = static_cast<uint32_t>(this->shadingModel);
 
-		paramBuffer->writeToBuffer(&bufferInfo);
+		uint32_t textureFlags = 0;
+		if (diffuseTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_DIFFUSE_BIT;
+		if (emissiveTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_EMISSIVE_BIT;
+		if (normalTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_NORMAL_BIT;
+		if (specularTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_SPECULAR_BIT;
+		if (roughnessTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_ROUGHNESS_BIT;
+		if (metallicTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_METALLIC_BIT;
+		if (ambientOcclusionTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_AMBIENTOCCLUSION_BIT;
+		if (maskTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_MASK_BIT;
+		bufferInfo.textureFlags = textureFlags;
+
+		paramBuffer->writeToBuffer(&bufferInfo, sizeof(SurfaceMaterialBufferInfo));
+		paramBuffer->flush();
 	}
 	void SESurfaceMaterial::updateTextures() {
 		uint32_t textureFlags = 0;
@@ -168,13 +182,35 @@ namespace ScorchEngine {
 		if (ambientOcclusionTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_AMBIENTOCCLUSION_BIT;
 		if (maskTexture) textureFlags |= SURFACE_MATERIAL_TEXTURE_MASK_BIT;
 
-		paramBuffer->writeToBuffer(&textureFlags, offsetof(SurfaceMaterialBufferInfo, textureFlags), sizeof(textureFlags));
-	
+		SurfaceMaterialBufferInfo bufferInfo{};
+		bufferInfo.diffuse = { this->diffuseFactor, 0 };
+		bufferInfo.emission = { this->emissiveFactor, 0 };
+		bufferInfo.specular = this->specularFactor;
+		bufferInfo.roughness = this->roughnessFactor;
+		bufferInfo.metallic = this->metallicFactor;
+		bufferInfo.ambientOcclusion = this->ambientOcclusionFactor;
+
+		bufferInfo.uvOffset = this->uvOffset;
+		bufferInfo.uvScale = this->uvScale;
+		bufferInfo.shadingModelFlag = static_cast<uint32_t>(this->shadingModel);
+		bufferInfo.textureFlags = textureFlags;
+
+		paramBuffer->writeToBuffer(&bufferInfo);
+		paramBuffer->flush();
+
 		writeDescriptor();
 	}
 	void SESurfaceMaterial::writeDescriptor() {
-		auto writer = SEDescriptorWriter::SEDescriptorWriter(*descriptorLayout, seDescriptorPool)
-			.writeBuffer(0, &paramBuffer->getDescriptorInfo());
+		auto writer = SEDescriptorWriter::SEDescriptorWriter(*MaterialSystem::getMaterialDescriptorSetLayout(), seDescriptorPool)
+			.writeBuffer(0, &paramBuffer->getDescriptorInfo())
+			.writeImage(1, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(2, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(3, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(4, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(5, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(6, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(7, &resourceSystem->getMissingTexture2D()->getImageInfo())
+			.writeImage(8, &resourceSystem->getMissingTexture2D()->getImageInfo());
 
 		if (diffuseTexture) writer.writeImage(1, &resourceSystem->getTexture2D({diffuseTexture, true, true})->getImageInfo());
 		if (emissiveTexture) writer.writeImage(2, &resourceSystem->getTexture2D({ emissiveTexture, true, true })->getImageInfo());

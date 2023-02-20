@@ -4,11 +4,6 @@
 #include <scorch/systems/resource_system.h>
 
 namespace ScorchEngine {
-	struct ModelMatrixPush {
-		glm::mat4 transform;
-		glm::mat3 normal;
-	};
-
 	ForwardRenderSystem::ForwardRenderSystem(
 		SEDevice& device, 
 		glm::vec2 size,
@@ -52,7 +47,7 @@ namespace ScorchEngine {
 		vkCmdBindDescriptorSets(
 			frameInfo.commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			opaquePipelineLayout->getPipelineLayout(),
+			earlyDepthPipelineLayout->getPipelineLayout(),
 			0,
 			1,
 			&frameInfo.globalUBO,
@@ -60,7 +55,7 @@ namespace ScorchEngine {
 			nullptr
 		);
 		
-		iterateOpaqueObjects(frameInfo);
+		renderMeshes(frameInfo, push, earlyDepthPipelineLayout->getPipelineLayout(), 1, false, true);
 
 		earlyDepthRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
@@ -82,21 +77,7 @@ namespace ScorchEngine {
 			nullptr
 		);
 
-		iterateOpaqueObjects(frameInfo);		
-	}
-
-	void ForwardRenderSystem::iterateOpaqueObjects(FrameInfo& frameInfo) {
-		frameInfo.level->getRegistry().view<Components::TransformComponent, Components::MeshComponent>().each(
-			[&](auto& transform, auto& mesh) {
-				SEModel* model = frameInfo.resourceSystem->getModel(mesh.mesh);
-				ModelMatrixPush mpush{};
-				mpush.transform = transform.getTransformMatrix();
-				mpush.normal = transform.getNormalMatrix();
-				push.push(frameInfo.commandBuffer, opaquePipelineLayout->getPipelineLayout(), &mpush);
-				model->bind(frameInfo.commandBuffer);
-				model->draw(frameInfo.commandBuffer);
-			}
-		);
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 2, false, true);
 	}
 
 	void ForwardRenderSystem::beginOpaquePass(FrameInfo& frameInfo) {
@@ -198,7 +179,8 @@ namespace ScorchEngine {
 	void ForwardRenderSystem::createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) {
 		push = SEPushConstant(sizeof(ModelMatrixPush), VK_SHADER_STAGE_VERTEX_BIT);
 
-		earlyDepthPipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, { uboLayout });
+		earlyDepthPipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, 
+			{ uboLayout, MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout() });
 
 		SEGraphicsPipelineConfigInfo earlyDepthPipelineConfigInfo{};
 		earlyDepthPipelineConfigInfo.enableVertexDescriptions();
@@ -211,7 +193,8 @@ namespace ScorchEngine {
 			earlyDepthPipelineConfigInfo
 		);
 
-		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, { uboLayout, ssboLayout });
+		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, 
+			{ uboLayout, ssboLayout, MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout() });
 
 		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
 		pipelineConfigInfo.enableVertexDescriptions();

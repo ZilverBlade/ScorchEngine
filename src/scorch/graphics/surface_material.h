@@ -25,7 +25,7 @@ namespace ScorchEngine {
 		SESurfaceMaterial operator=(const SESurfaceMaterial&) = delete;
 
 		void load(const std::string& filepath);
-		void bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t setOffset);
+		void bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t descriptorOffset);
 		void updateParams();
 		void updateTextures();
 
@@ -54,6 +54,7 @@ namespace ScorchEngine {
 		glm::vec2 uvOffset{ 0.f };
 
 		bool doubleSided = false;
+		bool translucent = false;
 	private:
 		void writeDescriptor();
 
@@ -61,7 +62,7 @@ namespace ScorchEngine {
 		SEDescriptorPool& seDescriptorPool;
 
 		std::unique_ptr<SEBuffer> paramBuffer{};
-		std::unique_ptr<SEDescriptorSetLayout> descriptorLayout{};
+
 		VkDescriptorSet descriptorSet{};
 		ResourceSystem* resourceSystem;
 	};

@@ -11,7 +11,14 @@
 #include <scorch/vkapi/pipeline_layout.h>
 #include <scorch/vkapi/push_constant.h>
 
+#include <scorch/systems/material_system.h>
+
 namespace ScorchEngine {
+	struct ModelMatrixPush {
+		glm::mat4 transform;
+		glm::mat3 normal;
+	};
+
 	class RenderSystem {
 	public:
 		RenderSystem(SEDevice& device, glm::vec2 size, VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout);
@@ -57,6 +64,8 @@ namespace ScorchEngine {
 		SERenderPass* getCompositionRenderPass() { return nullptr; }
 
 	protected:
+		void renderMeshes(FrameInfo& frameInfo, SEPushConstant push, VkPipelineLayout pipelineLayout, uint32_t descriptorOffset, bool translucent, bool doubleSided);
+
 		virtual void getColorAttachment(SEFrameBufferAttachment** out) {}
 		virtual void getDepthAttachment(SEFrameBufferAttachment** out) {}
 		virtual void getOpaqueRenderPass(SERenderPass** out) {}
@@ -69,6 +78,7 @@ namespace ScorchEngine {
 		virtual void createFrameBuffers() {}
 		virtual void createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) {}
 
+		//std::unique_ptr<MaterialSystem> materialSystem;
 		SEDevice& seDevice;
 	};
 }

@@ -123,6 +123,7 @@
     <ClInclude Include="src\scorch\renderer\frame_info.h" />
     <ClInclude Include="src\scorch\renderer\global_ubo.h" />
     <ClInclude Include="src\scorch\renderer\scene_ssbo.h" />
+    <ClInclude Include="src\scorch\systems\material_system.h" />
     <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_base.h" />
     <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.h" />
     <ClInclude Include="src\scorch\systems\post_fx\post_processing_fx.h" />

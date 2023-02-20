@@ -42,68 +42,97 @@ namespace ScorchEngine {
 	}
 	void SEModel::Builder::loadSubmesh(aiMesh* mesh, const aiScene* scene) {
 		float factor{ 1.0f };
+		const uint32_t index = mesh->mMaterialIndex;
+		const aiMaterial* material = scene->mMaterials[index];
+		std::string materialSlot = material->GetName().C_Str();
 		if (this->format == "fbx") factor *= 0.01f; // fbx unit is in cm for some reason
+		if (this->format == "gltf") materialSlot = "material_" + std::to_string(index); // cant reliably get material slot name with gltf
+
+		if (submeshes.find(materialSlot) == submeshes.end()) {
+			submeshes[materialSlot] = {};
+		}
+		Builder::Submesh& submesh = submeshes[materialSlot];
 
 		for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
-			vertexPositions.push_back({
+			submesh.vertexPositions.push_back({
 				factor * mesh->mVertices[i].x,
 				factor * mesh->mVertices[i].z,
 				factor * mesh->mVertices[i].y
 			});
-			vertexUVs.push_back({
+			submesh.vertexUVs.push_back({
 				mesh->mTextureCoords[0][i].x,
 				mesh->mTextureCoords[0][i].y
 			});
-			vertexNormals.push_back({
+			submesh.vertexNormals.push_back({
 				mesh->mNormals[i].x,
 				mesh->mNormals[i].z,
 				mesh->mNormals[i].y
 			});
-			vertexTangents.push_back({
+			submesh.vertexTangents.push_back({
 				mesh->mNormals[i].x,
 				mesh->mNormals[i].z,
 				mesh->mNormals[i].y
 			});
 		}
 
-		indices.reserve(mesh->mNumFaces * 3u);
+		submesh.indices.reserve(mesh->mNumFaces * 3u);
 		for (uint32_t i = 0; i < mesh->mNumFaces; i++) {
 			aiFace face = mesh->mFaces[i];
 			for (uint32_t j = 0; j < face.mNumIndices; j++)
-				indices.push_back(face.mIndices[j]);
+				submesh.indices.push_back(face.mIndices[j]);
 		}
 	}
 	
 	SEModel::SEModel(SEDevice& device, const SEModel::Builder& builder) : seDevice(device) {
-		vertexPositionBuffer = createBuffer(builder.vertexPositions);
-		vertexUVBuffer = createBuffer(builder.vertexUVs);
-		vertexNormalBuffer = createBuffer(builder.vertexNormals);
-		vertexTangentsBuffer = createBuffer(builder.vertexTangents);
-		indexBuffer = createBuffer(builder.indices);
+		for (const auto& [slot, data] : builder.submeshes) {
+			submeshes[slot] = {};
+			Submesh& submesh = submeshes[slot];
 
-		vertexCount = vertexPositionBuffer->getInstanceCount();
-		indexCount = indexBuffer->getInstanceCount();
+			submesh.vertexPositionBuffer = createBuffer(data.vertexPositions);
+			submesh.vertexUVBuffer = createBuffer(data.vertexUVs);
+			submesh.vertexNormalBuffer = createBuffer(data.vertexNormals);
+			submesh.vertexTangentsBuffer = createBuffer(data.vertexTangents);
+			submesh.indexBuffer = createBuffer(data.indices);
+
+			submesh.vertexCount = submesh.vertexPositionBuffer->getInstanceCount();
+			submesh.indexCount = submesh.indexBuffer->getInstanceCount();
+		}
 	}
 	SEModel::~SEModel() {
 		
 	}
 
-	void SEModel::bind(VkCommandBuffer commandBuffer) {
+	void SEModel::bind(VkCommandBuffer commandBuffer, const std::string& submeshName) {
+		auto iter = submeshes.find(submeshName);
+		if (iter == submeshes.end()) {
+			throw std::runtime_error("submesh '" + submeshName + "'not found!");
+		}
+		boundSubmesh = submeshName;
+		Submesh& submesh = (*iter).second;
+
 		VkBuffer vertexBuffers[4]{
-			vertexPositionBuffer->getBuffer(),
-			vertexUVBuffer->getBuffer(),
-			vertexNormalBuffer->getBuffer(),
-			vertexTangentsBuffer->getBuffer()
+			submesh.vertexPositionBuffer->getBuffer(),
+			submesh.vertexUVBuffer->getBuffer(),
+			submesh.vertexNormalBuffer->getBuffer(),
+			submesh.vertexTangentsBuffer->getBuffer()
 		};
 		VkDeviceSize offsets[4]{
 			0,0,0,0
 		};
 		vkCmdBindVertexBuffers(commandBuffer, 0, 4, vertexBuffers, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);	
+		vkCmdBindIndexBuffer(commandBuffer, submesh.indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 	}
 
 	void SEModel::draw(VkCommandBuffer commandBuffer) {
-		vkCmdDrawIndexed(commandBuffer, indexCount, 1, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, submeshes[boundSubmesh].indexCount, 1, 0, 0, 0);
+	}
+
+	std::vector<std::string> SEModel::getSubmeshes() {
+		std::vector<std::string> strings;
+		for (const auto& [slot, submesh] : submeshes) {
+			strings.push_back(slot);
+		}
+		return strings;
 	}
 
 	template<typename T>

@@ -8,6 +8,7 @@ namespace ScorchEngine {
 			MeshComponent() = default;
 			MeshComponent(const MeshComponent&) = default;
 			ResourceID mesh{};
+			std::unordered_map<std::string, ResourceID> materials; // kv = mapTo, ResourceID = surface material 
 		};
 	}
 }

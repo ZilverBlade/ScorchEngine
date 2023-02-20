@@ -1,0 +1,15 @@
+{
+	"name": "BlankMaterial",
+	"class": "surface",
+	"model": "lit",
+	"config": {
+		"diffuseFactor": [ 1, 1, 1 ],
+		"specularFactor": 1.0,
+		"roughnessFactor": 0.5,
+		"metallicFactor": 0.0
+	},
+	"uvScale": [ 1.0, 1.0 ],
+	"uvOffset": [ 0, 0 ],
+	"translucent": false,
+	"doubleSided": true
+}

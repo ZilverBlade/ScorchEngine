@@ -20,15 +20,28 @@ namespace ScorchEngine::Apps {
 	}
 	void LightingTest::run() {
 		glm::vec2 resolution = { 1280, 720 };
-		ResourceSystem* resourceSystem = new ResourceSystem(seDevice);
+		ResourceSystem* resourceSystem = new ResourceSystem(seDevice, *staticPool);
+		MaterialSystem::createDescriptorSetLayout(seDevice);
 
-		SESurfaceMaterial* exampleMaterial = new SESurfaceMaterial(seDevice, *staticPool, resourceSystem);
-		exampleMaterial->load("res/POC/example_material.json");
-
+		ResourceID missingMaterial = resourceSystem->loadSurfaceMaterial("res/materials/missing_material.json");
+		ResourceID blankMaterial = resourceSystem->loadSurfaceMaterial("res/materials/blank.json");
 
 		level = std::make_shared<Level>();
-		Actor actor = level->createActor("mesh");
-		actor.addComponent<Components::MeshComponent>().mesh = resourceSystem->loadModel("res/models/cube.fbx");
+		Actor floorActor = level->createActor("floor");
+		auto& msc = floorActor.addComponent<Components::MeshComponent>();
+		msc.mesh = resourceSystem->loadModel("res/models/cube.fbx");
+		for (const std::string& mapto : resourceSystem->getModel(msc.mesh)->getSubmeshes()) {
+			msc.materials[mapto] = blankMaterial;
+		}
+		floorActor.getTransform().scale = { 20.f, 20.f, 1.0f };
+		Actor sphereActor = level->createActor("sphereActor");
+		auto& msc2 = sphereActor.addComponent<Components::MeshComponent>();
+		msc2.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
+		for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
+			msc2.materials[mapto] = missingMaterial;
+		}
+		sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
+
 		Actor cameraActor = level->createActor("camera actor");
 
 		Actor lightActor = level->createActor("sun");
@@ -65,7 +78,7 @@ namespace ScorchEngine::Apps {
 
 		Controllers::CameraController controller{};
 
-
+		float incrementTime = 0;
 		auto oldTime = std::chrono::high_resolution_clock::now();
 		while (!seWindow.shouldClose()) {
 			auto newTime = std::chrono::high_resolution_clock::now();
@@ -80,6 +93,10 @@ namespace ScorchEngine::Apps {
 
 			camera.setViewYXZ(cameraActor.getTransform().translation, cameraActor.getTransform().rotation);
 			camera.setPerspectiveProjection(70.0f, seSwapChain->extentAspectRatio(), 0.01f, 128.f);
+
+			incrementTime += frameTime * 1.0;
+			resourceSystem->getSurfaceMaterial(missingMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
+			resourceSystem->getSurfaceMaterial(missingMaterial)->updateParams();
 
 			uint32_t frameIndex = seSwapChain->getImageIndex();
 			if (VkResult result = seSwapChain->acquireNextImage(&frameIndex); result == VK_SUCCESS) {
@@ -143,6 +160,7 @@ namespace ScorchEngine::Apps {
 		}
 		vkDeviceWaitIdle(seDevice.getDevice());
 
+		MaterialSystem::destroyDescriptorSetLayout();
 		delete renderSystem;
 		delete screenCorrection;
 

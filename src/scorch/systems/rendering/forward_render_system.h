@@ -26,7 +26,6 @@ namespace ScorchEngine {
 		}
 
 
-		void iterateOpaqueObjects(FrameInfo& frameInfo);
 		virtual void init(glm::vec2 size) override;
 		virtual void destroy() override;
 

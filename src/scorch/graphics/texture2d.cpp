@@ -85,9 +85,9 @@ namespace ScorchEngine {
 		);
 		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
+		seDevice.endSingleTimeCommands(commandBuffer);
+
 		vkDestroyBuffer(seDevice.getDevice(), stagingBuffer, nullptr);
 		vkFreeMemory(seDevice.getDevice(), stagingBufferMemory, nullptr);
-
-		seDevice.endSingleTimeCommands(commandBuffer);
 	}
 }

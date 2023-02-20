@@ -18,7 +18,7 @@ namespace ScorchEngine::Apps {
 	}
 	void ModelTest::run() {
 		glm::vec2 resolution = { 1280, 720 };
-		ResourceSystem* resourceSystem = new ResourceSystem(seDevice);
+		ResourceSystem* resourceSystem = new ResourceSystem(seDevice, *staticPool);
 
 		level = std::make_shared<Level>();
 		Actor actor = level->createActor("mesh");
@@ -43,7 +43,7 @@ namespace ScorchEngine::Apps {
 
 		SECamera camera{};
 		camera.setPerspectiveProjection(70.0f, 1.0f, 0.1f, 32.f);
-		camera.setViewYXZ({ 0.f, -1.f, 0.0f }, {});
+		cameraActor.getTransform().translation = { 0.f, -1.f, 0.f };
 
 		std::vector<std::unique_ptr<SECommandBuffer>> commandBuffers{};
 		commandBuffers.resize(seSwapChain->getImageCount());

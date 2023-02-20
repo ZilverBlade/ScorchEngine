@@ -48,7 +48,7 @@ namespace ScorchEngine {
 		}
 	}
 	
-	void SEBuffer::writeToBuffer(const void* data, VkDeviceSize offset, VkDeviceSize size) {
+	void SEBuffer::writeToBuffer(const void* data, VkDeviceSize size, VkDeviceSize offset) {
 		assert(mapped && "Cannot copy to unmapped buffer");
 	
 		char* memOffset = (char*)mapped;

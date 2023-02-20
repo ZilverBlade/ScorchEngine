@@ -4,6 +4,8 @@
 #include <scorch/utils/resid.h>
 #include <scorch/graphics/model.h>
 #include <scorch/graphics/texture2d.h>
+#include <scorch/graphics/surface_material.h>
+
 namespace ScorchEngine {
 	struct TextureResourceIDAttributes {
 		ResourceID id{};
@@ -26,16 +28,32 @@ namespace std {
 namespace ScorchEngine {
 	class ResourceSystem {
 	public:
-		ResourceSystem(SEDevice& device);
+		ResourceSystem(SEDevice& device, SEDescriptorPool& descriptorPool);
 		~ResourceSystem();
+
+		ResourceSystem(const ResourceSystem&) = delete;
+		ResourceSystem& operator=(const ResourceSystem&) = delete;
+
 		ResourceID loadModel(std::string path);
 		SEModel* getModel(ResourceID id);
 
 		TextureResourceIDAttributes loadTexture2D(std::string path, bool srgb, bool linearSampler);
 		SETexture2D* getTexture2D(TextureResourceIDAttributes id);
+
+		ResourceID loadSurfaceMaterial(std::string path);
+		SESurfaceMaterial* getSurfaceMaterial(ResourceID id);
+
+		SETexture2D* getMissingTexture2D() {
+			return special_MissingTexture2D;
+		}
 	private:
 		SEDevice& seDevice;
+		SEDescriptorPool& seDescriptorPool;
+
 		std::unordered_map<ResourceID, SEModel*> modelAssets;
 		std::unordered_map<TextureResourceIDAttributes, SETexture2D*> texture2DAssets;
+		std::unordered_map<ResourceID, SESurfaceMaterial*> surfaceMaterialAssets;
+
+		SETexture2D* special_MissingTexture2D;
 	};
 }

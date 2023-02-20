@@ -1,13 +1,19 @@
 #include "resource_system.h"
 
 namespace ScorchEngine {
-	ResourceSystem::ResourceSystem(SEDevice& device) : seDevice(device) {
+	ResourceSystem::ResourceSystem(SEDevice& device, SEDescriptorPool& descriptorPool) : seDevice(device), seDescriptorPool(descriptorPool) {
+		special_MissingTexture2D = getTexture2D(loadTexture2D("res/textures/missing.png", false, false));
 	}
 	ResourceSystem::~ResourceSystem() {
 		for (auto& [id, model] : modelAssets) {
 			delete model;
 		}
-		modelAssets.clear();
+		for (auto& [id, texture] : texture2DAssets) {
+			delete texture;
+		}
+		for (auto& [id, material] : surfaceMaterialAssets) {
+			delete material;
+		}
 	}
 	ResourceID ResourceSystem::loadModel(std::string path) {
 		ResourceID id = ResourceID(path);
@@ -17,7 +23,12 @@ namespace ScorchEngine {
 		return id;
 	}
 	SEModel* ResourceSystem::getModel(ResourceID id) {
-		return modelAssets[id];
+		auto iter = modelAssets.find(id);
+		if (iter == modelAssets.end()) {
+			throw std::runtime_error("model '" + id.getAsset() + "'not found");
+		} else {
+			return (*iter).second;
+		}
 	}
 	TextureResourceIDAttributes ResourceSystem::loadTexture2D(std::string path, bool srgb, bool linearSampler) {
 		ResourceID id = ResourceID(path);
@@ -34,9 +45,29 @@ namespace ScorchEngine {
 		return attribid;
 	}
 	SETexture2D* ResourceSystem::getTexture2D(TextureResourceIDAttributes id) {
-		if (texture2DAssets.find(id) == texture2DAssets.end()) {
+		auto iter = texture2DAssets.find(id);
+		if (iter == texture2DAssets.end()) {
 			loadTexture2D(id.id.getAsset(), id.srgb, id.linearSampler);
+			return texture2DAssets[id];
+		} else {
+			return (*iter).second;
 		}
-		return texture2DAssets[id];
+	}
+	ResourceID ResourceSystem::loadSurfaceMaterial(std::string path) {
+		ResourceID id = ResourceID(path);
+		SESurfaceMaterial* material = new SESurfaceMaterial(seDevice, seDescriptorPool, this);
+		material->load(path);
+		material->updateParams();
+		material->updateTextures();
+		surfaceMaterialAssets[id] = material;
+		return id;
+	}
+	SESurfaceMaterial* ResourceSystem::getSurfaceMaterial(ResourceID id) {
+		auto iter = surfaceMaterialAssets.find(id);
+		if (iter == surfaceMaterialAssets.end()) {
+			throw std::runtime_error("surface material '" + id.getAsset() + "'not found");
+		} else {
+			return (*iter).second;
+		}
 	}
 }

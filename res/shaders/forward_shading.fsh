@@ -20,7 +20,7 @@ void main() {
 		}
 	}
 
-	vec3 emission = surfaceMaterialParams.emission;
+	vec3 emission = surfaceMaterialParams.emission.rgb;
 	if (sfHasEmissiveTexture()){
 		emission = texture(sfMaskTexture, uv).rgb;
 	}
@@ -35,9 +35,9 @@ void main() {
 			mat3 TBN = mat3(T, cross(N, T), N);
 			sampleNormalMap(texture(sfNormalTexture, uv).xyz, TBN);
 		} else {
-			fragment.normal = N
+			fragment.normal = N;
 		}
-		fragment.diffuse = surfaceMaterialParams.diffuse;
+		fragment.diffuse = surfaceMaterialParams.diffuse.rgb;
 		if (sfHasDiffuseTexture()) {
 			fragment.diffuse *= texture(sfDiffuseTexture, uv).rgb;
 		} 
@@ -61,7 +61,7 @@ void main() {
 		vec3 lighting = pbrCalculateLighting(fragment);
 		outColor = vec4(lighting + emission, 1.0);
 	} 
-	else if (sfShadingModelUnlit) {
+	else if (sfShadingModelUnlit()) {
 		outColor = vec4(emission, 1.0);
 	}
 }
