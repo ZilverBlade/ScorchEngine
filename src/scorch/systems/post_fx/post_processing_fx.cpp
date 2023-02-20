@@ -84,7 +84,7 @@ namespace ScorchEngine {
 		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{
 			ppfxSceneDescriptorLayout->getDescriptorSetLayout()
 		};
-		ppfxPush = SEPushConstant(128, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+		ppfxPush = SEPushConstant(128, VK_SHADER_STAGE_FRAGMENT_BIT);
 		std::vector<VkPushConstantRange> pushConstantRanges{
 			ppfxPush.getRange()
 		};
@@ -93,7 +93,7 @@ namespace ScorchEngine {
 
 	void SEPostProcessingEffect::createPipeline(const SEShader& fragmentShader) {
 		SEGraphicsPipelineConfigInfo pipelineConfig{};
-		//pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
+		pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
 		pipelineConfig.disableDepthTest();
 
 		pipelineConfig.pipelineLayout = ppfxPipelineLayout->getPipelineLayout();

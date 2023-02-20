@@ -48,12 +48,12 @@ float F_Schlick(float F0, float dv){
 
 float D_beckmann(PrivatePBRData pbrData) {
     float NdH2 = pbrData.NdH * pbrData.NdH;
-    return exp((NdH2 - 1.0) / max(pbrData.m2 * NdH2, 1e-7)) / max(PI * pbrData.m2 * NdH2 * NdH2, 1e-7);
+    return exp((NdH2 - 1.0) / max(pbrData.m2 * NdH2, 1e-6)) / max(PI * pbrData.m2 * NdH2 * NdH2, 1e-6);
 }
 
 float D_GGX(PrivatePBRData pbrData) {
     float d = (pbrData.NdH * pbrData.m2 - pbrData.NdH) * pbrData.NdH + 1.0;
-    return pbrData.m2 / max(PI * d * d, 1e-7);
+    return pbrData.m2 / max(PI * d * d, 1e-6);
 }
 float Vis_Schlick(PrivatePBRData pbrData) {
     float x = (pbrData.m + 1.0);
@@ -61,10 +61,10 @@ float Vis_Schlick(PrivatePBRData pbrData) {
 	
 	float Vis_SchlickV = pbrData.NdV * (1.0 - k) + k;
 	float Vis_SchlickL = pbrData.NdL * (1.0 - k) + k;
-	return 0.25 / ( Vis_SchlickV * Vis_SchlickL );
+	return 0.25 / max(Vis_SchlickV * Vis_SchlickL, 1e-6);
 }
                    
-vec3 pbrSchlickBeckmannBRDF(PrivatePBRData pbrData, FragmentPBRData fragData, PrivateLightingData lightingData) {
+vec3 pbrSchlickBeckmannBRDF(PrivatePBRData pbrData, PrivateLightingData lightingData) {
 	float F = F_Schlick(pbrData.F0, pbrData.HdL);
     float V = Vis_Schlick(pbrData);
     float D = D_beckmann(pbrData);
@@ -73,8 +73,8 @@ vec3 pbrSchlickBeckmannBRDF(PrivatePBRData pbrData, FragmentPBRData fragData, Pr
     return brdfResult * lightingData.radiance;
 }
 
-vec3 pbrLambertDiffuseBRDF(PrivatePBRData pbrData, FragmentPBRData fragData, PrivateLightingData lightingData) {
-    return (1.0 / PI) * lightingData.radiance;
+vec3 pbrLambertDiffuseBRDF(PrivatePBRData pbrData, PrivateLightingData lightingData) {
+    return (1.0 / PI) * lightingData.radiance * pbrData.NdL;
 }
 
 vec3 pbrCalculateLighting(FragmentPBRData fragment) {
@@ -93,50 +93,47 @@ vec3 pbrCalculateLighting(FragmentPBRData fragment) {
 	
 	pbrDataBase.V = V; 
 	pbrDataBase.N = N; 
+	pbrDataBase.NdV = max(dot(N, V), 0.0);
 	
 	vec3 diffuse = vec3(0.0);
 	vec3 specular = vec3(0.0);
 	
-	//for (uint i = 0; i < scene.pointLightCount; i++) {
-	//	vec3 L = scene.pointLights[i].position - fragment.position;
-	//	float attenuation = 1.0 / dot(L, L);
-	//	
-	//	vec3 radiance = attenuation * scene.pointLights[i].color.rgb * scene.pointLights[i].color.a;
-	//	
-	//	vec3 H = normalize(V + L);
-	//	
-	//	PrivatePBRData pbrData = pbrDataBase;
-	//	pbrData.NdL = max(dot(N, L), 0.0);
-	//	pbrData.NdV = max(dot(N, V), 0.0);
-	//	pbrData.NdH = max(dot(N, H), 0.0);
-	//	pbrData.VdH = max(dot(V, H), 0.0);
-	//	
-	//	PrivateLightingData lightingData;
-	//	lightingData.radiance = radiance;
-	//	lightingData.fresnel = F_Schlick(F0, pbrData);
-	//	
-	//	diffuse += pbrShadeDiffuse(pbrData, fragment, lightingData);
-	//	specular += pbrShadeSpecular(pbrData, fragment, lightingData);
-	//}
-	
-	for (uint i = 0; i < scene.directionalLightCount; i++) {
-		float intensity = max(dot(fragment.normal, scene.directionalLights[i].direction), 0.0);
-		vec3 radiance = scene.directionalLights[i].color.rgb * scene.directionalLights[i].color.a;
-		vec3 L = scene.directionalLights[i].direction;
+	for (uint i = 0; i < scene.pointLightCount; i++) {
+		vec3 fragToLight = scene.pointLights[i].position - fragment.position;
+		vec3 L = normalize(fragToLight);
+		float attenuation = 1.0 / dot(L, L);
+		vec3 radiance = attenuation * scene.pointLights[i].color.rgb * scene.pointLights[i].color.a;	
 		vec3 H = normalize(V + L);
 		
 		PrivatePBRData pbrData = pbrDataBase;
 		pbrData.HdL = max(dot(H, L), 0.0);
 		pbrData.NdL = max(dot(N, L), 0.0);
-		pbrData.NdV = max(dot(N, V), 0.0);
 		pbrData.NdH = max(dot(N, H), 0.0);
 		pbrData.VdH = max(dot(V, H), 0.0);
 		
 		PrivateLightingData lightingData;
 		lightingData.radiance = radiance;
 		
-		diffuse += (1.0 - F_Schlick(F0, pbrData.NdL)) * (1.0 - F_Schlick(F0, pbrData.NdV)) * pbrLambertDiffuseBRDF(pbrData, fragment, lightingData) * intensity;
-		specular += pbrSchlickBeckmannBRDF(pbrData, fragment, lightingData);
+		diffuse += (1.0 - F_Schlick(F0, pbrData.NdL)) * (1.0 - F_Schlick(F0, pbrData.NdV)) * pbrLambertDiffuseBRDF(pbrData, lightingData);
+		specular += pbrSchlickBeckmannBRDF(pbrData, lightingData);
+	}
+	
+	for (uint i = 0; i < scene.directionalLightCount; i++) {
+		vec3 L = -scene.directionalLights[i].direction;
+		vec3 radiance = scene.directionalLights[i].color.rgb * scene.directionalLights[i].color.a;
+		vec3 H = normalize(V + L);
+		
+		PrivatePBRData pbrData = pbrDataBase;
+		pbrData.HdL = max(dot(H, L), 0.0);
+		pbrData.NdL = max(dot(N, L), 0.0);
+		pbrData.NdH = max(dot(N, H), 0.0);
+		pbrData.VdH = max(dot(V, H), 0.0);
+		
+		PrivateLightingData lightingData;
+		lightingData.radiance = radiance;
+		
+		diffuse += (1.0 - F_Schlick(F0, pbrData.NdL)) * (1.0 - F_Schlick(F0, pbrData.NdV)) * pbrLambertDiffuseBRDF(pbrData, lightingData);
+		specular += pbrSchlickBeckmannBRDF(pbrData, lightingData);
 	}
 	vec3 reflectedSpecular = mix(specular, specular * fragment.diffuse, fragment.metallic) * fragment.specular;
 	vec3 reflectedDiffuse = mix(diffuse * fragment.diffuse, vec3(0.0), fragment.metallic);

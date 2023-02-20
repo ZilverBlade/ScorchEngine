@@ -185,11 +185,12 @@ namespace ScorchEngine {
 		SEGraphicsPipelineConfigInfo earlyDepthPipelineConfigInfo{};
 		earlyDepthPipelineConfigInfo.enableVertexDescriptions();
 		earlyDepthPipelineConfigInfo.setSampleCount(sampleCount);
+		//earlyDepthPipelineConfigInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
 		earlyDepthPipelineConfigInfo.renderPass = earlyDepthRenderPass->getRenderPass();
 		earlyDepthPipelineConfigInfo.pipelineLayout = earlyDepthPipelineLayout->getPipelineLayout();
 		earlyDepthPipeline = new SEGraphicsPipeline(
 			seDevice,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/depth.fsh.spv") },
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/depth.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/depth.fsh.spv") },
 			earlyDepthPipelineConfigInfo
 		);
 
@@ -199,6 +200,7 @@ namespace ScorchEngine {
 		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
 		pipelineConfigInfo.enableVertexDescriptions();
 		pipelineConfigInfo.setSampleCount(sampleCount);
+		//pipelineConfigInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
 		pipelineConfigInfo.disableDepthWrite(); // early depth pass already takes care of depth writing
 		pipelineConfigInfo.renderPass = opaqueRenderPass->getRenderPass();
 		pipelineConfigInfo.pipelineLayout = opaquePipelineLayout->getPipelineLayout();

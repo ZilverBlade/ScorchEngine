@@ -5,7 +5,7 @@
 	"config": {
 		"diffuseFactor": [ 1, 1, 1 ],
 		"specularFactor": 1.0,
-		"roughnessFactor": 0.5,
+		"roughnessFactor": 0.8,
 		"metallicFactor": 0.0
 	},
 	"uvScale": [ 1.0, 1.0 ],

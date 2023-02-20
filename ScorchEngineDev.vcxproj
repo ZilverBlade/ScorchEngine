@@ -112,6 +112,7 @@
     <ClInclude Include="src\scorch\ecs\components\directional_light_component.h" />
     <ClInclude Include="src\scorch\ecs\components\id_component.h" />
     <ClInclude Include="src\scorch\ecs\components\mesh_component.h" />
+    <ClInclude Include="src\scorch\ecs\components\point_light_component.h" />
     <ClInclude Include="src\scorch\ecs\components\transform_component.h" />
     <ClInclude Include="src\scorch\ecs\level.h" />
     <ClInclude Include="src\scorch\graphics\model.h" />

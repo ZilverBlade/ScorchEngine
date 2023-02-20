@@ -78,6 +78,9 @@
     <ClInclude Include="src\scorch\ecs\components\mesh_component.h">
       <Filter>ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\ecs\components\point_light_component.h">
+      <Filter>ecs\components</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\ecs\components\transform_component.h">
       <Filter>ecs\components</Filter>
     </ClInclude>

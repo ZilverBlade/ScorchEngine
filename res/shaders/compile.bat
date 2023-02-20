@@ -7,5 +7,6 @@ glslc.exe -O -fshader-stage=fragment screen_correct.fsh -o spirv/screen_correct.
 glslc.exe -O -fshader-stage=vertex model.vsh -o spirv/model.vsh.spv
 glslc.exe -O -fshader-stage=fragment forward_shading.fsh -o spirv/forward_shading.fsh.spv
 glslc.exe -O -fshader-stage=fragment depth.fsh -o spirv/depth.fsh.spv
+glslc.exe -O -fshader-stage=vertex depth.vsh -o spirv/depth.vsh.spv
 
 pause

@@ -61,6 +61,9 @@ namespace ScorchEngine {
 		simdjson::dom::parser parser;
 		simdjson::padded_string json = simdjson::padded_string::load(filepath);
 		const auto& material = parser.parse(json);
+		if (material.error() != simdjson::error_code::SUCCESS) {
+			throw std::runtime_error("simdjson parser error");
+		}
 		if (material["class"].get_string().value() != "surface") 
 			throw std::runtime_error("wrong material class typed loaded as surface material!");
 		if (material["model"].get_string().value() == "lit")

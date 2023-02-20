@@ -6,7 +6,7 @@
 		"diffuseFactor": [ 1, 1, 1 ],
 		"diffuseTexture": "res/textures/missing.png",
 		"specularFactor": 1.0,
-		"roughnessFactor": 0.1,
+		"roughnessFactor": 0.5,
 		"metallicFactor": 0.0
 	},
 	"uvScale": [ 2.0, 2.0 ],

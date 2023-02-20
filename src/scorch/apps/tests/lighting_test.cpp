@@ -43,12 +43,18 @@ namespace ScorchEngine::Apps {
 		sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
 
 		Actor cameraActor = level->createActor("camera actor");
-
-		Actor lightActor = level->createActor("sun");
-		lightActor.addComponent<Components::DirectionalLightComponent>();
-		lightActor.getTransform().rotation.x = 0.5f;
-		lightActor.getTransform().rotation.z = 0.25f;
-
+		cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
+		{
+			Actor lightActor = level->createActor("sun");
+			lightActor.addComponent<Components::DirectionalLightComponent>();
+			lightActor.getTransform().rotation.x = 0.5f;
+			lightActor.getTransform().rotation.z = 0.25f;
+		}
+		{
+			Actor lightActor = level->createActor("point light");
+			lightActor.addComponent<Components::PointLightComponent>().emission = {1.0, 0.0, 0.0};
+			lightActor.getTransform().translation = { 1.0, 1.0, 3.0f};
+		}
 		RenderSystem* renderSystem = new ForwardRenderSystem(
 			seDevice, 
 			resolution, 
@@ -68,7 +74,6 @@ namespace ScorchEngine::Apps {
 
 		SECamera camera{};
 		camera.setPerspectiveProjection(70.0f, 1.0f, 0.1f, 32.f);
-		camera.setViewYXZ({ 0.f, -1.f, 0.0f }, {});
 
 		std::vector<std::unique_ptr<SECommandBuffer>> commandBuffers{};
 		commandBuffers.resize(seSwapChain->getImageCount());
