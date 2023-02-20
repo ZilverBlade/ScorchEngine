@@ -3,7 +3,7 @@
 echo 1. vs2017
 echo 2. vs2019
 echo 3. vs2022
-echo 4. gmake
+echo 4. gmake (Makefile)
 
 set /p answer=Choose your preferred build system: 
 if %answer%==1 goto vs2017_opt

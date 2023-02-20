@@ -15,7 +15,9 @@ int main() {
 		app->run();
 	} catch(std::exception ex) {
 		SELOG_ERR("%s", ex.what());
+#ifdef _WIN32	
 		MessageBoxA(nullptr, ex.what(), "FATAL ENGINE ERROR", MB_OK | MB_ICONERROR);
+#endif
 		return EXIT_FAILURE;
 	}
 

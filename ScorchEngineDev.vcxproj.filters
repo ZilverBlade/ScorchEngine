@@ -90,6 +90,12 @@
     <ClInclude Include="src\scorch\graphics\surface_material.h">
       <Filter>graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\graphics\texture.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\graphics\texture2d.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\log.h" />
     <ClInclude Include="src\scorch\renderer\camera.h">
       <Filter>renderer</Filter>
@@ -102,6 +108,9 @@
     </ClInclude>
     <ClInclude Include="src\scorch\renderer\scene_ssbo.h">
       <Filter>renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\material_system.h">
+      <Filter>systems</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\post_fx\fx\ppfx_base.h">
       <Filter>systems\post_fx\fx</Filter>
@@ -176,15 +185,6 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
-    <ClInclude Include="src\scorch\graphics\texture.h">
-      <Filter>graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scorch\graphics\texture2d.h">
-      <Filter>graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scorch\systems\material_system.h">
-      <Filter>systems</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
@@ -218,6 +218,15 @@
       <Filter>ecs</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\graphics\model.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\graphics\surface_material.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\graphics\texture.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\graphics\texture2d.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\main.cpp" />
@@ -288,14 +297,5 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />
-    <ClCompile Include="src\scorch\graphics\surface_material.cpp">
-      <Filter>graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\graphics\texture.cpp">
-      <Filter>graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\graphics\texture2d.cpp">
-      <Filter>graphics</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
