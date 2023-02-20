@@ -24,6 +24,7 @@ namespace ScorchEngine::Apps {
 		MaterialSystem::createDescriptorSetLayout(seDevice);
 
 		ResourceID missingMaterial = resourceSystem->loadSurfaceMaterial("res/materials/missing_material.json");
+		ResourceID clearCoatMaterial = resourceSystem->loadSurfaceMaterial("res/materials/paint.json");
 		ResourceID blankMaterial = resourceSystem->loadSurfaceMaterial("res/materials/blank.json");
 
 		level = std::make_shared<Level>();
@@ -38,7 +39,7 @@ namespace ScorchEngine::Apps {
 		auto& msc2 = sphereActor.addComponent<Components::MeshComponent>();
 		msc2.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
 		for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
-			msc2.materials[mapto] = missingMaterial;
+			msc2.materials[mapto] = clearCoatMaterial;
 		}
 		sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
 

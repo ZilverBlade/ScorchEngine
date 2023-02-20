@@ -28,6 +28,8 @@ layout(set = SURFACE_MATERIAL_DESCRIPTOR_SET, binding = 0) uniform Params {
 	vec2 uvOffset;
 	uint textureFlags;
 	uint shadingModelFlag;
+	float clearCoat;
+	float clearCoatRoughness;
 } surfaceMaterialParams;
 
 layout(set = SURFACE_MATERIAL_DESCRIPTOR_SET, binding = 1) uniform sampler2D sfDiffuseTexture;

@@ -1,0 +1,17 @@
+{
+	"name": "Paint",
+	"class": "surface",
+	"model": "clearCoat",
+	"config": {
+		"diffuseFactor": [ 1.0, 0.05, 0.05 ],
+		"specularFactor": 1.0,
+		"roughnessFactor": 0.2,
+		"metallicFactor": 0.9,
+		"clearCoatRoughnessFactor": 0.1,
+		"clearCoatFactor": 1.0
+	},
+	"uvScale": [ 1.0, 1.0 ],
+	"uvOffset": [ 0, 0 ],
+	"translucent": false,
+	"doubleSided": true
+}

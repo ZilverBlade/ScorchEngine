@@ -28,6 +28,8 @@ namespace ScorchEngine {
 		glm::vec2 uvOffset;
 		uint32_t textureFlags;
 		uint32_t shadingModelFlag;
+		float clearCoat;
+		float clearCoatRoughness;
 	};
 
 	SESurfaceMaterial::SESurfaceMaterial(SEDevice& device, SEDescriptorPool& descriptorPool, ResourceSystem* resourceSystem) :
@@ -98,6 +100,11 @@ namespace ScorchEngine {
 		if (config["ambientOcclusionFactor"].error() == simdjson::error_code::SUCCESS)
 			this->ambientOcclusionFactor = config["ambientOcclusionFactor"].get_double().value();
 
+		if (config["clearCoatFactor"].error() == simdjson::error_code::SUCCESS)
+			this->clearCoatFactor = config["clearCoatFactor"].get_double().value();
+		if (config["clearCoatRoughnessFactor"].error() == simdjson::error_code::SUCCESS)
+			this->clearCoatRoughnessFactor = config["clearCoatRoughnessFactor"].get_double().value();
+
 		if (config["diffuseTexture"].error() == simdjson::error_code::SUCCESS)
 			this->diffuseTexture = std::string(config["diffuseTexture"].get_string().value());
 		if (config["emissiveTexture"].error() == simdjson::error_code::SUCCESS)
@@ -125,14 +132,6 @@ namespace ScorchEngine {
 				material["uvOffset"].get_array().at(0).get_double().value(),
 				material["uvOffset"].get_array().at(1).get_double().value()
 		};
-
-		/*
-	
-	"UVOffset": [ 0, 0 ],
-	"Translucent": false,
-	"DoubleSided": true
-}
-	*/
 	}
 	void SESurfaceMaterial::bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, uint32_t descriptorOffset) {
 		vkCmdBindDescriptorSets(
@@ -154,6 +153,8 @@ namespace ScorchEngine {
 		bufferInfo.roughness = this->roughnessFactor;
 		bufferInfo.metallic = this->metallicFactor;
 		bufferInfo.ambientOcclusion = this->ambientOcclusionFactor;
+		bufferInfo.clearCoat = this->clearCoatFactor;
+		bufferInfo.clearCoatRoughness = this->clearCoatRoughnessFactor;
 
 		bufferInfo.uvOffset = this->uvOffset;
 		bufferInfo.uvScale = this->uvScale;
@@ -192,6 +193,8 @@ namespace ScorchEngine {
 		bufferInfo.roughness = this->roughnessFactor;
 		bufferInfo.metallic = this->metallicFactor;
 		bufferInfo.ambientOcclusion = this->ambientOcclusionFactor;
+		bufferInfo.clearCoat = this->clearCoatFactor;
+		bufferInfo.clearCoatRoughness = this->clearCoatRoughnessFactor;
 
 		bufferInfo.uvOffset = this->uvOffset;
 		bufferInfo.uvScale = this->uvScale;

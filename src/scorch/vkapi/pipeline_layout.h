@@ -10,7 +10,7 @@ namespace ScorchEngine {
 		SEPipelineLayout(const SEPipelineLayout&) = delete;
 		SEPipelineLayout& operator=(const SEPipelineLayout&) = delete;
 
-		inline VkPipelineLayout getPipelineLayout() { return pipelineLayout; }
+		VkPipelineLayout getPipelineLayout() { return pipelineLayout; }
 	private:
 		VkPipelineLayout pipelineLayout{};
 		SEDevice& seDevice;

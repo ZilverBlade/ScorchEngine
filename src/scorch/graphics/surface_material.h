@@ -47,8 +47,8 @@ namespace ScorchEngine {
 		float metallicFactor = 1.0f;
 		float ambientOcclusionFactor = 1.0f;
 
-	//	float clearCoatFactor = 1.0f;
-	//	float clearCoatRoughnessFactor = 0.0f;
+		float clearCoatFactor = 1.0f;
+		float clearCoatRoughnessFactor = 0.0f;
 
 		glm::vec2 uvScale{ 1.f };
 		glm::vec2 uvOffset{ 0.f };
