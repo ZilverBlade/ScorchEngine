@@ -78,6 +78,9 @@
     <ClInclude Include="src\scorch\ecs\components\point_light_component.h">
       <Filter>ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\ecs\components\sky_light_component.h">
+      <Filter>ecs\components</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\ecs\components\skybox_component.h">
       <Filter>ecs\components</Filter>
     </ClInclude>
@@ -134,6 +137,9 @@
       <Filter>systems\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\rendering\render_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\sky_light_system.h">
       <Filter>systems\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\rendering\skybox_system.h">
@@ -255,6 +261,9 @@
       <Filter>systems\rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\systems\rendering\render_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\sky_light_system.cpp">
       <Filter>systems\rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\systems\rendering\skybox_system.cpp">

@@ -101,7 +101,6 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	vec3 I = normalize(fragment.position - cameraPosWorld);
 	vec3 R = reflect(I, N);
 	
-	
 	float F0 = 0.04; // refraction index of 1.5
 	PrivateStaticPBRData pbrSData;
 	pbrSData.F0 = F0;
@@ -113,12 +112,14 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	pbrSData.N = N; 
 	pbrSData.NdV = max(dot(N, V), 0.0);
 	
+	
+	vec3 specular = vec3(0.0);
+	vec3 clearCoat = vec3(0.0);
+	
 	bool enableClearCoatBRDF = fragmentcc.clearCoat != 0.0;
-	vec3 baseReflection = textureLod(environmentMap, R, pow(fragment.roughness, 0.3) * 10.0).rgb;
-	baseReflection = F_Schlick(mix(baseReflection, baseReflection * fragment.diffuse, fragment.metallic), pbrSData.NdV);
 	vec3 clearCoatReflection = vec3(0.0);
 	if (enableClearCoatBRDF) {
-		clearCoatReflection = textureLod(environmentMap, R, fragmentcc.clearCoatRoughness).rgb;
+		
 	}
 	
 	PrivateStaticPBRData ccpbrSData = pbrSData;
@@ -127,9 +128,7 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	
 	const float fresnelTotalInternalReflection = F_Schlick(F0, pbrSData.NdV);
 	
-	vec3 diffuse = vec3(0.0);
-	vec3 specular = vec3(0.0);
-	vec3 clearCoat = vec3(0.0);
+	vec3 diffuse = vec3(0.5) * fragment.diffuse; // ambient lighting
 	
 	for (uint i = 0; i < scene.pointLightCount; i++) {
 		vec3 fragToLight = scene.pointLights[i].position - fragment.position;
@@ -177,6 +176,6 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	vec3 reflectedDiffuse = mix(diffuse * fragment.diffuse, vec3(0.0), fragment.metallic);
 	vec3 reflectedSpecular = mix(specular, specular * fragment.diffuse, fragment.metallic) * fragment.specular;
 	vec3 reflectedClearCoat = clearCoat * fragmentcc.clearCoat;
-	return reflectedDiffuse + reflectedSpecular + reflectedClearCoat + baseReflection + clearCoatReflection;
+	return reflectedDiffuse + reflectedSpecular + reflectedClearCoat;
 }
 #endif

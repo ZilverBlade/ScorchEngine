@@ -57,9 +57,8 @@ namespace ScorchEngine::Apps {
 			lightActor.getTransform().rotation.z = 0.25f;
 		}
 		{
-			Actor lightActor = level->createActor("point light");
-			lightActor.addComponent<Components::PointLightComponent>().emission = {1.0, 0.0, 0.0};
-			lightActor.getTransform().translation = { 1.0, 1.0, 3.0f};
+			cameraActor.addComponent<Components::PointLightComponent>().emission = {1.0, 0.0, 0.0};
+			cameraActor.getTransform().translation = { 1.0, 1.0, 3.0f};
 		}
 		VkSampleCountFlagBits msaa = VK_SAMPLE_COUNT_8_BIT;
 		auto skyboxDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)

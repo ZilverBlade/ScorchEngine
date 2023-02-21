@@ -5,7 +5,7 @@
 
 namespace ScorchEngine {
 	inline namespace Components {
-		struct SkyboxComponent {
+		struct SkyLightComponent {
 			glm::vec3 tint{ 1.0f };
 			float intensity{ 1.0f };
 			ResourceID environmentMap{};

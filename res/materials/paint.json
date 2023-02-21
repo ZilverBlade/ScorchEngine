@@ -1,14 +1,14 @@
 {
 	"name": "Paint",
 	"class": "surface",
-	"model": "lit",
+	"model": "clearCoat",
 	"config": {
 		"diffuseFactor": [ 1.0, 0.05, 0.05 ],
 		"specularFactor": 1.0,
-		"roughnessFactor": 0.9,
-		"metallicFactor": 0.3,
-		"clearCoatRoughnessFactor": 0.1,
-		"clearCoatFactor": 1.0
+		"roughnessFactor": 0.25,
+		"metallicFactor": 0.0,
+		"clearCoatFactor": 1.0,
+		"clearCoatRoughnessFactor": 0.0
 	},
 	"uvScale": [ 1.0, 1.0 ],
 	"uvOffset": [ 0, 0 ],

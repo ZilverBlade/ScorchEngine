@@ -30,7 +30,7 @@ namespace ScorchEngine {
 		RenderSystem& operator=(RenderSystem&&) = delete;
 
 		virtual void renderEarlyDepth(FrameInfo& frameInfo) {}
-		virtual void renderOpaque(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor) {}
+		virtual void renderOpaque(FrameInfo& frameInfo) {}
 		virtual void renderTranslucent(FrameInfo& frameInfo) {}
 		virtual void renderSkybox(FrameInfo& frameInfo) {}
 		 

@@ -58,12 +58,11 @@ namespace ScorchEngine {
 
 		earlyDepthRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
-	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor) {
+	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo) {
 		opaquePipeline->bind(frameInfo.commandBuffer);
-		VkDescriptorSet sets[3]{
+		VkDescriptorSet sets[2]{
 			frameInfo.globalUBO,
-			frameInfo.sceneSSBO,
-			skyboxDescriptor
+			frameInfo.sceneSSBO
 		};
 
 		vkCmdBindDescriptorSets(
@@ -71,7 +70,7 @@ namespace ScorchEngine {
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			opaquePipelineLayout->getPipelineLayout(),
 			0,
-			3,
+			2,
 			sets,
 			0,
 			nullptr

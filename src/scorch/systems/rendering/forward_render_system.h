@@ -8,7 +8,7 @@ namespace ScorchEngine {
 		virtual ~ForwardRenderSystem();
 
 		virtual void renderEarlyDepth(FrameInfo& frameInfo) override;
-		virtual void renderOpaque(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor) override;
+		virtual void renderOpaque(FrameInfo& frameInfo) override;
 		 
 		virtual void beginOpaquePass(FrameInfo& frameInfo) override;
 		virtual void endOpaquePass(FrameInfo& frameInfo) override;
