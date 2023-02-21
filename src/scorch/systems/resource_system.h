@@ -4,6 +4,7 @@
 #include <scorch/utils/resid.h>
 #include <scorch/graphics/model.h>
 #include <scorch/graphics/texture2d.h>
+#include <scorch/graphics/texture_cube.h>
 #include <scorch/graphics/surface_material.h>
 
 namespace ScorchEngine {
@@ -40,6 +41,9 @@ namespace ScorchEngine {
 		TextureResourceIDAttributes loadTexture2D(std::string path, bool srgb, bool linearSampler);
 		SETexture2D* getTexture2D(TextureResourceIDAttributes id);
 
+		TextureResourceIDAttributes loadTextureCube(std::string path, bool srgb = true, bool linearSampler = true);
+		SETextureCube* getTextureCube(TextureResourceIDAttributes id);
+
 		ResourceID loadSurfaceMaterial(std::string path);
 		SESurfaceMaterial* getSurfaceMaterial(ResourceID id);
 
@@ -52,6 +56,7 @@ namespace ScorchEngine {
 
 		std::unordered_map<ResourceID, SEModel*> modelAssets;
 		std::unordered_map<TextureResourceIDAttributes, SETexture2D*> texture2DAssets;
+		std::unordered_map<TextureResourceIDAttributes, SETextureCube*> textureCubeAssets;
 		std::unordered_map<ResourceID, SESurfaceMaterial*> surfaceMaterialAssets;
 
 		SETexture2D* special_MissingTexture2D;

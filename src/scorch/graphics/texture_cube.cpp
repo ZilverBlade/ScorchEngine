@@ -1,20 +1,23 @@
 #pragma once
 
-#include "texture2d.h"
+#define NOMINMAX
+#include "texture_cube.h"
 
 namespace ScorchEngine {
-	SETexture2D::SETexture2D(SEDevice& device, const SETexture::Builder& builder) : SETexture(device) {
-		anisotropy = 16.0;
+	SETextureCube::SETextureCube(SEDevice& device, const SETexture::Builder& builder) : SETexture(device) {
+		anisotropy = 1.0;
+		layerCount = 6;
+		filter = VK_FILTER_LINEAR;
 		createTextureImage(builder);
-		createTextureImageView(VK_IMAGE_VIEW_TYPE_2D);
+		createTextureImageView(VK_IMAGE_VIEW_TYPE_CUBE);
 		createTextureSampler();
 		updateDescriptor();
 	}
-	SETexture2D::~SETexture2D()
+	SETextureCube::~SETextureCube()
 	{
 	}
-	void SETexture2D::createTextureImage(const SETexture::Builder& builder) {
-		mipLevels = 1;
+	void SETextureCube::createTextureImage(const SETexture::Builder& builder) {
+		mipLevels = std::floor(std::log2(std::max(builder.height, builder.width))) + 1;
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
@@ -29,7 +32,10 @@ namespace ScorchEngine {
 
 		void* data;
 		vkMapMemory(seDevice.getDevice(), stagingBufferMemory, 0, builder.dataSize, 0, &data);
-		memcpy(data, builder.pixels[0], builder.dataSize);
+		size_t layerSize = builder.dataSize / 6;
+		for (int i = 0; i < 6; i++) {
+			memcpy(static_cast<char*>(data) + layerSize * i, builder.pixels[i], layerSize);
+		}
 		vkUnmapMemory(seDevice.getDevice(), stagingBufferMemory);
 
 		format = builder.srgb ? VK_FORMAT_R8G8B8A8_SRGB : VK_FORMAT_R8G8B8A8_UNORM;
@@ -42,7 +48,7 @@ namespace ScorchEngine {
 		imageInfo.mipLevels = mipLevels;
 		imageInfo.arrayLayers = layerCount;
 		imageInfo.format = format;
-		imageInfo.flags = 0;
+		imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
@@ -75,14 +81,15 @@ namespace ScorchEngine {
 			static_cast<uint32_t>(builder.height),
 			layerCount
 		);
-		seDevice.transitionImageLayout(
+		seDevice.generateMipMaps(
 			commandBuffer,
 			image,
 			format,
-			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			static_cast<uint32_t>(builder.width),
+			static_cast<uint32_t>(builder.height),
 			mipLevels,
-			layerCount
+			layerCount,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		);
 		layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 

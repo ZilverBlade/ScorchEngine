@@ -1,6 +1,6 @@
 #version 450
 #extension GL_GOOGLE_include_directive : enable
-#define SURFACE_MATERIAL_DESCRIPTOR_SET 2
+#define SURFACE_MATERIAL_DESCRIPTOR_SET 3
 #include "surface_material.glsl"
 #include "normal_mapping.glsl"
 #include "pbr.glsl"

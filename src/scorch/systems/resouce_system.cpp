@@ -42,6 +42,7 @@ namespace ScorchEngine {
 		attribid.linearSampler = linearSampler;
 
 		texture2DAssets[attribid] = new SETexture2D(seDevice, bdr);
+		bdr.free();
 		return attribid;
 	}
 	SETexture2D* ResourceSystem::getTexture2D(TextureResourceIDAttributes id) {
@@ -49,6 +50,30 @@ namespace ScorchEngine {
 		if (iter == texture2DAssets.end()) {
 			loadTexture2D(id.id.getAsset(), id.srgb, id.linearSampler);
 			return texture2DAssets[id];
+		} else {
+			return (*iter).second;
+		}
+	}
+	TextureResourceIDAttributes ResourceSystem::loadTextureCube(std::string path, bool srgb, bool linearSampler) {
+		ResourceID id = ResourceID(path);
+		auto bdr = SETexture::Builder();
+		bdr.loadSTBCubeFolder(path);
+		bdr.srgb = srgb;
+
+		TextureResourceIDAttributes attribid{};
+		attribid.id = id;
+		attribid.srgb = srgb;
+		attribid.linearSampler = linearSampler;
+
+		textureCubeAssets[attribid] = new SETextureCube(seDevice, bdr);
+		bdr.free();
+		return attribid;
+	}
+	SETextureCube* ResourceSystem::getTextureCube(TextureResourceIDAttributes id) {
+		auto iter = textureCubeAssets.find(id);
+		if (iter == textureCubeAssets.end()) {
+			loadTextureCube(id.id.getAsset(), id.srgb, id.linearSampler);
+			return textureCubeAssets[id];
 		} else {
 			return (*iter).second;
 		}

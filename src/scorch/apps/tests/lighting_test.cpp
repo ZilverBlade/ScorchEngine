@@ -4,6 +4,7 @@
 #include <scorch/renderer/camera.h>
 #include <scorch/systems/rendering/forward_render_system.h>
 #include <scorch/systems/rendering/light_system.h>
+#include <scorch/systems/rendering/skybox_system.h>
 #include <scorch/systems/resource_system.h>
 
 #include <scorch/systems/post_fx/fx/ppfx_screen_correct.h>
@@ -43,6 +44,10 @@ namespace ScorchEngine::Apps {
 		}
 		sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
 
+		Actor skyboxActor = level->createActor("skyboxActor");
+		auto& sbc = skyboxActor.addComponent<Components::SkyboxComponent>();
+		sbc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
+
 		Actor cameraActor = level->createActor("camera actor");
 		cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
 		{
@@ -56,12 +61,27 @@ namespace ScorchEngine::Apps {
 			lightActor.addComponent<Components::PointLightComponent>().emission = {1.0, 0.0, 0.0};
 			lightActor.getTransform().translation = { 1.0, 1.0, 3.0f};
 		}
+		VkSampleCountFlagBits msaa = VK_SAMPLE_COUNT_8_BIT;
+		auto skyboxDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
 		RenderSystem* renderSystem = new ForwardRenderSystem(
 			seDevice, 
-			resolution, 
-			globalUBODescriptorLayout->getDescriptorSetLayout(), 
-			sceneSSBODescriptorLayout->getDescriptorSetLayout(), 
-			VK_SAMPLE_COUNT_8_BIT
+			resolution, { 
+				globalUBODescriptorLayout->getDescriptorSetLayout(),
+				sceneSSBODescriptorLayout->getDescriptorSetLayout(),
+				skyboxDescriptorLayout->getDescriptorSetLayout()
+			},
+			msaa
+		);
+		SkyboxSystem* skyboxSystem = new SkyboxSystem(
+			seDevice,
+			*staticPool,
+			*skyboxDescriptorLayout,
+			renderSystem->getOpaqueRenderPass()->getRenderPass(),
+			globalUBODescriptorLayout->getDescriptorSetLayout(),
+			sceneSSBODescriptorLayout->getDescriptorSetLayout(),
+			msaa
 		);
 		LightSystem lightSystem = LightSystem();
 
@@ -101,8 +121,8 @@ namespace ScorchEngine::Apps {
 			camera.setPerspectiveProjection(70.0f, seSwapChain->extentAspectRatio(), 0.01f, 128.f);
 
 			incrementTime += frameTime * 1.0;
-			resourceSystem->getSurfaceMaterial(missingMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
-			resourceSystem->getSurfaceMaterial(missingMaterial)->updateParams();
+			resourceSystem->getSurfaceMaterial(clearCoatMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
+			resourceSystem->getSurfaceMaterial(clearCoatMaterial)->updateParams();
 
 			uint32_t frameIndex = seSwapChain->getImageIndex();
 			if (VkResult result = seSwapChain->acquireNextImage(&frameIndex); result == VK_SUCCESS) {
@@ -129,6 +149,7 @@ namespace ScorchEngine::Apps {
 				renderData[frameIndex].uboBuffer->flush();
 
 				lightSystem.update(frameInfo, *renderData[frameIndex].sceneSSBO);
+				skyboxSystem->update(frameInfo, *renderData[frameIndex].sceneSSBO);
 
 				renderData[frameIndex].ssboBuffer->writeToBuffer(renderData[frameIndex].sceneSSBO.get());
 				renderData[frameIndex].ssboBuffer->flush();
@@ -136,7 +157,8 @@ namespace ScorchEngine::Apps {
 				renderSystem->renderEarlyDepth(frameInfo);
 
 				renderSystem->beginOpaquePass(frameInfo);
-				renderSystem->renderOpaque(frameInfo);
+				renderSystem->renderOpaque(frameInfo, skyboxSystem->getSkyboxDescriptor());
+				skyboxSystem->renderSkybox(frameInfo);
 				renderSystem->endOpaquePass(frameInfo);
 
 				seSwapChain->beginRenderPass(commandBuffer);

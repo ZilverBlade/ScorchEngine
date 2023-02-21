@@ -7,14 +7,15 @@ namespace ScorchEngine {
     public:
         struct Builder {
             void loadSTB2DImage(const std::string& path);
-            void freeSTBIImage();
+            void loadSTBCubeFolder(const std::string& path);
+            void free();
             int width;
             int height;
             int depth;
             size_t dataSize;
             int layers;
             bool srgb;
-            void* pixels;
+            std::vector<void*> pixels;
         };
         SETexture(SEDevice& device);
         virtual ~SETexture();
@@ -61,6 +62,7 @@ namespace ScorchEngine {
         VkImageLayout layout{};
         uint32_t mipLevels{ 1 };
         uint32_t layerCount{ 1 };
+        float anisotropy{};
         VkExtent3D extent{};
     };
 

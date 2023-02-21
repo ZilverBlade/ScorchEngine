@@ -4,21 +4,50 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <scorch/utils/resid.h>
+#include <array>
 
 namespace ScorchEngine {
     void SETexture::Builder::loadSTB2DImage(const std::string& path) {
         int texChannels;
-        pixels = stbi_load(path.c_str(), &width, &height, &texChannels, 4);
+        pixels.resize(1);
+        depth = 1;
+        pixels[0] = stbi_load(path.c_str(), &width, &height, &texChannels, 4);
         dataSize = width * height * 4;
         layers = 1;
-        depth = 1;
-        if (!pixels) {
+        if (!pixels[0]) {
             throw std::runtime_error("failed to load texture image! Tried to load '" + path + "'");
         }
     }
-    void SETexture::Builder::freeSTBIImage() {
-        stbi_image_free(pixels);
-        pixels = nullptr;
+    void SETexture::Builder::loadSTBCubeFolder(const std::string& path) {
+        int texChannels;
+        pixels.resize(6);
+        layers = 6;
+        depth = 1;
+        std::array<std::string, 6> images{
+            path + "/right.png",
+            path + "/left.png",
+            path + "/top.png",
+            path + "/bottom.png",
+            path + "/front.png",
+            path + "/back.png"
+        };
+        int i = 0;
+        for (auto& image : images) {
+            pixels[i] = stbi_load(image.c_str(), &width, &height, &texChannels, 4);
+            if (!pixels[i]) {
+                throw std::runtime_error("failed to load texture image! Tried to load '" + image + "'");
+            }
+            i++;
+        }
+        dataSize = width * height * 4 * 6;
+
+    }
+    void SETexture::Builder::free() {
+        //for (int i = 0; i < layers; i++) {
+        //    stbi_image_free(pixels[i]);
+        //    pixels[i] = nullptr;
+        //}
+        //std::free(pixels);
     }
 
     SETexture::SETexture(SEDevice& device) : seDevice(device) {
@@ -57,15 +86,15 @@ namespace ScorchEngine {
 	void SETexture::createTextureSampler() {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = static_cast<VkFilter>(filter);
-        samplerInfo.minFilter = static_cast<VkFilter>(filter);
+        samplerInfo.magFilter = filter;
+        samplerInfo.minFilter = filter;
 
-        samplerInfo.addressModeU = static_cast<VkSamplerAddressMode>(addressMode);
-        samplerInfo.addressModeV = static_cast<VkSamplerAddressMode>(addressMode);
-        samplerInfo.addressModeW = static_cast<VkSamplerAddressMode>(addressMode);
+        samplerInfo.addressModeU = addressMode;
+        samplerInfo.addressModeV = addressMode;
+        samplerInfo.addressModeW = addressMode;
 
         samplerInfo.anisotropyEnable = true;
-        samplerInfo.maxAnisotropy = 16.0f;
+        samplerInfo.maxAnisotropy = anisotropy;
         samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
 

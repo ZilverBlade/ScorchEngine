@@ -48,9 +48,6 @@
     <ClInclude Include="src\scorch\apps\tests\lighting_test.h">
       <Filter>apps\tests</Filter>
     </ClInclude>
-    <ClInclude Include="src\scorch\apps\tests\model_test.h">
-      <Filter>apps\tests</Filter>
-    </ClInclude>
     <ClInclude Include="src\scorch\apps\tests\vulkan_test.h">
       <Filter>apps\tests</Filter>
     </ClInclude>
@@ -81,6 +78,9 @@
     <ClInclude Include="src\scorch\ecs\components\point_light_component.h">
       <Filter>ecs\components</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\ecs\components\skybox_component.h">
+      <Filter>ecs\components</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\ecs\components\transform_component.h">
       <Filter>ecs\components</Filter>
     </ClInclude>
@@ -97,6 +97,9 @@
       <Filter>graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\graphics\texture2d.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\graphics\texture_cube.h">
       <Filter>graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\log.h" />
@@ -131,6 +134,9 @@
       <Filter>systems\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\rendering\render_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\skybox_system.h">
       <Filter>systems\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\resource_system.h">
@@ -196,9 +202,6 @@
     <ClCompile Include="src\scorch\apps\tests\lighting_test.cpp">
       <Filter>apps\tests</Filter>
     </ClCompile>
-    <ClCompile Include="src\scorch\apps\tests\model_test.cpp">
-      <Filter>apps\tests</Filter>
-    </ClCompile>
     <ClCompile Include="src\scorch\apps\tests\vulkan_test.cpp">
       <Filter>apps\tests</Filter>
     </ClCompile>
@@ -232,6 +235,9 @@
     <ClCompile Include="src\scorch\graphics\texture2d.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\graphics\texture_cube.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\main.cpp" />
     <ClCompile Include="src\scorch\renderer\camera.cpp">
       <Filter>renderer</Filter>
@@ -249,6 +255,9 @@
       <Filter>systems\rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\systems\rendering\render_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\skybox_system.cpp">
       <Filter>systems\rendering</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\systems\resouce_system.cpp">

@@ -7,13 +7,12 @@ namespace ScorchEngine {
 	ForwardRenderSystem::ForwardRenderSystem(
 		SEDevice& device, 
 		glm::vec2 size,
-		VkDescriptorSetLayout uboLayout, 
-		VkDescriptorSetLayout ssboLayout, 
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts,
 		VkSampleCountFlagBits msaaSamples
-	) : RenderSystem(device, size, uboLayout, ssboLayout), sampleCount(msaaSamples)
+	) : RenderSystem(device, size), sampleCount(msaaSamples)
 	{
 		init(size);
-		createGraphicsPipelines(uboLayout, ssboLayout);
+		createGraphicsPipelines(descriptorSetLayouts);
 	}
 	ForwardRenderSystem::~ForwardRenderSystem() {
 		destroy();
@@ -59,11 +58,12 @@ namespace ScorchEngine {
 
 		earlyDepthRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
-	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo) {
+	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor) {
 		opaquePipeline->bind(frameInfo.commandBuffer);
-		VkDescriptorSet sets[2]{
+		VkDescriptorSet sets[3]{
 			frameInfo.globalUBO,
-			frameInfo.sceneSSBO
+			frameInfo.sceneSSBO,
+			skyboxDescriptor
 		};
 
 		vkCmdBindDescriptorSets(
@@ -71,13 +71,13 @@ namespace ScorchEngine {
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			opaquePipelineLayout->getPipelineLayout(),
 			0,
-			2,
+			3,
 			sets,
 			0,
 			nullptr
 		);
 
-		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 2, false, true);
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 3, false, true);
 	}
 
 	void ForwardRenderSystem::beginOpaquePass(FrameInfo& frameInfo) {
@@ -176,11 +176,12 @@ namespace ScorchEngine {
 		earlyDepthFrameBuffer = new SEFrameBuffer(seDevice, earlyDepthRenderPass, { depthAttachment });
 	}
 
-	void ForwardRenderSystem::createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) {
+	void ForwardRenderSystem::createGraphicsPipelines(std::vector<VkDescriptorSetLayout> descriptorSetLayouts) {
 		push = SEPushConstant(sizeof(ModelMatrixPush), VK_SHADER_STAGE_VERTEX_BIT);
 
 		earlyDepthPipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, 
-			{ uboLayout, MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout() });
+			{ descriptorSetLayouts[0], MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout() });
+		// early depth only cares about first (global ubo) set layout
 
 		SEGraphicsPipelineConfigInfo earlyDepthPipelineConfigInfo{};
 		earlyDepthPipelineConfigInfo.enableVertexDescriptions();
@@ -194,8 +195,10 @@ namespace ScorchEngine {
 			earlyDepthPipelineConfigInfo
 		);
 
+		std::vector<VkDescriptorSetLayout> setLayouts = descriptorSetLayouts;
+		setLayouts.push_back(MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout());
 		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, 
-			{ uboLayout, ssboLayout, MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout() });
+			setLayouts);
 
 		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
 		pipelineConfigInfo.enableVertexDescriptions();

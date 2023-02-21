@@ -6,6 +6,8 @@
 #include "scene_ssbo.glsl"
 #include "constants.glsl"
 
+layout (set = 2, binding = 0) uniform samplerCube environmentMap;
+
 struct FragmentLitPBRData {
 	vec3 position;
 	vec3 normal;
@@ -52,6 +54,14 @@ float F_Schlick(float F0, float dv){
 	
     return F0 + (1.0 - F0) * Fc;
 }
+vec3 F_Schlick(vec3 F0, float dv){
+	float x = 1.0 - dv;
+	float x2 = x*x;
+	float x4 = x2*x2;
+	float Fc = x4*x;
+	
+    return F0 + (1.0 - F0) * Fc;
+}
 
 float D_beckmann(PrivateStaticPBRData pbrSData, PrivatePBRData pbrData) {
     float NdH2 = pbrData.NdH * pbrData.NdH;
@@ -91,6 +101,7 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	vec3 I = normalize(fragment.position - cameraPosWorld);
 	vec3 R = reflect(I, N);
 	
+	
 	float F0 = 0.04; // refraction index of 1.5
 	PrivateStaticPBRData pbrSData;
 	pbrSData.F0 = F0;
@@ -101,6 +112,14 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	pbrSData.V = V; 
 	pbrSData.N = N; 
 	pbrSData.NdV = max(dot(N, V), 0.0);
+	
+	bool enableClearCoatBRDF = fragmentcc.clearCoat != 0.0;
+	vec3 baseReflection = textureLod(environmentMap, R, pow(fragment.roughness, 0.3) * 10.0).rgb;
+	baseReflection = F_Schlick(mix(baseReflection, baseReflection * fragment.diffuse, fragment.metallic), pbrSData.NdV);
+	vec3 clearCoatReflection = vec3(0.0);
+	if (enableClearCoatBRDF) {
+		clearCoatReflection = textureLod(environmentMap, R, fragmentcc.clearCoatRoughness).rgb;
+	}
 	
 	PrivateStaticPBRData ccpbrSData = pbrSData;
 	ccpbrSData.m = fragmentcc.clearCoatRoughness * fragmentcc.clearCoatRoughness; 
@@ -158,6 +177,6 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	vec3 reflectedDiffuse = mix(diffuse * fragment.diffuse, vec3(0.0), fragment.metallic);
 	vec3 reflectedSpecular = mix(specular, specular * fragment.diffuse, fragment.metallic) * fragment.specular;
 	vec3 reflectedClearCoat = clearCoat * fragmentcc.clearCoat;
-	return reflectedDiffuse + reflectedSpecular + reflectedClearCoat;
+	return reflectedDiffuse + reflectedSpecular + reflectedClearCoat + baseReflection + clearCoatReflection;
 }
 #endif

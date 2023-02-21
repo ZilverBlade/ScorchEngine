@@ -21,7 +21,7 @@ namespace ScorchEngine {
 
 	class RenderSystem {
 	public:
-		RenderSystem(SEDevice& device, glm::vec2 size, VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout);
+		RenderSystem(SEDevice& device, glm::vec2 size);
 		virtual ~RenderSystem();
 
 		RenderSystem(const RenderSystem&) = delete;
@@ -30,7 +30,7 @@ namespace ScorchEngine {
 		RenderSystem& operator=(RenderSystem&&) = delete;
 
 		virtual void renderEarlyDepth(FrameInfo& frameInfo) {}
-		virtual void renderOpaque(FrameInfo& frameInfo) {}
+		virtual void renderOpaque(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor) {}
 		virtual void renderTranslucent(FrameInfo& frameInfo) {}
 		virtual void renderSkybox(FrameInfo& frameInfo) {}
 		 
@@ -76,7 +76,7 @@ namespace ScorchEngine {
 		virtual void createFrameBufferAttachments(glm::vec2 size) {}
 		virtual void createRenderPasses() {}
 		virtual void createFrameBuffers() {}
-		virtual void createGraphicsPipelines(VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout) {}
+		virtual void createGraphicsPipelines(std::vector<VkDescriptorSetLayout> descriptorSetLayouts) {}
 
 		//std::unique_ptr<MaterialSystem> materialSystem;
 		SEDevice& seDevice;

@@ -4,9 +4,7 @@
 namespace ScorchEngine {
 	RenderSystem::RenderSystem(
 		SEDevice& device, 
-		glm::vec2 size,
-		VkDescriptorSetLayout uboLayout,
-		VkDescriptorSetLayout ssboLayout
+		glm::vec2 size
 	) : seDevice(device) {
 	//	materialSystem = std::make_unique<MaterialSystem>(device);
 	}
