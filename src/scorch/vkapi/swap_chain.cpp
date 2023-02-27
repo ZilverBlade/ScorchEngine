@@ -6,18 +6,18 @@ namespace ScorchEngine {
 		init();
 	}
 	SESwapChain::~SESwapChain() {
-		for (SEFrameBuffer* frameBuffer : swapChainFrameBuffers) {
-			delete frameBuffer;
-		}
-		for (SEFrameBufferAttachment* frameBufferAttachment : swapChainAttachments) {
-			delete frameBufferAttachment;
-		}
-		delete swapChainRenderPass;
 		for (size_t i = 0; i < imageCount; i++) {
 			vkDestroySemaphore(seDevice.getDevice(), renderFinishedSemaphores[i], nullptr);
 			vkDestroySemaphore(seDevice.getDevice(), imageAvailableSemaphores[i], nullptr);
 			vkDestroyFence(seDevice.getDevice(), inFlightFences[i], nullptr);
 		}
+		for (VkFramebuffer frameBuffer : swapChainFramebuffers) {
+			vkDestroyFramebuffer(seDevice.getDevice(), frameBuffer, nullptr);
+		}
+		for (VkImageView imageView : swapChainImageViews) {
+			vkDestroyImageView(seDevice.getDevice(), imageView, nullptr);
+		}
+		vkDestroyRenderPass(seDevice.getDevice(), swapChainRenderPass, nullptr);
 		vkDestroySwapchainKHR(seDevice.getDevice(), swapChain, nullptr);
 	}
 	void SESwapChain::init() {
@@ -27,9 +27,9 @@ namespace ScorchEngine {
 		swapChainImageFormat = surfaceFormat.format;
 		createSwapChain(details.capabilities, getSwapChainExtent(), surfaceFormat, chooseSwapPresentMode(details.presentModes));
 
-		createAttachments();
+		createImageViews();
 		createRenderPass();
-		createFrameBuffers();
+		createFramebuffers();
 		createSyncObjects();
 	}
 	VkResult SESwapChain::acquireNextImage(uint32_t* imageIndex) {
@@ -121,34 +121,51 @@ namespace ScorchEngine {
 			throw std::runtime_error("failed to create swap chain!");
 		}
 	}
-	void SESwapChain::createAttachments() {
+	void SESwapChain::createImageViews() {
 		std::vector<VkImage> swapChainImages{};
 		swapChainImages.resize(imageCount);
 		vkGetSwapchainImagesKHR(seDevice.getDevice(), swapChain, &imageCount, swapChainImages.data());
 
 		for (int i = 0; i < imageCount; i++) {
-			SEFrameBufferAttachmentCreateInfo createInfo{};
-			createInfo.dimensions = { swapChainExtent.width, swapChainExtent.height, 1 };
-			createInfo.frameBufferFormat = swapChainImageFormat;
-			createInfo.frameBufferType = SEFrameBufferAttachmentType::Color;
-			createInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
-			createInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-			createInfo.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-			createInfo.swapchainImage = swapChainImages[i];
-			swapChainAttachments.push_back(new SEFrameBufferAttachment(seDevice, createInfo));
+			VkImageViewCreateInfo imageViewCreateInfo = {};
+			imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			imageViewCreateInfo.format = swapChainImageFormat;
+			VkImageSubresourceRange subresourceRange{};
+			subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			subresourceRange.baseMipLevel = 0;
+			subresourceRange.levelCount = 1;
+			subresourceRange.baseArrayLayer = 0;
+			subresourceRange.layerCount = 1;
+			imageViewCreateInfo.subresourceRange = subresourceRange;
+			imageViewCreateInfo.image = swapChainImages[i];
+			VkImageView imageView;
+			if (vkCreateImageView(seDevice.getDevice(), &imageViewCreateInfo, nullptr, &imageView) != VK_SUCCESS) {
+				throw std::runtime_error("Failed to create image view!");
+			}
+			swapChainImageViews.push_back(imageView);
 		}
 	}
 	void SESwapChain::createRenderPass() {
-		SEAttachmentInfo attachmentInfo{};
-		attachmentInfo.frameBufferAttachment = swapChainAttachments[0];
-		attachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		attachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		attachmentInfo.clear.color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		swapChainRenderPass = new SERenderPass(seDevice, { attachmentInfo });
+		
 	}
-	void SESwapChain::createFrameBuffers() {
+	void SESwapChain::createFramebuffers() {
 		for (int i = 0; i < imageCount; i++) {
-			swapChainFrameBuffers.push_back(new SEFrameBuffer(seDevice, swapChainRenderPass, { swapChainAttachments[i] }));
+			VkFramebufferCreateInfo fbufferCreateInfo{};
+			fbufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			fbufferCreateInfo.pNext = nullptr;
+			fbufferCreateInfo.flags = 0;
+			fbufferCreateInfo.renderPass = swapChainRenderPass;
+			fbufferCreateInfo.attachmentCount = static_cast<uint32_t>(swapChainImageViews.size());
+			fbufferCreateInfo.pAttachments = swapChainImageViews.data();
+			fbufferCreateInfo.width = windowExtent.width;
+			fbufferCreateInfo.height = windowExtent.height;
+			fbufferCreateInfo.layers = 1;
+			VkFramebuffer framebuffer;
+			if (vkCreateFramebuffer(seDevice.getDevice(), &fbufferCreateInfo, nullptr, &framebuffer) != VK_SUCCESS) {
+				throw std::runtime_error("Failed to create framebuffer!");
+			}
+			swapChainFramebuffers.push_back(framebuffer);
 		}
 	}
 	void SESwapChain::createSyncObjects() {

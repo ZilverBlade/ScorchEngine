@@ -1,7 +1,7 @@
 #include "lighting_test.h"
 
 #include <chrono>
-#include <scorch/renderer/camera.h>
+#include <scorch/rendering/camera.h>
 #include <scorch/systems/rendering/forward_render_system.h>
 #include <scorch/systems/rendering/light_system.h>
 #include <scorch/systems/rendering/skybox_system.h>

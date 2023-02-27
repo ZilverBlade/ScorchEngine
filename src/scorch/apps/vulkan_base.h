@@ -8,8 +8,8 @@
 #include <scorch/vkapi/pipeline_layout.h>
 #include <scorch/vkapi/descriptors.h>
 #include <scorch/vkapi/buffer.h>
-#include <scorch/renderer/global_ubo.h>
-#include <scorch/renderer/scene_ssbo.h>
+#include <scorch/rendering/global_ubo.h>
+#include <scorch/rendering/scene_ssbo.h>
 
 namespace ScorchEngine::Apps {
 	struct InFlightRenderData {

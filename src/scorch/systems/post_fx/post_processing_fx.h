@@ -1,14 +1,14 @@
 #pragma once
-#include <scorch/renderer/frame_info.h>
+#include <scorch/rendering/frame_info.h>
 #include <scorch/vkapi/device.h>
-#include <scorch/vkapi/frame_buffer_attachment.h>
+#include <scorch/vkapi/framebuffer_attachment.h>
 #include <scorch/vkapi/graphics_pipeline.h>
 #include <scorch/vkapi/descriptors.h>
 #include <scorch/vkapi/pipeline_layout.h>
 #include <scorch/vkapi/push_constant.h>
 
 namespace ScorchEngine {
-	class SEFrameBuffer;
+	class SEFramebuffer;
 	class SERenderPass;
 	class SEPostProcessingEffect {
 	public:
@@ -17,26 +17,21 @@ namespace ScorchEngine {
 			glm::vec2 resolution,
 			const SEShader& fragmentShader,
 			SEDescriptorPool& descriptorPool,
-			const std::vector<SEFrameBufferAttachment*>& inputTargets,
-			VkFormat frameBufferFormat
-		);
-		SEPostProcessingEffect(
-			SEDevice& device,
-			glm::vec2 resolution,
-			const SEShader& fragmentShader,
-			SEDescriptorPool& descriptorPool,
-			const std::vector<SEFrameBufferAttachment*>& inputTargets,
-			SERenderPass* renderPass // in case to render to an existing renderpass e.g. swapchain
+			const std::vector<SEFramebufferAttachment*>& inputTargets,
+			VkFormat framebufferFormat,
+			VkImageViewType viewType,
+			uint32_t layers = 1,
+			uint32_t mipLevels = 1
 		);
 		~SEPostProcessingEffect();
 
 		SEPostProcessingEffect(const SEPostProcessingEffect&) = delete;
 		SEPostProcessingEffect& operator= (const SEPostProcessingEffect&) = delete;
 
-		void render(FrameInfo& frameInfo, const void* pushData);
-		void resize(glm::vec2 newResolution, const std::vector<SEFrameBufferAttachment*>& inputTargets);
+		void render(VkCommandBuffer commandBuffer, const void* pushData, uint32_t layer = 0, uint32_t mipLevel = 0);
+		void resize(glm::vec2 newResolution, const std::vector<SEFramebufferAttachment*>& inputTargets);
 
-		SEFrameBufferAttachment* getAttachment() {
+		SEFramebufferAttachment* getAttachment() {
 			return ppfxRenderTarget;
 		}
 	private:
@@ -48,14 +43,16 @@ namespace ScorchEngine {
 		SEDevice& seDevice;
 		SEDescriptorPool& descriptorPool;
 
-		bool overridesRenderPass = false;
+		uint32_t mipLevels = 1;
+		uint32_t layerCount = 1;
 
-		SEFrameBuffer* ppfxFrameBuffer{};
+		std::vector<std::vector<SEFramebuffer*>> ppfxSubFramebuffers{};
 		SERenderPass* ppfxRenderPass{};
-		SEFrameBufferAttachment* ppfxRenderTarget{};
-		VkFormat ppfxFrameBufferFormat;
+		SEFramebufferAttachment* ppfxRenderTarget{};
+		VkFormat ppfxFramebufferFormat;
+		VkImageViewType ppfxFramebufferViewType;
 
-		std::vector<SEFrameBufferAttachment*> inputAttachments;
+		std::vector<SEFramebufferAttachment*> inputAttachments;
 
 		std::unique_ptr<SEGraphicsPipeline> ppfxPipeline{};
 		std::unique_ptr<SEPipelineLayout> ppfxPipelineLayout{};

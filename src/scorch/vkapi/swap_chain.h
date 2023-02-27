@@ -14,17 +14,17 @@ namespace ScorchEngine {
         SESwapChain& operator=(const SESwapChain&) = delete;
         SESwapChain() = default;
 
-        VkFramebuffer getFrameBuffer(int index) {
-            return swapChainFrameBuffers[index]->getFrameBuffer();
+        VkFramebuffer getFramebuffer(int index) {
+            return swapChainFramebuffers[index];
         }
-        SERenderPass* getRenderPass() {
+        VkRenderPass getRenderPass() {
             return swapChainRenderPass;
         }
         VkImageView getImageView(int index) {
-            return swapChainAttachments[index]->getImageView();
+            return swapChainImageViews[index];
         }
         size_t getImageCount() {
-            return swapChainAttachments.size();
+            return swapChainImageViews.size();
         }
         VkFormat getSwapChainImageFormat() {
             return swapChainImageFormat;
@@ -59,17 +59,42 @@ namespace ScorchEngine {
         }
 
         void beginRenderPass(VkCommandBuffer commandBuffer) {
-            swapChainRenderPass->beginRenderPass(commandBuffer, swapChainFrameBuffers[currentFrame]);
+            VkRenderPassBeginInfo renderPassBeginInfo{};
+            renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+            renderPassBeginInfo.renderPass = swapChainRenderPass;
+            renderPassBeginInfo.framebuffer = swapChainFramebuffers[currentFrame];
+            renderPassBeginInfo.renderArea.extent = windowExtent;
+            renderPassBeginInfo.clearValueCount = 1;
+            VkClearValue clearColor{};
+            clearColor.color = { 0.0f, 0.0f, 0.0f, 1.0 };
+            renderPassBeginInfo.pClearValues = &clearColor;
+
+            vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            VkViewport viewport = {};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = static_cast<float>(windowExtent.width);
+            viewport.height = static_cast<float>(windowExtent.height);
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+            VkRect2D scissor = {};
+            scissor.extent = windowExtent;
+            scissor.offset.x = 0;
+            scissor.offset.y = 0;
+            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
         }
         void endRenderPass(VkCommandBuffer commandBuffer) {
-            swapChainRenderPass->endRenderPass(commandBuffer);
+            vkCmdEndRenderPass(commandBuffer);
         }
     private:
         void init();
         void createSwapChain(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D extent, VkSurfaceFormatKHR surfaceFormat, VkPresentModeKHR presentMode);
-        void createAttachments();
+        void createImageViews();
         void createRenderPass();
-        void createFrameBuffers();
+        void createFramebuffers();
         void createSyncObjects();
         void setImageCount(const VkSurfaceCapabilitiesKHR& capabilities);
 
@@ -85,9 +110,9 @@ namespace ScorchEngine {
         VkFormat swapChainImageFormat{};
         VkExtent2D swapChainExtent{};
 
-        std::vector<SEFrameBuffer*> swapChainFrameBuffers{};
-        std::vector<SEFrameBufferAttachment*> swapChainAttachments{};
-        SERenderPass* swapChainRenderPass{};
+        std::vector<VkFramebuffer> swapChainFramebuffers{};
+        std::vector<VkImageView> swapChainImageViews{};
+        VkRenderPass swapChainRenderPass{};
 
         SEDevice& seDevice;
         SEWindow& seWindow;

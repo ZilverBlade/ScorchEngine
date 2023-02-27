@@ -1,31 +1,32 @@
 #pragma once
-#include <scorch/renderer/frame_info.h>
-#include <scorch/renderer/scene_ssbo.h>
-#include <scorch/vkapi/descriptors.h>
-#include <scorch/vkapi/graphics_pipeline.h>
-#include <scorch/vkapi/pipeline_layout.h>
+#include <scorch/vk.h>
+#include <scorch/rendering/frame_info.h>
+#include <scorch/rendering/scene_ssbo.h>
+#include <scorch/systems/post_fx/post_processing_fx.h>
+#include <scorch/graphics/sky_light.h>
 
 namespace ScorchEngine {
-	class SETextureCube;
 	class SkyLightSystem {
 	public:
-		SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool);
+		SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool, uint32_t framesInFlight);
 		~SkyLightSystem();
 
 		SkyLightSystem(const SkyLightSystem&) = delete;
 		SkyLightSystem& operator=(const SkyLightSystem&) = delete;
 
-		void update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer);
-		VkDescriptorSet getSkyboxDescriptor() { return skyboxDescriptor; }
+		void update(SESkyLight* skyLight);
+
 	private:
 		SEDevice& seDevice;
 		SEDescriptorPool& seDescriptorPool;
-		SEDescriptorSetLayout& skyboxDescriptorLayout;
+		std::unique_ptr<SEDescriptorSetLayout> skyLightDescriptorLayout;
 
 		SEPipelineLayout* pipelineLayout{};
 		SEGraphicsPipeline* pipeline{};
 
-		VkDescriptorSet skyboxDescriptor = nullptr;
 		SETextureCube* environment{};
+
+		SEPostProcessingEffect* envBRDFGen{};
+		SEPostProcessingEffect* envPrefilteredGen{};
 	};
 }

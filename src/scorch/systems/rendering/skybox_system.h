@@ -1,32 +1,31 @@
 #pragma once
-#include <scorch/renderer/frame_info.h>
-#include <scorch/renderer/scene_ssbo.h>
+#include <scorch/rendering/frame_info.h>
+#include <scorch/rendering/scene_ssbo.h>
 #include <scorch/vkapi/descriptors.h>
 #include <scorch/vkapi/graphics_pipeline.h>
 #include <scorch/vkapi/pipeline_layout.h>
 
 namespace ScorchEngine {
 	class SETextureCube;
-	class SkyboxSystem {
+	class SkyLightSystem {
 	public:
-		SkyboxSystem(SEDevice& device, SEDescriptorPool& descriptorPool, SEDescriptorSetLayout& skyboxDescriptorLayout, VkRenderPass renderPass, VkDescriptorSetLayout uboLayout, VkDescriptorSetLayout ssboLayout, VkSampleCountFlagBits msaaSamples);
-		~SkyboxSystem();
+		SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool);
+		~SkyLightSystem();
 
-		SkyboxSystem(const SkyboxSystem&) = delete;
-		SkyboxSystem& operator=(const SkyboxSystem&) = delete;
+		SkyLightSystem(const SkyLightSystem&) = delete;
+		SkyLightSystem& operator=(const SkyLightSystem&) = delete;
 
 		void update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer);
-		void renderSkybox(FrameInfo& frameInfo);
-		VkDescriptorSet getSkyboxDescriptor() { return skyboxDescriptor; }
+		VkDescriptorSet getEnvironmentMapDescriptor(int frameIndex) { return skyboxDescriptors[frameIndex]; }
 	private:
 		SEDevice& seDevice;
 		SEDescriptorPool& seDescriptorPool;
-		SEDescriptorSetLayout& skyboxDescriptorLayout;
+		SEDescriptorSetLayout skyboxDescriptorSetLayout;
 
 		SEPipelineLayout* pipelineLayout{};
 		SEGraphicsPipeline* pipeline{};
 
-		VkDescriptorSet skyboxDescriptor = nullptr;
+		std::vector<VkDescriptorSet> skyboxDescriptors{};
 		SETextureCube* environment{};
 	};
 }

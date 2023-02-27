@@ -6,9 +6,8 @@
 layout (location = 1) in vec2 fragUV;
 
 void main() {
-	vec2 uv = sfSampleUV(fragUV);
 	if (sfHasMaskTexture()){
-		if (texture(sfMaskTexture, uv).x < 0.5) {
+		if (texture(sfMaskTexture, sfSampleUV(fragUV)).x < 0.5) {
 			discard;
 		}
 	}

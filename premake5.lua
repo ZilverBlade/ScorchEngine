@@ -24,7 +24,7 @@ project "ScorchEngineDev"
 	  "src/scorch/**.h",
 	  
       "src/scorch/vkapi/**.*",
-      "src/scorch/renderer/**.*",
+      "src/scorch/rendering/**.*",
       "src/scorch/systems/**.*",
       "src/scorch/graphics/**.*",
       "src/scorch/ecs/**.*",

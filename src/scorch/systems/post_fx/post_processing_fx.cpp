@@ -1,5 +1,5 @@
 #include "post_processing_fx.h"
-#include <scorch/vkapi/frame_buffer.h>
+#include <scorch/vkapi/framebuffer.h>
 #include <scorch/vkapi/render_pass.h>
 
 namespace ScorchEngine {
@@ -8,75 +8,60 @@ namespace ScorchEngine {
 		glm::vec2 resolution,
 		const SEShader& fragmentShader,
 		SEDescriptorPool& descriptorPool,
-		const std::vector<SEFrameBufferAttachment*>& inputAttachments,
-		VkFormat frameBufferFormat
-	) : seDevice(device), inputAttachments(inputAttachments), ppfxFrameBufferFormat(frameBufferFormat), descriptorPool(descriptorPool) {
-		SEDescriptorSetLayout::Builder builder = SEDescriptorSetLayout::Builder(seDevice);
-
-		for (int i = 0; i < inputAttachments.size(); i++) {
-			builder.addBinding(i, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+		const std::vector<SEFramebufferAttachment*>& inputAttachments,
+		VkFormat framebufferFormat,
+		VkImageViewType viewType,
+		uint32_t layers,
+		uint32_t mipLevels
+	) : seDevice(device), inputAttachments(inputAttachments), ppfxFramebufferFormat(framebufferFormat), ppfxFramebufferViewType(viewType), descriptorPool(descriptorPool), layerCount(layers), mipLevels(mipLevels) {
+		if (inputAttachments.size() != 0) {
+			SEDescriptorSetLayout::Builder builder = SEDescriptorSetLayout::Builder(seDevice);
+			for (int i = 0; i < inputAttachments.size(); i++) {
+				builder.addBinding(i, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
+			}
+			ppfxSceneDescriptorLayout = builder.build();
 		}
-
-		ppfxSceneDescriptorLayout = builder.build();
-
 		createSceneDescriptors();
 		createRenderPass(resolution);
 		createPipelineLayout();
 		createPipeline(fragmentShader);
 	}
 
-	SEPostProcessingEffect::SEPostProcessingEffect(
-		SEDevice& device,
-		glm::vec2 resolution,
-		const SEShader& fragmentShader,
-		SEDescriptorPool& descriptorPool,
-		const std::vector<SEFrameBufferAttachment*>& inputAttachments,
-		SERenderPass* renderPass
-	) : seDevice(device), inputAttachments(inputAttachments), ppfxFrameBufferFormat(VK_FORMAT_MAX_ENUM), descriptorPool(descriptorPool), ppfxRenderPass(renderPass), overridesRenderPass(true){
-		SEDescriptorSetLayout::Builder builder = SEDescriptorSetLayout::Builder(seDevice);
-
-		for (int i = 0; i < inputAttachments.size(); i++) {
-			builder.addBinding(i, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT);
-		}
-
-		ppfxSceneDescriptorLayout = builder.build();
-
-		createSceneDescriptors();
-		createPipelineLayout();
-		createPipeline(fragmentShader);
-	}
 	SEPostProcessingEffect::~SEPostProcessingEffect() {
 		delete ppfxRenderTarget;
-
-		if (!overridesRenderPass)
-			delete ppfxRenderPass;
-		if (!overridesRenderPass)
-			delete ppfxFrameBuffer;
+		delete ppfxRenderPass;
+		for (auto& sub : ppfxSubFramebuffers) {
+			for (auto* ppfxFramebuffer : sub) {
+				delete ppfxFramebuffer;
+			}
+		}
 	}
 
-	void SEPostProcessingEffect::render(FrameInfo& frameInfo, const void* pushData) {
-		if (!overridesRenderPass)
-			ppfxRenderPass->beginRenderPass(frameInfo.commandBuffer, ppfxFrameBuffer);
-		ppfxPipeline->bind(frameInfo.commandBuffer);
-		vkCmdBindDescriptorSets(frameInfo.commandBuffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			ppfxPipelineLayout->getPipelineLayout(),
-			0,
-			1,
-			&ppfxSceneDescriptorSet,
-			0,
-			nullptr
-		);
-		ppfxPush.push(frameInfo.commandBuffer, ppfxPipelineLayout->getPipelineLayout(), pushData);
-		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
-		if (!overridesRenderPass)
-			ppfxRenderPass->endRenderPass(frameInfo.commandBuffer);
+	void SEPostProcessingEffect::render(VkCommandBuffer commandBuffer, const void* pushData, uint32_t layer, uint32_t mipLevel) {
+		ppfxRenderPass->beginRenderPass(commandBuffer, ppfxSubFramebuffers[layer][mipLevel]);
+		ppfxPipeline->bind(commandBuffer);
+
+		if (inputAttachments.size() != 0) {
+			vkCmdBindDescriptorSets(commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				ppfxPipelineLayout->getPipelineLayout(),
+				0,
+				1,
+				&ppfxSceneDescriptorSet,
+				0,
+				nullptr
+			);
+		}
+		if (pushData) {
+			ppfxPush.push(commandBuffer, ppfxPipelineLayout->getPipelineLayout(), pushData);
+		}
+		vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+		ppfxRenderPass->endRenderPass(commandBuffer);
 	}
 
-	void SEPostProcessingEffect::resize(glm::vec2 newResolution, const std::vector<SEFrameBufferAttachment*>& newInputAttachments) {
+	void SEPostProcessingEffect::resize(glm::vec2 newResolution, const std::vector<SEFramebufferAttachment*>& newInputAttachments) {
 		inputAttachments = newInputAttachments;
-		if (!overridesRenderPass)
-			createRenderPass(newResolution);
+		createRenderPass(newResolution);
 		createSceneDescriptors();
 	}
 
@@ -108,34 +93,48 @@ namespace ScorchEngine {
 	}
 
 	void SEPostProcessingEffect::createSceneDescriptors() {
-		auto writer = SEDescriptorWriter(*ppfxSceneDescriptorLayout, descriptorPool);
-		std::vector<VkDescriptorImageInfo> imageDescriptors{};
-		imageDescriptors.resize(inputAttachments.size());
-		for (int i = 0; i < inputAttachments.size(); i++) {
-			imageDescriptors[i] = inputAttachments[i]->getDescriptor();
-			writer.writeImage(i, &imageDescriptors[i]);
+		if (inputAttachments.size() != 0) {
+			auto writer = SEDescriptorWriter(*ppfxSceneDescriptorLayout, descriptorPool);
+			std::vector<VkDescriptorImageInfo> imageDescriptors{};
+			imageDescriptors.resize(inputAttachments.size());
+			for (int i = 0; i < inputAttachments.size(); i++) {
+				imageDescriptors[i] = inputAttachments[i]->getDescriptor();
+				writer.writeImage(i, &imageDescriptors[i]);
+			}
+			writer.build(ppfxSceneDescriptorSet);
 		}
-
-		writer.build(ppfxSceneDescriptorSet);
 	}
 	void SEPostProcessingEffect::createRenderPass(glm::vec2 resolution) {
 		if (ppfxRenderTarget) delete ppfxRenderTarget;
 		if (ppfxRenderPass) delete ppfxRenderPass;
-		if (ppfxFrameBuffer) delete ppfxFrameBuffer;
+		for (auto& sub : ppfxSubFramebuffers) {
+			for (auto* ppfxFramebuffer : sub) {
+				if (ppfxFramebuffer) delete ppfxFramebuffer;
+			}
+		}
+		ppfxSubFramebuffers.clear();
 
 		glm::ivec3 windowSize = { resolution, 1 };
-		ppfxRenderTarget = new SEFrameBufferAttachment(seDevice, {
-				ppfxFrameBufferFormat,
-				VK_IMAGE_ASPECT_COLOR_BIT,
-				windowSize,
-				VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				SEFrameBufferAttachmentType::Color,
-			}
-		);
+		SEFramebufferAttachmentCreateInfo createInfo = {
+			ppfxFramebufferFormat,
+			VK_IMAGE_ASPECT_COLOR_BIT,
+			ppfxFramebufferViewType,
+			windowSize,
+			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			SEFramebufferAttachmentType::Color,
+		};
+		createInfo.layerCount = layerCount;
+		createInfo.mipLevels = mipLevels;
+
+		ppfxRenderTarget = new SEFramebufferAttachment(seDevice, createInfo);
 
 		ppfxRenderPass = new SERenderPass(seDevice, { SEAttachmentInfo{ppfxRenderTarget, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE }});
-		ppfxFrameBuffer = new SEFrameBuffer(seDevice, ppfxRenderPass, { ppfxRenderTarget });
+		for (int i = 0; i < layerCount; i++) {
+			for (int j = 0; j < mipLevels; i++) {
+				ppfxSubFramebuffers.push_back(new SEFramebuffer(seDevice, ppfxRenderPass, { ppfxRenderTarget }, i));
+			}
+		}
 	}
 }
 

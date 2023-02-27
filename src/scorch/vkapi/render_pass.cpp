@@ -11,21 +11,21 @@ namespace ScorchEngine {
 
 		for (int i = 0; i < attachmentDescriptions.size(); i++) {
 			auto& attachmentDescription = attachmentDescriptions[i];
-			if (attachments[i].frameBufferAttachment->getAttachmentType() == SEFrameBufferAttachmentType::Resolve) {
+			if (attachments[i].framebufferAttachment->getAttachmentType() == SEFramebufferAttachmentType::Resolve) {
 				assert(attachments[i].loadOp == VK_ATTACHMENT_LOAD_OP_DONT_CARE && "Resolve attachments should have VK_ATTACHMENT_LOAD_OP_DONT_CARE set as the loadOp!");
 			}
-			attachmentDescription.format = attachments[i].frameBufferAttachment->getAttachmentDescription().frameBufferFormat;
-			attachmentDescription.samples = attachments[i].frameBufferAttachment->getAttachmentDescription().sampleCount;
+			attachmentDescription.format = attachments[i].framebufferAttachment->getAttachmentDescription().framebufferFormat;
+			attachmentDescription.samples = attachments[i].framebufferAttachment->getAttachmentDescription().sampleCount;
 			attachmentDescription.loadOp = attachments[i].loadOp;
 			attachmentDescription.storeOp = attachments[i].storeOp;
 			attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 			attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			attachmentDescription.initialLayout = attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD ? attachments[i].frameBufferAttachment->getImageLayout() : VK_IMAGE_LAYOUT_UNDEFINED;
-			attachmentDescription.finalLayout = attachments[i].frameBufferAttachment->getAttachmentDescription().layout;
+			attachmentDescription.initialLayout = attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD ? attachments[i].framebufferAttachment->getImageLayout() : VK_IMAGE_LAYOUT_UNDEFINED;
+			attachmentDescription.finalLayout = attachments[i].framebufferAttachment->getAttachmentDescription().layout;
 
-			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].frameBufferAttachment->getAttachmentType() == SEFrameBufferAttachmentType::Color))
+			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].framebufferAttachment->getAttachmentType() == SEFramebufferAttachmentType::Color))
 				colorAttachmentLoadCount ++;
-			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].frameBufferAttachment->getAttachmentType() == SEFrameBufferAttachmentType::Depth))
+			if ((attachmentDescription.loadOp == VK_ATTACHMENT_LOAD_OP_LOAD) && (attachments[i].framebufferAttachment->getAttachmentType() == SEFramebufferAttachmentType::Depth))
 				depthAttachmentLoadCount ++;
 		}
 
@@ -40,17 +40,17 @@ namespace ScorchEngine {
 		
 		for (uint32_t i = 0; i < attachments.size(); i++) {
 			VkAttachmentReference attachmentRef{};
-			switch(attachments[i].frameBufferAttachment->getAttachmentType()) {
-			case(SEFrameBufferAttachmentType::Color):
-				attachmentRef = { i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, };
+			switch(attachments[i].framebufferAttachment->getAttachmentType()) {
+			case(SEFramebufferAttachmentType::Color):
+				attachmentRef = { i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
 				colorAttachments.push_back(attachmentRef);
 				break;
-			case(SEFrameBufferAttachmentType::Depth):
-				attachmentRef = { i, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, };
+			case(SEFramebufferAttachmentType::Depth):
+				attachmentRef = { i, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
 				depthAttachments.push_back(attachmentRef);
 				break; 
-			case(SEFrameBufferAttachmentType::Resolve):
-				attachmentRef = { i, attachments[i].frameBufferAttachment->getImageLayout() };
+			case(SEFramebufferAttachmentType::Resolve):
+				attachmentRef = { i, attachments[i].framebufferAttachment->getImageLayout() };
 				resolveAttachments.push_back(attachmentRef);
 				break;
 			}
@@ -99,14 +99,14 @@ namespace ScorchEngine {
 
 		clearValues.resize(attachments.size());
 		for (int i = 0; i < attachments.size(); i++) {
-			switch (attachments[i].frameBufferAttachment->getAttachmentType()) {
-			case(SEFrameBufferAttachmentType::Color):
+			switch (attachments[i].framebufferAttachment->getAttachmentType()) {
+			case(SEFramebufferAttachmentType::Color):
 				clearValues[i].color = attachments[i].clear.color;
 				break;
-			case(SEFrameBufferAttachmentType::Depth):
+			case(SEFramebufferAttachmentType::Depth):
 				clearValues[i].depthStencil = attachments[i].clear.depth;
 				break;
-			// Resolve attachments should be loaded with VK_LOAD_OP_DONT_CARE
+			// Resolve attachments must be loaded with VK_LOAD_OP_DONT_CARE
 			}
 		}
 	}
@@ -115,13 +115,13 @@ namespace ScorchEngine {
 		vkDestroyRenderPass(seDevice.getDevice(), renderpass, nullptr);
 	}
 
-	void SERenderPass::beginRenderPass(VkCommandBuffer commandbuffer, SEFrameBuffer* frameBuffer) {
+	void SERenderPass::beginRenderPass(VkCommandBuffer commandbuffer, SEFramebuffer* framebuffer) {
 		VkRenderPassBeginInfo renderPassBeginInfo{};
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassBeginInfo.renderPass = renderpass;
-		renderPassBeginInfo.framebuffer = frameBuffer->getFrameBuffer();
-		renderPassBeginInfo.renderArea.extent.width = frameBuffer->getDimensions().x;
-		renderPassBeginInfo.renderArea.extent.height = frameBuffer->getDimensions().y;
+		renderPassBeginInfo.framebuffer = framebuffer->getFramebuffer();
+		renderPassBeginInfo.renderArea.extent.width = framebuffer->getDimensions().x;
+		renderPassBeginInfo.renderArea.extent.height = framebuffer->getDimensions().y;
 		renderPassBeginInfo.clearValueCount = clearValues.size();
 		renderPassBeginInfo.pClearValues = clearValues.data();
 	
@@ -130,15 +130,15 @@ namespace ScorchEngine {
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(frameBuffer->getDimensions().x);
-		viewport.height = static_cast<float>(frameBuffer->getDimensions().y);
+		viewport.width = static_cast<float>(framebuffer->getDimensions().x);
+		viewport.height = static_cast<float>(framebuffer->getDimensions().y);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(commandbuffer, 0, 1, &viewport);
 
 		VkRect2D scissor = {};
-		scissor.extent.width = frameBuffer->getDimensions().x;
-		scissor.extent.height = frameBuffer->getDimensions().y;
+		scissor.extent.width = framebuffer->getDimensions().x;
+		scissor.extent.height = framebuffer->getDimensions().y;
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
 		vkCmdSetScissor(commandbuffer, 0, 1, &scissor);

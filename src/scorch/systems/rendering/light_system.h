@@ -1,6 +1,6 @@
 #pragma once
-#include <scorch/renderer/frame_info.h>
-#include <scorch/renderer/scene_ssbo.h>
+#include <scorch/rendering/frame_info.h>
+#include <scorch/rendering/scene_ssbo.h>
 
 namespace ScorchEngine {
 	class LightSystem {

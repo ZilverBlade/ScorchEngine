@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scorch/vkapi/frame_buffer.h>
+#include <scorch/vkapi/framebuffer.h>
 
 namespace ScorchEngine {
 	struct SEAttachmentClearColor {
@@ -8,7 +8,7 @@ namespace ScorchEngine {
 		VkClearDepthStencilValue depth{ 1.f, 0 };
 	};
 	struct SEAttachmentInfo {
-		SEFrameBufferAttachment* frameBufferAttachment;
+		SEFramebufferAttachment* framebufferAttachment;
 		VkAttachmentLoadOp loadOp;
 		VkAttachmentStoreOp storeOp;
 		SEAttachmentClearColor clear = SEAttachmentClearColor{};
@@ -24,7 +24,7 @@ namespace ScorchEngine {
 		SERenderPass(SERenderPass&&) = delete;
 		SERenderPass& operator=(SERenderPass&&) = delete;
 
-		void beginRenderPass(VkCommandBuffer commandbuffer, SEFrameBuffer* frameBuffer);
+		void beginRenderPass(VkCommandBuffer commandbuffer, SEFramebuffer* framebuffer);
 		void endRenderPass(VkCommandBuffer commandbuffer);
 
 		void setViewportSize(uint32_t w, uint32_t h) { width = w; height = h; }

@@ -12,7 +12,7 @@ namespace ScorchEngine::PostFX {
 		SEDevice& device, 
 		glm::vec2 size,
 		SEDescriptorPool& descriptorPool,
-		SEFrameBufferAttachment* inputAttachment, 
+		SEFramebufferAttachment* inputAttachment, 
 		SESwapChain* swapChain
 	) : PostFX::Effect(device) {
 		screenCorrection = new SEPostProcessingEffect(
@@ -35,7 +35,7 @@ namespace ScorchEngine::PostFX {
 
 		screenCorrection->render(frameInfo, &push);
 	}
-	void ScreenCorrection::resize(glm::vec2 size, const std::vector<SEFrameBufferAttachment*>& newInputAttachments) {
+	void ScreenCorrection::resize(glm::vec2 size, const std::vector<SEFramebufferAttachment*>& newInputAttachments) {
 		screenCorrection->resize(size, newInputAttachments);
 	}
 }

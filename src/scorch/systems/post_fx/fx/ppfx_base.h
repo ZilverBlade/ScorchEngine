@@ -14,8 +14,8 @@ namespace ScorchEngine {
 			Effect& operator=(const Effect&) = delete;
 
 			virtual void render(FrameInfo& frameInfo) {}
-			virtual void resize(glm::vec2 size, const std::vector<SEFrameBufferAttachment*>& newInputAttachments) {}
-			virtual SEFrameBufferAttachment* getAttachment() { return nullptr; }
+			virtual void resize(glm::vec2 size, const std::vector<SEFramebufferAttachment*>& newInputAttachments) {}
+			virtual SEFramebufferAttachment* getAttachment() { return nullptr; }
 		protected:
 			SEDevice& seDevice;
 		};

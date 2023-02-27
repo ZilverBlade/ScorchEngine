@@ -1,11 +1,11 @@
 #pragma once
 #include <scorch/vkapi/device.h>
 #include <glm/glm.hpp>
-#include <scorch/renderer/frame_info.h>
+#include <scorch/rendering/frame_info.h>
 
 #include <scorch/vkapi/render_pass.h>
-#include <scorch/vkapi/frame_buffer_attachment.h>
-#include <scorch/vkapi/frame_buffer.h>
+#include <scorch/vkapi/framebuffer_attachment.h>
+#include <scorch/vkapi/framebuffer.h>
 
 #include <scorch/vkapi/graphics_pipeline.h>
 #include <scorch/vkapi/pipeline_layout.h>
@@ -43,13 +43,13 @@ namespace ScorchEngine {
 		virtual void beginCompositionPass(FrameInfo& frameInfo) {}
 		virtual void endCompositionPass(FrameInfo& frameInfo){}
 
-		SEFrameBufferAttachment* getColorAttachment() {
-			SEFrameBufferAttachment* attachment{};
+		SEFramebufferAttachment* getColorAttachment() {
+			SEFramebufferAttachment* attachment{};
 			getColorAttachment(&attachment);
 			return attachment;
 		}
-		SEFrameBufferAttachment* getDepthAttachment() {
-			SEFrameBufferAttachment* attachment{};
+		SEFramebufferAttachment* getDepthAttachment() {
+			SEFramebufferAttachment* attachment{};
 			getDepthAttachment(&attachment);
 			return attachment;
 		}
@@ -66,16 +66,16 @@ namespace ScorchEngine {
 	protected:
 		void renderMeshes(FrameInfo& frameInfo, SEPushConstant push, VkPipelineLayout pipelineLayout, uint32_t descriptorOffset, bool translucent, bool doubleSided);
 
-		virtual void getColorAttachment(SEFrameBufferAttachment** out) {}
-		virtual void getDepthAttachment(SEFrameBufferAttachment** out) {}
+		virtual void getColorAttachment(SEFramebufferAttachment** out) {}
+		virtual void getDepthAttachment(SEFramebufferAttachment** out) {}
 		virtual void getOpaqueRenderPass(SERenderPass** out) {}
 
 		virtual void init(glm::vec2 size);
 		virtual void destroy();
 
-		virtual void createFrameBufferAttachments(glm::vec2 size) {}
+		virtual void createFramebufferAttachments(glm::vec2 size) {}
 		virtual void createRenderPasses() {}
-		virtual void createFrameBuffers() {}
+		virtual void createFramebuffers() {}
 		virtual void createGraphicsPipelines(std::vector<VkDescriptorSetLayout> descriptorSetLayouts) {}
 
 		//std::unique_ptr<MaterialSystem> materialSystem;
