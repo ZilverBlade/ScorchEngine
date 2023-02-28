@@ -101,6 +101,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\scorch\apps\app.h" />
+    <ClInclude Include="src\scorch\apps\renderers\render_app.h" />
     <ClInclude Include="src\scorch\apps\tests\lighting_test.h" />
     <ClInclude Include="src\scorch\apps\tests\vulkan_test.h" />
     <ClInclude Include="src\scorch\apps\tests\window_test.h" />
@@ -116,8 +117,8 @@
     <ClInclude Include="src\scorch\ecs\components\skybox_component.h" />
     <ClInclude Include="src\scorch\ecs\components\transform_component.h" />
     <ClInclude Include="src\scorch\ecs\level.h" />
+    <ClInclude Include="src\scorch\graphics\environment_map.h" />
     <ClInclude Include="src\scorch\graphics\model.h" />
-    <ClInclude Include="src\scorch\graphics\sky_light.h" />
     <ClInclude Include="src\scorch\graphics\surface_material.h" />
     <ClInclude Include="src\scorch\graphics\texture.h" />
     <ClInclude Include="src\scorch\graphics\texture2d.h" />
@@ -159,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp" />
+    <ClCompile Include="src\scorch\apps\renderers\render_app.cpp" />
     <ClCompile Include="src\scorch\apps\tests\lighting_test.cpp" />
     <ClCompile Include="src\scorch\apps\tests\vulkan_test.cpp" />
     <ClCompile Include="src\scorch\apps\tests\window_test.cpp" />
@@ -167,8 +169,8 @@
     <ClCompile Include="src\scorch\ecs\actor.cpp" />
     <ClCompile Include="src\scorch\ecs\components\transform_component.cpp" />
     <ClCompile Include="src\scorch\ecs\level.cpp" />
+    <ClCompile Include="src\scorch\graphics\environment_map.cpp" />
     <ClCompile Include="src\scorch\graphics\model.cpp" />
-    <ClCompile Include="src\scorch\graphics\sky_light.cpp" />
     <ClCompile Include="src\scorch\graphics\surface_material.cpp" />
     <ClCompile Include="src\scorch\graphics\texture.cpp" />
     <ClCompile Include="src\scorch\graphics\texture2d.cpp" />

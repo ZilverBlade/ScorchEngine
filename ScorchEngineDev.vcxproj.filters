@@ -4,6 +4,9 @@
     <Filter Include="apps">
       <UniqueIdentifier>{992B947C-8562-950D-2E4F-7B101A65110F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="apps\renderers">
+      <UniqueIdentifier>{D217F063-BEE5-E369-A779-549093E6BFCE}</UniqueIdentifier>
+    </Filter>
     <Filter Include="apps\tests">
       <UniqueIdentifier>{3BA5651B-275D-A768-9064-80C47C3B4259}</UniqueIdentifier>
     </Filter>
@@ -44,6 +47,9 @@
   <ItemGroup>
     <ClInclude Include="src\scorch\apps\app.h">
       <Filter>apps</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\renderers\render_app.h">
+      <Filter>apps\renderers</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\apps\tests\lighting_test.h">
       <Filter>apps\tests</Filter>
@@ -90,10 +96,10 @@
     <ClInclude Include="src\scorch\ecs\level.h">
       <Filter>ecs</Filter>
     </ClInclude>
-    <ClInclude Include="src\scorch\graphics\model.h">
+    <ClInclude Include="src\scorch\graphics\environment_map.h">
       <Filter>graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\scorch\graphics\sky_light.h">
+    <ClInclude Include="src\scorch\graphics\model.h">
       <Filter>graphics</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\graphics\surface_material.h">
@@ -209,6 +215,9 @@
     <ClCompile Include="src\scorch\apps\app.cpp">
       <Filter>apps</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\apps\renderers\render_app.cpp">
+      <Filter>apps\renderers</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\apps\tests\lighting_test.cpp">
       <Filter>apps\tests</Filter>
     </ClCompile>
@@ -233,10 +242,10 @@
     <ClCompile Include="src\scorch\ecs\level.cpp">
       <Filter>ecs</Filter>
     </ClCompile>
-    <ClCompile Include="src\scorch\graphics\model.cpp">
+    <ClCompile Include="src\scorch\graphics\environment_map.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
-    <ClCompile Include="src\scorch\graphics\sky_light.cpp">
+    <ClCompile Include="src\scorch\graphics\model.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\graphics\surface_material.cpp">

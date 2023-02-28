@@ -66,9 +66,10 @@ namespace ScorchEngine {
 	}
 
 	void SEPostProcessingEffect::createPipelineLayout() {
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{
-			ppfxSceneDescriptorLayout->getDescriptorSetLayout()
-		};
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{};
+		if (inputAttachments.size() != 0) {
+			descriptorSetLayouts.push_back(ppfxSceneDescriptorLayout->getDescriptorSetLayout());
+		}
 		ppfxPush = SEPushConstant(128, VK_SHADER_STAGE_FRAGMENT_BIT);
 		std::vector<VkPushConstantRange> pushConstantRanges{
 			ppfxPush.getRange()
@@ -130,9 +131,11 @@ namespace ScorchEngine {
 		ppfxRenderTarget = new SEFramebufferAttachment(seDevice, createInfo);
 
 		ppfxRenderPass = new SERenderPass(seDevice, { SEAttachmentInfo{ppfxRenderTarget, VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE }});
+		ppfxSubFramebuffers.resize(layerCount);
 		for (int i = 0; i < layerCount; i++) {
-			for (int j = 0; j < mipLevels; i++) {
-				ppfxSubFramebuffers.push_back(new SEFramebuffer(seDevice, ppfxRenderPass, { ppfxRenderTarget }, i));
+			ppfxSubFramebuffers[i].resize(mipLevels);
+			for (int j = 0; j < mipLevels; j++) {
+				ppfxSubFramebuffers[i][j] = new SEFramebuffer(seDevice, ppfxRenderPass, { ppfxRenderTarget }, i, j);
 			}
 		}
 	}

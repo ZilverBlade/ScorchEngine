@@ -10,9 +10,23 @@ namespace ScorchEngine {
 			virtual ~ScreenCorrection();
 			virtual void render(FrameInfo& frameInfo);
 			virtual void resize(glm::vec2 size, const std::vector<SEFramebufferAttachment*>& newInputAttachments);
-			virtual SEFramebufferAttachment* getAttachment() { return screenCorrection->getAttachment(); }
+			virtual SEFramebufferAttachment* getAttachment() { return nullptr; }
 		protected:
-			SEPostProcessingEffect* screenCorrection{};
+			void createPipelineLayout();
+			void createPipeline(const SEShader& fragmentShader, VkRenderPass renderPass);
+			void createSceneDescriptors();
+
+			SEDescriptorPool& seDescriptorPool;
+
+			SEFramebufferAttachment* inputAttachment;
+
+			std::unique_ptr<SEGraphicsPipeline> ppfxPipeline{};
+			std::unique_ptr<SEPipelineLayout> ppfxPipelineLayout{};
+			SEPushConstant ppfxPush{};
+
+			std::unique_ptr<SEDescriptorSetLayout> ppfxSceneDescriptorLayout{};
+			VkDescriptorImageInfo ppfxDescriptorRenderTarget{};
+			VkDescriptorSet ppfxSceneDescriptorSet{};
 		};
 	}
 }

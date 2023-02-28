@@ -15,4 +15,9 @@ glslc.exe -O -fshader-stage=fragment depth.fsh -o spirv/depth.fsh.spv
 glslc.exe -O -fshader-stage=fragment skybox.fsh -o spirv/skybox.fsh.spv
 glslc.exe -O -fshader-stage=vertex skybox.vsh -o spirv/skybox.vsh.spv
 
+
+glslc.exe -O -fshader-stage=fragment envirrgen.fsh -o spirv/envirrgen.fsh.spv
+glslc.exe -O -fshader-stage=fragment envprefiltergen.fsh -o spirv/envprefiltergen.fsh.spv
+glslc.exe -O -fshader-stage=fragment envbrdfgen.fsh -o spirv/envbrdfgen.fsh.spv
+
 pause

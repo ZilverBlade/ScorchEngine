@@ -4,28 +4,28 @@
 #include <scorch/graphics/texture_cube.h>
 
 namespace ScorchEngine {
-	class SESkyLight {
+	class SEEnvironmentMap {
 	public:
-		SESkyLight(SEDevice& device, SEDescriptorPool& descriptorPool, std::unique_ptr<SEDescriptorSetLayout>& descriptorSetLayout, VkDescriptorImageInfo skyLightImageInfo, glm::vec2 skyLightImageDimensions, bool fastGeneration);
-		~SESkyLight();
+		SEEnvironmentMap(SEDevice& device, SEDescriptorPool& descriptorPool, std::unique_ptr<SEDescriptorSetLayout>& descriptorSetLayout, VkDescriptorImageInfo envMapImageInfo, glm::vec2 envMapImageDimensions, bool fastGeneration);
+		~SEEnvironmentMap();
 
-		SESkyLight(const SESkyLight&) = delete;
-		SESkyLight& operator=(const SESkyLight&) = delete;
+		SEEnvironmentMap(const SEEnvironmentMap&) = delete;
+		SEEnvironmentMap& operator=(const SEEnvironmentMap&) = delete;
 
 		void generatePrefilteredEnvironmentMap(VkCommandBuffer commandBuffer);
 		void generateIrradianceMap(VkCommandBuffer commandBuffer);
 		static void generateEnvironmentBRDF(VkCommandBuffer commandBuffer); // env brdf only needs to be generated once at the start of the application
 		VkDescriptorSet getEnvironmentMapDescriptor() {
-			return skyLightDescriptor;
+			return envMapDescriptor;
 		}
 	private:
 		SEDevice& seDevice;
 		SEDescriptorPool& seDescriptorPool;
-		std::unique_ptr<SEDescriptorSetLayout>& skyLightDescriptorLayout;
+		std::unique_ptr<SEDescriptorSetLayout>& envMapDescriptorLayout;
 
-		VkDescriptorSet skyLightDescriptor{};
+		VkDescriptorSet envMapDescriptor{};
 
-		VkDescriptorImageInfo skyLightImageInfo{}; // not a SETextureCube* since I plan on adding dynamic reflection cubemapping which means this could come from a render pass
+		VkDescriptorImageInfo  envMapImageInfo{}; // not a SETextureCube* since I plan on adding dynamic reflection cubemapping which means this could come from a render pass
 
 		static inline SEPostProcessingEffect* envBRDFGen{};
 		static inline bool envBRDFGenerated = false;

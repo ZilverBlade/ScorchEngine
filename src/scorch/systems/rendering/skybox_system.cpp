@@ -1,24 +1,21 @@
 #pragma once
 #include "skybox_system.h"
-#include <glm/gtx/rotate_vector.hpp>
 
 #include <scorch/ecs/level.h>
 #include <scorch/ecs/actor.h>
 #include <scorch/ecs/components.h>
 
-#include <scorch/systems/resource_system.h>
 
 namespace ScorchEngine {
 	SkyboxSystem::SkyboxSystem(
 		SEDevice& device, 
-		SEDescriptorPool& descriptorPool, 
-		SEDescriptorSetLayout& skyboxDescriptorLayout,
 		VkRenderPass renderPass,
 		VkDescriptorSetLayout uboLayout, 
-		VkDescriptorSetLayout ssboLayout, 
+		VkDescriptorSetLayout ssboLayout,
+		VkDescriptorSetLayout skyboxDescriptorLayout,
 		VkSampleCountFlagBits msaaSamples
-	) : seDevice(device), seDescriptorPool(descriptorPool), skyboxDescriptorLayout(skyboxDescriptorLayout) {
-		pipelineLayout = new SEPipelineLayout(seDevice, {}, { uboLayout, ssboLayout, skyboxDescriptorLayout.getDescriptorSetLayout() });
+	) : seDevice(device) {
+		pipelineLayout = new SEPipelineLayout(seDevice, {}, { uboLayout, ssboLayout, skyboxDescriptorLayout });
 		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
 		pipelineConfigInfo.disableDepthWrite();
 		pipelineConfigInfo.renderPass = renderPass;
@@ -36,20 +33,12 @@ namespace ScorchEngine {
 	void SkyboxSystem::update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer) {
 		frameInfo.level->getRegistry().view<Components::SkyboxComponent>().each(
 			[&](auto& skybox) {
-				sceneBuffer.skybox.envTint = { skybox.envTint, skybox.envIntensity };
-				sceneBuffer.skybox.tint = { skybox.tint, skybox.intensity };
-				environment = frameInfo.resourceSystem->getTextureCube({ skybox.environmentMap, true, true });
-			}
-		);
-		auto writer = SEDescriptorWriter::SEDescriptorWriter(skyboxDescriptorLayout, seDescriptorPool)
-			.writeImage(0, &environment->getImageInfo());
-		if (skyboxDescriptor) {
-			writer.overwrite(skyboxDescriptor);
-		} else {
-			writer.build(skyboxDescriptor);
+			sceneBuffer.skyLights[0].tint = { skybox.tint, skybox.intensity };
+			sceneBuffer.skyLightCount = 1; // hack for now
 		}
+		);
 	}
-	void SkyboxSystem::renderSkybox(FrameInfo& frameInfo) {
+	void SkyboxSystem::render(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor) {
 		pipeline->bind(frameInfo.commandBuffer);
 		VkDescriptorSet sets[3]{
 			frameInfo.globalUBO,

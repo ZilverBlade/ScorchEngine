@@ -20,6 +20,7 @@ namespace ScorchEngine {
 		imageCreateInfo.samples = attachmentCreateInfo.sampleCount;
 		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageCreateInfo.usage = attachmentCreateInfo.usage;
+		imageCreateInfo.flags |= attachmentCreateInfo.viewType == VK_IMAGE_VIEW_TYPE_CUBE ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
 		VkMemoryAllocateInfo memAlloc = {};
 		memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		VkMemoryRequirements memReqs;
@@ -61,19 +62,19 @@ namespace ScorchEngine {
 				subImageViews[i].resize(attachmentCreateInfo.mipLevels);
 				subSubresourceRanges[i].resize(attachmentCreateInfo.mipLevels);
 				for (int j = 0; j < attachmentCreateInfo.mipLevels; j++) {
-					VkImageViewCreateInfo mipImageViewCreateInfo = {};
-					mipImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-					mipImageViewCreateInfo.viewType = attachmentCreateInfo.viewType;
-					mipImageViewCreateInfo.format = attachmentCreateInfo.framebufferFormat;
+					VkImageViewCreateInfo subImageViewCreateInfo = {};
+					subImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+					subImageViewCreateInfo.viewType = attachmentCreateInfo.viewType;
+					subImageViewCreateInfo.format = attachmentCreateInfo.framebufferFormat;
 					subSubresourceRanges[i][j].aspectMask = attachmentCreateInfo.imageAspect;
 					subSubresourceRanges[i][j].baseMipLevel = j;
 					subSubresourceRanges[i][j].levelCount = 1;
 					subSubresourceRanges[i][j].baseArrayLayer = i;
 					subSubresourceRanges[i][j].layerCount = 1;
-					mipImageViewCreateInfo.subresourceRange = subSubresourceRanges[i][j];
-					mipImageViewCreateInfo.image = image;
+					subImageViewCreateInfo.subresourceRange = subSubresourceRanges[i][j];
+					subImageViewCreateInfo.image = image;
 
-					if (vkCreateImageView(device.getDevice(), &imageViewCreateInfo, nullptr, &subImageViews[i][j]) != VK_SUCCESS) {
+					if (vkCreateImageView(device.getDevice(), &subImageViewCreateInfo, nullptr, &subImageViews[i][j]) != VK_SUCCESS) {
 						throw std::runtime_error("Failed to create image view!");
 					}
 				}

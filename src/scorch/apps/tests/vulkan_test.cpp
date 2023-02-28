@@ -20,7 +20,7 @@ namespace ScorchEngine::Apps {
 
 		SEPipelineLayout* pipelineLayout = new SEPipelineLayout(seDevice);
 		pipelineConfigInfo.pipelineLayout = pipelineLayout->getPipelineLayout();
-		pipelineConfigInfo.renderPass = seSwapChain->getRenderPass()->getRenderPass();
+		pipelineConfigInfo.renderPass = seSwapChain->getRenderPass();
 		//pipelineConfigInfo.wireframe(1.f);
 
 		SEGraphicsPipeline* pipeline = new SEGraphicsPipeline(

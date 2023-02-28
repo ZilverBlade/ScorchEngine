@@ -3,7 +3,7 @@
 #include <scorch/rendering/frame_info.h>
 #include <scorch/rendering/scene_ssbo.h>
 #include <scorch/systems/post_fx/post_processing_fx.h>
-#include <scorch/graphics/sky_light.h>
+#include <scorch/graphics/environment_map.h>
 
 namespace ScorchEngine {
 	class SkyLightSystem {
@@ -14,19 +14,16 @@ namespace ScorchEngine {
 		SkyLightSystem(const SkyLightSystem&) = delete;
 		SkyLightSystem& operator=(const SkyLightSystem&) = delete;
 
-		void update(SESkyLight* skyLight);
-
+		void update(FrameInfo& frameInfo, SETextureCube* skyLight);
+		VkDescriptorSet getDescriptorSet(uint32_t frameIndex) {
+			return descriptorSet[frameIndex];
+		}
 	private:
+		std::unordered_map<SETextureCube*, SEEnvironmentMap*> envCubeToMap{};
+
 		SEDevice& seDevice;
 		SEDescriptorPool& seDescriptorPool;
 		std::unique_ptr<SEDescriptorSetLayout> skyLightDescriptorLayout;
-
-		SEPipelineLayout* pipelineLayout{};
-		SEGraphicsPipeline* pipeline{};
-
-		SETextureCube* environment{};
-
-		SEPostProcessingEffect* envBRDFGen{};
-		SEPostProcessingEffect* envPrefilteredGen{};
+		std::vector<VkDescriptorSet> descriptorSet{};
 	};
 }

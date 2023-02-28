@@ -63,7 +63,7 @@ namespace ScorchEngine {
             renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
             renderPassBeginInfo.renderPass = swapChainRenderPass;
             renderPassBeginInfo.framebuffer = swapChainFramebuffers[currentFrame];
-            renderPassBeginInfo.renderArea.extent = windowExtent;
+            renderPassBeginInfo.renderArea.extent = swapChainExtent;
             renderPassBeginInfo.clearValueCount = 1;
             VkClearValue clearColor{};
             clearColor.color = { 0.0f, 0.0f, 0.0f, 1.0 };
@@ -74,8 +74,8 @@ namespace ScorchEngine {
             VkViewport viewport = {};
             viewport.x = 0.0f;
             viewport.y = 0.0f;
-            viewport.width = static_cast<float>(windowExtent.width);
-            viewport.height = static_cast<float>(windowExtent.height);
+            viewport.width = static_cast<float>(swapChainExtent.width);
+            viewport.height = static_cast<float>(swapChainExtent.height);
             viewport.minDepth = 0.0f;
             viewport.maxDepth = 1.0f;
             vkCmdSetViewport(commandBuffer, 0, 1, &viewport);

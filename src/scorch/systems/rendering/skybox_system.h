@@ -6,26 +6,26 @@
 #include <scorch/vkapi/pipeline_layout.h>
 
 namespace ScorchEngine {
-	class SETextureCube;
-	class SkyLightSystem {
+	class SkyboxSystem {
 	public:
-		SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool);
-		~SkyLightSystem();
+		SkyboxSystem(
+			SEDevice& device,
+			VkRenderPass renderPass,
+			VkDescriptorSetLayout uboLayout,
+			VkDescriptorSetLayout ssboLayout,
+			VkDescriptorSetLayout skyboxDescriptorLayout,
+			VkSampleCountFlagBits msaaSamples
+		);
+		~SkyboxSystem();
 
-		SkyLightSystem(const SkyLightSystem&) = delete;
-		SkyLightSystem& operator=(const SkyLightSystem&) = delete;
+		SkyboxSystem(const SkyboxSystem&) = delete;
+		SkyboxSystem& operator=(const SkyboxSystem&) = delete;
 
 		void update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer);
-		VkDescriptorSet getEnvironmentMapDescriptor(int frameIndex) { return skyboxDescriptors[frameIndex]; }
+		void render(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor);
 	private:
 		SEDevice& seDevice;
-		SEDescriptorPool& seDescriptorPool;
-		SEDescriptorSetLayout skyboxDescriptorSetLayout;
-
 		SEPipelineLayout* pipelineLayout{};
 		SEGraphicsPipeline* pipeline{};
-
-		std::vector<VkDescriptorSet> skyboxDescriptors{};
-		SETextureCube* environment{};
 	};
 }

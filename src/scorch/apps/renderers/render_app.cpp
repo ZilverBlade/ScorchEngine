@@ -1,4 +1,4 @@
-#include "lighting_test.h"
+#include "render_app.h"
 
 #include <chrono>
 #include <scorch/rendering/camera.h>
@@ -11,87 +11,69 @@
 
 #include <scorch/controllers/camera_controller.h>
 #include <scorch/graphics/surface_material.h>
-#include <scorch/systems/rendering/sky_light_system.h>
 
 namespace ScorchEngine::Apps {
-	LightingTest::LightingTest(const char* name) : VulkanBaseApp(name)
+	RenderApp::RenderApp(const char* name) : VulkanBaseApp(name)
 	{
 	}
-	LightingTest::~LightingTest()
+	RenderApp::~RenderApp()
 	{
 	}
-	void LightingTest::run() {
+	void RenderApp::run() {
 		glm::vec2 resolution = { 1280, 720 };
 		ResourceSystem* resourceSystem = new ResourceSystem(seDevice, *staticPool);
 		MaterialSystem::createDescriptorSetLayout(seDevice);
-		std::unique_ptr<SEDescriptorSetLayout> skyLightDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
-			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // prefiltered
-			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // irradiance
-			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // brdfLUT
-			.build();
-	
-		
+
 		ResourceID missingMaterial = resourceSystem->loadSurfaceMaterial("res/materials/missing_material.json");
 		ResourceID clearCoatMaterial = resourceSystem->loadSurfaceMaterial("res/materials/paint.json");
 		ResourceID blankMaterial = resourceSystem->loadSurfaceMaterial("res/materials/blank.json");
-		
+
 		level = std::make_shared<Level>();
+		Actor floorActor = level->createActor("floor");
+		auto& msc = floorActor.addComponent<Components::MeshComponent>();
+		msc.mesh = resourceSystem->loadModel("res/models/cube.fbx");
+		for (const std::string& mapto : resourceSystem->getModel(msc.mesh)->getSubmeshes()) {
+			msc.materials[mapto] = blankMaterial;
+		}
+		floorActor.getTransform().scale = { 20.f, 20.f, 1.0f };
+		Actor sphereActor = level->createActor("sphereActor");
+		auto& msc2 = sphereActor.addComponent<Components::MeshComponent>();
+		msc2.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
+		for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
+			msc2.materials[mapto] = clearCoatMaterial;
+		}
+		sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
+
 		Actor skyboxActor = level->createActor("skyboxActor");
+		auto& sbc = skyboxActor.addComponent<Components::SkyboxComponent>();
+		sbc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
+
 		Actor cameraActor = level->createActor("camera actor");
+		cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
 		{
-			Actor floorActor = level->createActor("floor");
-			auto& msc = floorActor.addComponent<Components::MeshComponent>();
-			msc.mesh = resourceSystem->loadModel("res/models/cube.fbx");
-			for (const std::string& mapto : resourceSystem->getModel(msc.mesh)->getSubmeshes()) {
-				msc.materials[mapto] = blankMaterial;
-			}
-			floorActor.getTransform().scale = { 20.f, 20.f, 1.0f };
-			Actor sphereActor = level->createActor("sphereActor");
-			auto& msc2 = sphereActor.addComponent<Components::MeshComponent>();
-			msc2.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
-			for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
-				msc2.materials[mapto] = clearCoatMaterial;
-			}
-			sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
-
-			auto& sbc = skyboxActor.addComponent<Components::SkyboxComponent>();
-			sbc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
-
-			cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
-			{
-				Actor lightActor = level->createActor("sun");
-				lightActor.addComponent<Components::DirectionalLightComponent>();
-				lightActor.getTransform().rotation.x = 0.5f;
-				lightActor.getTransform().rotation.z = 0.25f;
-			}
-			{
-				cameraActor.addComponent<Components::PointLightComponent>().emission = { 1.0, 0.0, 0.0 };
-				cameraActor.getTransform().translation = { 1.0, 1.0, 3.0f };
-			}
+			Actor lightActor = level->createActor("sun");
+			lightActor.addComponent<Components::DirectionalLightComponent>();
+			lightActor.getTransform().rotation.x = 0.5f;
+			lightActor.getTransform().rotation.z = 0.25f;
+		}
+		{
+			cameraActor.addComponent<Components::PointLightComponent>().emission = {1.0, 0.0, 0.0};
+			cameraActor.getTransform().translation = { 1.0, 1.0, 3.0f};
 		}
 		VkSampleCountFlagBits msaa = VK_SAMPLE_COUNT_8_BIT;
+		auto skyboxDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
 		RenderSystem* renderSystem = new ForwardRenderSystem(
 			seDevice, 
 			resolution, { 
 				globalUBODescriptorLayout->getDescriptorSetLayout(),
 				sceneSSBODescriptorLayout->getDescriptorSetLayout(),
-				skyLightDescriptorLayout->getDescriptorSetLayout()
+				skyboxDescriptorLayout->getDescriptorSetLayout()
 			},
 			msaa
 		);
-		SkyLightSystem* skyLightSystem = new SkyLightSystem(
-			seDevice,
-			*staticPool,
-			seSwapChain->getImageCount()
-		);
-		SkyboxSystem* skyboxSystem = new SkyboxSystem(
-			seDevice,
-			renderSystem->getOpaqueRenderPass()->getRenderPass(),
-			globalUBODescriptorLayout->getDescriptorSetLayout(),
-			sceneSSBODescriptorLayout->getDescriptorSetLayout(),
-			skyLightDescriptorLayout->getDescriptorSetLayout(),
-			msaa
-		);
+		
 		LightSystem lightSystem = LightSystem();
 
 		PostFX::Effect* screenCorrection = new PostFX::ScreenCorrection(
@@ -158,27 +140,12 @@ namespace ScorchEngine::Apps {
 				renderData[frameIndex].uboBuffer->flush();
 
 				lightSystem.update(frameInfo, *renderData[frameIndex].sceneSSBO);
-				SETextureCube* pickedCube = nullptr;
-				frameInfo.level->getRegistry().view<Components::SkyboxComponent>().each(
-				[&](auto& skybox) {
-					pickedCube = resourceSystem->getTextureCube({ skybox.environmentMap, true, true });
-				}
-				);
-				if (pickedCube) {
-					skyLightSystem->update(frameInfo, pickedCube);
-				}
-				skyboxSystem->update(frameInfo, *renderData[frameIndex].sceneSSBO);
-
 				renderData[frameIndex].ssboBuffer->writeToBuffer(renderData[frameIndex].sceneSSBO.get());
 				renderData[frameIndex].ssboBuffer->flush();
 
 				renderSystem->renderEarlyDepth(frameInfo);
 
 				renderSystem->beginOpaquePass(frameInfo);
-				renderSystem->renderOpaque(frameInfo);
-				if (pickedCube) {
-					skyboxSystem->render(frameInfo, skyLightSystem->getDescriptorSet(frameIndex));
-				}
 				renderSystem->endOpaquePass(frameInfo);
 
 				seSwapChain->beginRenderPass(commandBuffer);

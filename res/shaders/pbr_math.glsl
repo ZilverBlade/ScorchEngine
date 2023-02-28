@@ -5,13 +5,13 @@
 #include "constants.glsl"
 
 float D_beckmann(float NdH, float m2) {
-    float NdH2 = pbrData.NdH * pbrData.NdH;
-    return exp((NdH2 - 1.0) / max(pbrSData.m2 * NdH2, 1e-6)) / max(PI * pbrSData.m2 * NdH2 * NdH2, 1e-6);
+    float NdH2 = NdH * NdH;
+    return exp((NdH2 - 1.0) / max(m2 * NdH2, 1e-6)) / max(PI * m2 * NdH2 * NdH2, 1e-6);
 }
 
 float D_GGX(float NdH, float m2) {
-    float d = (pbrData.NdH * pbrSData.m2 - pbrData.NdH) * pbrData.NdH + 1.0;
-    return pbrSData.m2 / max(PI * d * d, 1e-6);
+    float d = (NdH * m2 - NdH) * NdH + 1.0;
+    return m2 / max(PI * d * d, 1e-6);
 }
 float Vis_Schlick(float NdV, float NdL, float m) {
     float x = (m + 1.0);

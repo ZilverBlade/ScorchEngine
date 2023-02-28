@@ -2,36 +2,40 @@
 #extension GL_GOOGLE_include_directive : enable
 #include "pbr_math.glsl"
 #include "constants.glsl"
+#include "magic.glsl"
+#include "cubemap_utils.glsl"
 
 layout (set = 0, binding = 0) uniform samplerCube environmentMap;
 
-layout (location = 0) in vec3 fragUV;
+layout (location = 0) in vec2 fragUV;
 layout (location = 0) out vec4 outDiffuse;
 
- float3 SH_Evaluation( Llm,                        AlmYlm,                        thetaPhi : VPOS ) : COLOR  {   
-
- } 
+layout (push_constant) uniform Push {
+	uint faceIndex;
+	float roughness;
+} push;
 
 void main() {
-	const vec3 normal = normalize(fragUV);
-	
-	const vec3 up = vec3(0.0, 1.0, 0.0);
-	const vec3 right = normalize(cross(up, normal));
-	
-	vec3 irradiance = vec3(0.0); 
-	
-	float sampleDelta = 0.025;
-	float nrSamples = 0.0; 
-	float thetaPhi = 0.0;
-	float sum = 0;
-	for(float phi = 0.0; phi < 2.0 * PI; phi += sampleDelta)
-	{  
-		for_all {T0:Llm}      
-		T1 = map_to_tile_and_offset(T0, thetaPhi)     
-		weighted_BRDF = AlmYlm[T1]      
-		light_environment = inputEnvironmentMap[T0]      
-		sum += light_environment * weighted_BRDF    
-		return sum  
-	}
-	outDiffuse = vec4(PI * irradiance * (1.0 / float(nrSamples)), 1.0);
+	vec3 N = normalize(getCubeUV(fragUV, push.faceIndex));    
+    vec3 R = N;
+    vec3 V = R;
+
+    const uint SAMPLE_COUNT = 1024u;
+    float totalWeight = 0.0;   
+    vec3 prefilteredColor = vec3(0.0);     
+    for(uint i = 0u; i < SAMPLE_COUNT; ++i)
+    {
+        vec2 Xi = hammersley(i, SAMPLE_COUNT);
+        vec3 H  = importanceSampleGGX(Xi, N, push.roughness);
+        vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+
+        float NdotL = max(dot(N, L), 0.0);
+        if(NdotL > 0.0)
+        {
+            prefilteredColor += texture(environmentMap, L).rgb * NdotL;
+            totalWeight      += NdotL;
+        }
+    }
+    prefilteredColor = prefilteredColor / totalWeight;
+
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <scorch/vkapi/framebuffer.h>
+#include <scorch/vkapi/framebuffer_attachment.h>
 
 namespace ScorchEngine {
 	struct SEAttachmentClearColor {

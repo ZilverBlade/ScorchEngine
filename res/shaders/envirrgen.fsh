@@ -2,19 +2,25 @@
 #extension GL_GOOGLE_include_directive : enable
 #include "pbr_math.glsl"
 #include "constants.glsl"
+#include "magic.glsl"
+#include "cubemap_utils.glsl"
 
 layout (set = 0, binding = 0) uniform samplerCube environmentMap;
 
-layout (location = 0) in vec3 fragUV;
+layout (location = 0) in vec2 fragUV;
 layout (location = 0) out vec4 outDiffuse;
+
+layout (push_constant) uniform Push {
+	uint faceIndex;
+} push;
 
 // use this for static cubemap generation for correct results, otherwise for dynamic reflections use the faster gaussian blur approximation
 
 void main() {
-	const vec3 normal = normalize(fragUV);
+	const vec3 N = normalize(getCubeUV(fragUV, push.faceIndex));    
 	
 	const vec3 up = vec3(0.0, 1.0, 0.0);
-	const vec3 right = normalize(cross(up, normal));
+	const vec3 right = normalize(cross(up, N));
 	
 	vec3 irradiance = vec3(0.0); 
 	

@@ -1,5 +1,6 @@
 #include "swap_chain.h"
 #include <simple_ini.h>
+#include <array>
 
 namespace ScorchEngine {
 	SESwapChain::SESwapChain(SEDevice& device, SEWindow& window, VkExtent2D windowExtent, SESwapChain* oldSwapChain) : seDevice(device), seWindow(window), swapChainExtent(windowExtent), oldSwapChain(oldSwapChain){
@@ -147,7 +148,53 @@ namespace ScorchEngine {
 		}
 	}
 	void SESwapChain::createRenderPass() {
+		std::array<VkAttachmentDescription, 1> attachmentDescriptions;
+	
+		attachmentDescriptions[0].format = swapChainImageFormat;
+		attachmentDescriptions[0].flags = 0;
+		attachmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
+		attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		attachmentDescriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		attachmentDescriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		std::array<VkAttachmentReference, 1> colorAttachments;
 		
+		colorAttachments[0] = { 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
+
+		VkSubpassDescription subpassDescription{};
+		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassDescription.pColorAttachments = colorAttachments.data();
+		subpassDescription.colorAttachmentCount = colorAttachments.size();
+		subpassDescription.pDepthStencilAttachment = nullptr;
+		subpassDescription.pResolveAttachments = nullptr;
+
+		// Use subpass dependencies for layout transitions
+		std::array<VkSubpassDependency, 1> dependencies{};
+
+		dependencies[0].dstSubpass = 0;
+		dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependencies[0].srcAccessMask = 0;
+		dependencies[0].srcStageMask =
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+
+		// Create the actual renderpass
+		VkRenderPassCreateInfo renderPassInfo{};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptions.size());
+		renderPassInfo.pAttachments = attachmentDescriptions.data();
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpassDescription;
+		renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
+		renderPassInfo.pDependencies = dependencies.data();
+
+		if (vkCreateRenderPass(seDevice.getDevice(), &renderPassInfo, nullptr, &swapChainRenderPass) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create render pass");
+		}
 	}
 	void SESwapChain::createFramebuffers() {
 		for (int i = 0; i < imageCount; i++) {
@@ -156,10 +203,10 @@ namespace ScorchEngine {
 			fbufferCreateInfo.pNext = nullptr;
 			fbufferCreateInfo.flags = 0;
 			fbufferCreateInfo.renderPass = swapChainRenderPass;
-			fbufferCreateInfo.attachmentCount = static_cast<uint32_t>(swapChainImageViews.size());
-			fbufferCreateInfo.pAttachments = swapChainImageViews.data();
-			fbufferCreateInfo.width = windowExtent.width;
-			fbufferCreateInfo.height = windowExtent.height;
+			fbufferCreateInfo.attachmentCount = 1;
+			fbufferCreateInfo.pAttachments = &swapChainImageViews[i];
+			fbufferCreateInfo.width = swapChainExtent.width;
+			fbufferCreateInfo.height = swapChainExtent.height;
 			fbufferCreateInfo.layers = 1;
 			VkFramebuffer framebuffer;
 			if (vkCreateFramebuffer(seDevice.getDevice(), &fbufferCreateInfo, nullptr, &framebuffer) != VK_SUCCESS) {
