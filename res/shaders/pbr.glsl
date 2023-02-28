@@ -56,13 +56,13 @@ float F_Schlick(float F0, float dv){
 	
     return F0 + (1.0 - F0) * Fc;
 }
-vec3 F_Schlick(vec3 F0, float dv){
+float F_SchlickRoughness(float F0, float dv, float roughness){
 	float x = 1.0 - dv;
 	float x2 = x*x;
 	float x4 = x2*x2;
 	float Fc = x4*x;
 	
-    return F0 + (1.0 - F0) * Fc;
+    return F0 + (max(1.0 - roughness, F0) - F0)  * Fc;
 }
 
 vec3 pbrSchlickBeckmannBRDF(PrivateStaticPBRData pbrSData, PrivatePBRData pbrData, PrivateLightingData lightingData) {
@@ -95,6 +95,14 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	pbrSData.V = V; 
 	pbrSData.N = N; 
 	pbrSData.NdV = max(dot(N, V), 0.0);
+	
+	
+	PrivateStaticPBRData ccpbrSData = pbrSData;
+	ccpbrSData.m = fragmentcc.clearCoatRoughness * fragmentcc.clearCoatRoughness; 
+	ccpbrSData.m2 = ccpbrSData.m * ccpbrSData.m;
+	
+	const float maxEnvMapMipLevel = min(floor(log2(float(textureSize(environmentPrefilteredMap, 0).x))) - 2.0, 3.0);
+	
 	const float fresnelTotalInternalReflection = F_Schlick(F0, pbrSData.NdV);
 	
 	bool enableClearCoatBRDF = fragmentcc.clearCoat != 0.0;
@@ -102,22 +110,16 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	vec3 specular = vec3(0.0);
 	vec3 clearCoat = vec3(0.0);
 
-	float maxEnvMapMipLevel = min(floor(log2(float(textureSize(environmentPrefilteredMap, 0).x))) - 2.0, 3.0);
-	vec3 prefilteredColor = textureLod(environmentPrefilteredMap, R, fragment.roughness * maxEnvMapMipLevel).rgb;
-	vec2 envBRDF = textureLod(brdfLUT, vec2(pbrSData.NdV, fragment.roughness), 0.0).xy;
+	const vec3 prefilteredColor = textureLod(environmentPrefilteredMap, R, pbrSData.m * maxEnvMapMipLevel).rgb;
+	const vec2 envBRDF = textureLod(brdfLUT, vec2(pbrSData.NdV, fragment.roughness), 0.0).xy;
 	specular += prefilteredColor * (fresnelTotalInternalReflection * envBRDF.x + envBRDF.y);
 	if (enableClearCoatBRDF) {
-		vec3 ccprefilteredColor = textureLod(environmentPrefilteredMap, R, fragmentcc.clearCoatRoughness * maxEnvMapMipLevel).rgb;
-		vec2 ccenvBRDF = textureLod(brdfLUT, vec2(pbrSData.NdV, fragmentcc.clearCoatRoughness), 0.0).xy;
+		const vec3 ccprefilteredColor = textureLod(environmentPrefilteredMap, R, ccpbrSData.m * maxEnvMapMipLevel).rgb;
+		const vec2 ccenvBRDF = textureLod(brdfLUT, vec2(pbrSData.NdV, fragmentcc.clearCoatRoughness), 0.0).xy;
 		clearCoat += ccprefilteredColor * (fresnelTotalInternalReflection * ccenvBRDF.x + ccenvBRDF.y);
 	}
 	
-	PrivateStaticPBRData ccpbrSData = pbrSData;
-	ccpbrSData.m = fragmentcc.clearCoatRoughness * fragmentcc.clearCoatRoughness; 
-	ccpbrSData.m2 = ccpbrSData.m * ccpbrSData.m;
-	
-	
-	vec3 diffuse = vec3(0.5) * fragment.diffuse; // ambient lighting
+	vec3 diffuse = textureLod(irradianceMap, R, 0.0).rgb * scene.skyLights[0].tint.rgb * scene.skyLights[0].tint.a * fragment.diffuse ; // ambient lighting
 	
 	for (uint i = 0; i < scene.pointLightCount; i++) {
 		vec3 fragToLight = scene.pointLights[i].position - fragment.position;
@@ -135,7 +137,7 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 		PrivateLightingData lightingData;
 		lightingData.radiance = radiance;
 		
-		diffuse += (1.0 - F_Schlick(F0, pbrData.NdL)) * (1.0 - fresnelTotalInternalReflection) * pbrLambertDiffuseBRDF(pbrSData, pbrData, lightingData);
+		diffuse += (1.0 - F_Schlick(F0, pbrData.NdL)) * pbrLambertDiffuseBRDF(pbrSData, pbrData, lightingData);
 		specular += pbrSchlickBeckmannBRDF(pbrSData, pbrData, lightingData);
 		if (fragmentcc.clearCoat != 0.0) {
 			clearCoat += pbrSchlickBeckmannBRDF(ccpbrSData, pbrData, lightingData);

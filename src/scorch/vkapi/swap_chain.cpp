@@ -148,10 +148,9 @@ namespace ScorchEngine {
 		}
 	}
 	void SESwapChain::createRenderPass() {
-		std::array<VkAttachmentDescription, 1> attachmentDescriptions;
+		std::array<VkAttachmentDescription, 1> attachmentDescriptions{};
 	
 		attachmentDescriptions[0].format = swapChainImageFormat;
-		attachmentDescriptions[0].flags = 0;
 		attachmentDescriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
 		attachmentDescriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		attachmentDescriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -160,7 +159,7 @@ namespace ScorchEngine {
 		attachmentDescriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		attachmentDescriptions[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		std::array<VkAttachmentReference, 1> colorAttachments;
+		std::array<VkAttachmentReference, 1> colorAttachments{};
 		
 		colorAttachments[0] = { 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
 

@@ -17,7 +17,7 @@ namespace ScorchEngine {
 			glm::vec2 resolution,
 			const SEShader& fragmentShader,
 			SEDescriptorPool& descriptorPool,
-			const std::vector<SEFramebufferAttachment*>& inputTargets,
+			const std::vector<VkDescriptorImageInfo>& inputAttachments,
 			VkFormat framebufferFormat,
 			VkImageViewType viewType,
 			uint32_t layers = 1,
@@ -29,7 +29,7 @@ namespace ScorchEngine {
 		SEPostProcessingEffect& operator= (const SEPostProcessingEffect&) = delete;
 
 		void render(VkCommandBuffer commandBuffer, const void* pushData, uint32_t layer = 0, uint32_t mipLevel = 0);
-		void resize(glm::vec2 newResolution, const std::vector<SEFramebufferAttachment*>& inputTargets);
+		void resize(glm::vec2 newResolution, const std::vector<VkDescriptorImageInfo>& inputAttachments);
 
 		SEFramebufferAttachment* getAttachment() {
 			return ppfxRenderTarget;
@@ -52,7 +52,7 @@ namespace ScorchEngine {
 		VkFormat ppfxFramebufferFormat;
 		VkImageViewType ppfxFramebufferViewType;
 
-		std::vector<SEFramebufferAttachment*> inputAttachments;
+		std::vector<VkDescriptorImageInfo> inputAttachments;
 
 		std::unique_ptr<SEGraphicsPipeline> ppfxPipeline{};
 		std::unique_ptr<SEPipelineLayout> ppfxPipelineLayout{};

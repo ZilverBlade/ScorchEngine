@@ -81,7 +81,7 @@ namespace ScorchEngine {
             vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
             VkRect2D scissor = {};
-            scissor.extent = windowExtent;
+            scissor.extent = swapChainExtent;
             scissor.offset.x = 0;
             scissor.offset.y = 0;
             vkCmdSetScissor(commandBuffer, 0, 1, &scissor);

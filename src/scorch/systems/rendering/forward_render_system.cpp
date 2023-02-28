@@ -60,9 +60,10 @@ namespace ScorchEngine {
 	}
 	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo) {
 		opaquePipeline->bind(frameInfo.commandBuffer);
-		VkDescriptorSet sets[2]{
+		VkDescriptorSet sets[3]{
 			frameInfo.globalUBO,
-			frameInfo.sceneSSBO
+			frameInfo.sceneSSBO,
+			frameInfo.skyLight
 		};
 
 		vkCmdBindDescriptorSets(
@@ -70,7 +71,7 @@ namespace ScorchEngine {
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			opaquePipelineLayout->getPipelineLayout(),
 			0,
-			2,
+			3,
 			sets,
 			0,
 			nullptr
@@ -199,8 +200,7 @@ namespace ScorchEngine {
 
 		std::vector<VkDescriptorSetLayout> setLayouts = descriptorSetLayouts;
 		setLayouts.push_back(MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout());
-		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, 
-			setLayouts);
+		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, setLayouts);
 
 		SEGraphicsPipelineConfigInfo pipelineConfigInfo{};
 		pipelineConfigInfo.enableVertexDescriptions();

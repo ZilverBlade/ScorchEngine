@@ -11,6 +11,7 @@ namespace ScorchEngine {
 		float frameTime;
 		VkDescriptorSet globalUBO;
 		VkDescriptorSet sceneSSBO;
+		VkDescriptorSet skyLight;
 		std::shared_ptr<Level> level;
 		ResourceSystem* resourceSystem;
 	};

@@ -1,5 +1,7 @@
 #pragma once
 #include  "environment_map.h"
+#include <glm/gtc/constants.hpp>
+#include <scorch/rendering/camera.h>
 
 namespace ScorchEngine {
 	SEEnvironmentMap::SEEnvironmentMap(SEDevice& device, SEDescriptorPool& descriptorPool, std::unique_ptr<SEDescriptorSetLayout>& descriptorSetLayout, VkDescriptorImageInfo envMapImageInfo, glm::vec2 envMapImageDimensions, bool fastGeneration)
@@ -14,7 +16,7 @@ namespace ScorchEngine {
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/envbrdfgen.fsh.spv"),
 			descriptorPool,
 			{},
-			VK_FORMAT_R8G8_UNORM,
+			VK_FORMAT_R16G16_SFLOAT, //VK_FORMAT_R8G8_UNORM,
 			VK_IMAGE_VIEW_TYPE_2D
 		);
 		if (!envBRDFGenerated) {
@@ -29,7 +31,7 @@ namespace ScorchEngine {
 				envMapImageDimensions,
 				SEShader(SEShaderType::Fragment, "res/shaders/spirv/envprefiltergen.fsh.spv"),
 				descriptorPool,
-				{},
+				{ envMapImageInfo },
 				VK_FORMAT_R8G8B8A8_UNORM,
 				VK_IMAGE_VIEW_TYPE_CUBE,
 				6,
@@ -40,7 +42,7 @@ namespace ScorchEngine {
 				{ 128, 128 },
 				SEShader(SEShaderType::Fragment, "res/shaders/spirv/envirrgen.fsh.spv"),
 				descriptorPool,
-				{},
+				{ envMapImageInfo },
 				VK_FORMAT_R8G8B8A8_UNORM,
 				VK_IMAGE_VIEW_TYPE_CUBE,
 				6,
@@ -48,6 +50,11 @@ namespace ScorchEngine {
 			);
 		}
 
+		SEDescriptorWriter::SEDescriptorWriter(*descriptorSetLayout, descriptorPool)
+			.writeImage(0, &envPrefilteredGen->getAttachment()->getDescriptor())
+			.writeImage(1, &envIrradianceGen->getAttachment()->getDescriptor())
+			.writeImage(2, &envBRDFGen->getAttachment()->getDescriptor())
+			.build(envMapDescriptor);
 	}
 	SEEnvironmentMap::~SEEnvironmentMap() {
 		if (!fastGeneration) {
@@ -55,18 +62,37 @@ namespace ScorchEngine {
 			delete envIrradianceGen;
 		}
 	}
+	static glm::vec3 orientations[6]{
+		{ 0.f, 0.f, glm::half_pi<float>() },	// right (works)
+		{ 0.f, 0.f, -glm::half_pi<float>() },		// left
+		{ glm::half_pi<float>(), 0.f, 0.f },	// up (works)
+		{ -glm::half_pi<float>() , 0.f, 0.f },		// down 
+		{ 0.f, 0.f, 0.f },						// front (works)
+		{ 0.f, 0.f, glm::pi<float>() }			// back
+	};
+	static glm::vec3 lookVectors[6]{
+		{ 1.f, 0.f, 0.0 },	
+		{ -1.f, 0.f, 0.0 },
+		{ 0.f, 1.f, 0.0 },
+		{ 0.f, -1.f, 0.0 },
+		{ 0.f, 0.f, 1.f, },
+		{ 0.f, 0.f, -1.f, }
+	};
 	void SEEnvironmentMap::generatePrefilteredEnvironmentMap(VkCommandBuffer commandBuffer) {
 		struct EnvPrefilteredPush {
-			uint32_t face;
+			glm::mat4 mvp;
 			float roughness;
 		};
 		if (!fastGeneration) {
 			for (int i = 0; i < 6; i++) {
+				SECamera camera{};
+				camera.setViewYXZ({}, orientations[i]);
+				//camera.setViewDirection({}, lookVectors[i]);
+				EnvPrefilteredPush push{};
+				push.mvp =  camera.getView();
 				for (int j = 0; j < envPrefilteredMipLevels; j++) {
-					EnvPrefilteredPush push{};
-					push.face = i;
 					push.roughness = static_cast<float>(j) / static_cast<float>(envPrefilteredMipLevels - 1);
-					envPrefilteredGen->render(commandBuffer, nullptr, i, j);
+					envPrefilteredGen->render(commandBuffer, &push, i, j);
 				}
 			}
 		}	
@@ -74,7 +100,11 @@ namespace ScorchEngine {
 	void SEEnvironmentMap::generateIrradianceMap(VkCommandBuffer commandBuffer) {
 		if (!fastGeneration) {
 			for (int i = 0; i < 6; i++) {
-				envPrefilteredGen->render(commandBuffer, &i, i); // face ID for push constant
+				SECamera camera{};
+				camera.setViewYXZ({}, orientations[i]);
+				//camera.setViewDirection({}, lookVectors[i]);
+				glm::mat4 mvp = camera.getView();
+				envIrradianceGen->render(commandBuffer, &mvp, i); 
 			}
 		}
 	}

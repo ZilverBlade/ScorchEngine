@@ -19,7 +19,13 @@ float Vis_Schlick(float NdV, float NdL, float m) {
 	
 	float Vis_SchlickV = NdV * (1.0 - k) + k;
 	float Vis_SchlickL = NdL * (1.0 - k) + k;
-	return 0.25 / max(Vis_SchlickV * Vis_SchlickL, 1e-6);
+	return (max(Vis_SchlickV * Vis_SchlickL, 1e-6));
 }
-
+float Vis_SchlickIBL(float NdV, float NdL, float m) {
+    float k = (m * m) / 2.0;
+	
+	float Vis_SchlickV = NdV * (1.0 - k) + k;
+	float Vis_SchlickL = NdL * (1.0 - k) + k;
+	return max(Vis_SchlickV * Vis_SchlickL, 1e-6);
+}
 #endif

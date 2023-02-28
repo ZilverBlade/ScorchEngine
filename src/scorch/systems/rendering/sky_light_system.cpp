@@ -8,7 +8,8 @@
 #include <scorch/systems/resource_system.h>
 
 namespace ScorchEngine {
-	SkyLightSystem::SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool, uint32_t framesInFlight) : seDevice(device), seDescriptorPool(descriptorPool) {
+	SkyLightSystem::SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool, std::unique_ptr<SEDescriptorSetLayout>& skyLightDescriptorLayout, uint32_t framesInFlight)
+		: seDevice(device), seDescriptorPool(descriptorPool), skyLightDescriptorLayout(skyLightDescriptorLayout) {
 		descriptorSet.resize(framesInFlight);
 	}
 	SkyLightSystem::~SkyLightSystem() {
@@ -23,6 +24,7 @@ namespace ScorchEngine {
 			envCubeToMap[skyLight]->generateEnvironmentBRDF(commandBuffer);
 			envCubeToMap[skyLight]->generateIrradianceMap(commandBuffer);
 			envCubeToMap[skyLight]->generatePrefilteredEnvironmentMap(commandBuffer);
+			seDevice.endSingleTimeCommands(commandBuffer);
 		} 
 		descriptorSet[frameInfo.frameIndex] = envCubeToMap[skyLight]->getEnvironmentMapDescriptor();
 	}

@@ -32,7 +32,18 @@ namespace ScorchEngine::PostFX {
 		push.ditherIntensity = 0.5f / 256.f; // 8 bit
 		//push.ditherIntensity = 0.5f / 1024.f; // 10 bit
 
+		ppfxPipeline->bind(frameInfo.commandBuffer);
 		ppfxPush.push(frameInfo.commandBuffer, ppfxPipelineLayout->getPipelineLayout(), &push);
+		vkCmdBindDescriptorSets(
+			frameInfo.commandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			ppfxPipelineLayout->getPipelineLayout(),
+			0,
+			1,
+			&ppfxSceneDescriptorSet,
+			0,
+			nullptr
+		);
 		vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
 	}
 	void ScreenCorrection::resize(glm::vec2 size, const std::vector<SEFramebufferAttachment*>& newInputAttachments) {
@@ -51,7 +62,8 @@ namespace ScorchEngine::PostFX {
 	}
 	void ScreenCorrection::createPipeline(const SEShader& fragmentShader, VkRenderPass renderPass) {
 		SEGraphicsPipelineConfigInfo pipelineConfig{};
-		pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
+		pipelineConfig.setSampleCount(VK_SAMPLE_COUNT_1_BIT);
+		//pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
 		pipelineConfig.disableDepthTest();
 
 		pipelineConfig.pipelineLayout = ppfxPipelineLayout->getPipelineLayout();

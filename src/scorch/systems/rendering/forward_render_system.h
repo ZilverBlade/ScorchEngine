@@ -16,7 +16,7 @@ namespace ScorchEngine {
 		virtual void resize(glm::vec2 size) override;	
 	protected:
 		virtual void getColorAttachment(SEFramebufferAttachment** out) override {
-			*out = sampleCount == VK_SAMPLE_COUNT_1_BIT ? opaqueColorAttachment : opaqueColorResolveAttachment;
+			*out = (sampleCount == VK_SAMPLE_COUNT_1_BIT) ? opaqueColorAttachment : opaqueColorResolveAttachment;
 		}
 		virtual void getDepthAttachment(SEFramebufferAttachment** out) override { 
 			*out = depthAttachment;
@@ -24,7 +24,6 @@ namespace ScorchEngine {
 		virtual void getOpaqueRenderPass(SERenderPass** out) override {
 			*out = opaqueRenderPass;
 		}
-
 
 		virtual void init(glm::vec2 size) override;
 		virtual void destroy() override;

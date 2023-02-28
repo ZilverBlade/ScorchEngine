@@ -1,9 +1,8 @@
 #ifndef SCENE_SSBO_GLSL
 #define SCENE_SSBO_GLSL
 
-struct Skybox {
-	vec4 tint;
-	vec4 envTint;
+struct SkyLight {
+	vec4 tint; // w = intensity
 };
 
 struct DirectionalLight {
@@ -16,9 +15,10 @@ struct PointLight {
 };
 
 layout (set = 1, binding = 0) readonly buffer SceneSSBO {
-	Skybox skybox;
+	SkyLight[16] skyLights;
 	DirectionalLight directionalLights[16];
 	PointLight pointLights[512];
+	uint skyLightCount;
 	uint directionalLightCount;
 	uint pointLightCount;
 } scene;

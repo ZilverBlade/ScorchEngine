@@ -8,7 +8,7 @@ namespace ScorchEngine {
 		glm::vec2 resolution,
 		const SEShader& fragmentShader,
 		SEDescriptorPool& descriptorPool,
-		const std::vector<SEFramebufferAttachment*>& inputAttachments,
+		const std::vector<VkDescriptorImageInfo>& inputAttachments,
 		VkFormat framebufferFormat,
 		VkImageViewType viewType,
 		uint32_t layers,
@@ -55,11 +55,11 @@ namespace ScorchEngine {
 		if (pushData) {
 			ppfxPush.push(commandBuffer, ppfxPipelineLayout->getPipelineLayout(), pushData);
 		}
-		vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+		vkCmdDraw(commandBuffer, ppfxFramebufferViewType == VK_IMAGE_VIEW_TYPE_CUBE ? 36 : 6, 1, 0, 0);
 		ppfxRenderPass->endRenderPass(commandBuffer);
 	}
 
-	void SEPostProcessingEffect::resize(glm::vec2 newResolution, const std::vector<SEFramebufferAttachment*>& newInputAttachments) {
+	void SEPostProcessingEffect::resize(glm::vec2 newResolution, const std::vector<VkDescriptorImageInfo>& newInputAttachments) {
 		inputAttachments = newInputAttachments;
 		createRenderPass(newResolution);
 		createSceneDescriptors();
@@ -70,7 +70,7 @@ namespace ScorchEngine {
 		if (inputAttachments.size() != 0) {
 			descriptorSetLayouts.push_back(ppfxSceneDescriptorLayout->getDescriptorSetLayout());
 		}
-		ppfxPush = SEPushConstant(128, VK_SHADER_STAGE_FRAGMENT_BIT);
+		ppfxPush = SEPushConstant(128, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 		std::vector<VkPushConstantRange> pushConstantRanges{
 			ppfxPush.getRange()
 		};
@@ -79,14 +79,15 @@ namespace ScorchEngine {
 
 	void SEPostProcessingEffect::createPipeline(const SEShader& fragmentShader) {
 		SEGraphicsPipelineConfigInfo pipelineConfig{};
-		pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
+		if (!ppfxFramebufferViewType != VK_IMAGE_VIEW_TYPE_CUBE) {
+			pipelineConfig.setCullMode(VK_CULL_MODE_BACK_BIT);
+		}
 		pipelineConfig.disableDepthTest();
-
 		pipelineConfig.pipelineLayout = ppfxPipelineLayout->getPipelineLayout();
 		pipelineConfig.renderPass = ppfxRenderPass->getRenderPass();
 		ppfxPipeline = std::make_unique<SEGraphicsPipeline>(
 			seDevice, std::vector<SEShader>{
-			SEShader{ SEShaderType::Vertex, "res/shaders/spirv/full_screen.vsh.spv" },
+			SEShader{ SEShaderType::Vertex, ppfxFramebufferViewType == VK_IMAGE_VIEW_TYPE_CUBE ? "res/shaders/spirv/full_screen_cube.vsh.spv" : "res/shaders/spirv/full_screen.vsh.spv" },
 				fragmentShader
 			},
 			pipelineConfig
@@ -96,11 +97,8 @@ namespace ScorchEngine {
 	void SEPostProcessingEffect::createSceneDescriptors() {
 		if (inputAttachments.size() != 0) {
 			auto writer = SEDescriptorWriter(*ppfxSceneDescriptorLayout, descriptorPool);
-			std::vector<VkDescriptorImageInfo> imageDescriptors{};
-			imageDescriptors.resize(inputAttachments.size());
 			for (int i = 0; i < inputAttachments.size(); i++) {
-				imageDescriptors[i] = inputAttachments[i]->getDescriptor();
-				writer.writeImage(i, &imageDescriptors[i]);
+				writer.writeImage(i, &inputAttachments[i]);
 			}
 			writer.build(ppfxSceneDescriptorSet);
 		}
@@ -115,16 +113,15 @@ namespace ScorchEngine {
 		}
 		ppfxSubFramebuffers.clear();
 
-		glm::ivec3 windowSize = { resolution, 1 };
-		SEFramebufferAttachmentCreateInfo createInfo = {
-			ppfxFramebufferFormat,
-			VK_IMAGE_ASPECT_COLOR_BIT,
-			ppfxFramebufferViewType,
-			windowSize,
-			VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			SEFramebufferAttachmentType::Color,
-		};
+		SEFramebufferAttachmentCreateInfo createInfo{};
+		createInfo.framebufferFormat = ppfxFramebufferFormat;
+		createInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
+		createInfo.viewType = ppfxFramebufferViewType;
+		createInfo.dimensions = { resolution, 1 };
+		createInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		createInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		createInfo.framebufferType = SEFramebufferAttachmentType::Color;
+		createInfo.linearFiltering = true;
 		createInfo.layerCount = layerCount;
 		createInfo.mipLevels = mipLevels;
 

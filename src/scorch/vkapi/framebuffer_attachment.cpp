@@ -64,7 +64,7 @@ namespace ScorchEngine {
 				for (int j = 0; j < attachmentCreateInfo.mipLevels; j++) {
 					VkImageViewCreateInfo subImageViewCreateInfo = {};
 					subImageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-					subImageViewCreateInfo.viewType = attachmentCreateInfo.viewType;
+					subImageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 					subImageViewCreateInfo.format = attachmentCreateInfo.framebufferFormat;
 					subSubresourceRanges[i][j].aspectMask = attachmentCreateInfo.imageAspect;
 					subSubresourceRanges[i][j].baseMipLevel = j;
@@ -85,9 +85,9 @@ namespace ScorchEngine {
 			// Create sampler to sample from the attachment in the fragment shader
 			VkSamplerCreateInfo samplerInfo = {};
 			samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-			samplerInfo.magFilter = (attachmentCreateInfo.linearFiltering) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
-			samplerInfo.minFilter = (attachmentCreateInfo.linearFiltering) ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
-			samplerInfo.mipmapMode = (attachmentCreateInfo.linearFiltering) ? VK_SAMPLER_MIPMAP_MODE_NEAREST : VK_SAMPLER_MIPMAP_MODE_LINEAR;
+			samplerInfo.magFilter = attachmentCreateInfo.linearFiltering ? VK_FILTER_LINEAR :  VK_FILTER_NEAREST;
+			samplerInfo.minFilter = attachmentCreateInfo.linearFiltering ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
+			samplerInfo.mipmapMode = attachmentCreateInfo.linearFiltering ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
 			samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			samplerInfo.mipLodBias = 0.0f;
 			samplerInfo.maxAnisotropy = 1.0f;

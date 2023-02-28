@@ -21,8 +21,8 @@ namespace ScorchEngine{
 			imageViews.push_back(attachment->getSubImageView(useLayer, useMipLevel));
 		}
 
-		width = static_cast<uint32_t>(newAttachments[0]->getDimensions().x);
-		height = static_cast<uint32_t>(newAttachments[0]->getDimensions().y);
+		width = static_cast<uint32_t>(newAttachments[0]->getDimensions().x) / std::pow(2, useMipLevel);
+		height = static_cast<uint32_t>(newAttachments[0]->getDimensions().y) / std::pow(2, useMipLevel);
 		depth = static_cast<uint32_t>(newAttachments[0]->getDimensions().z);
 
 		VkFramebufferCreateInfo fbufferCreateInfo{};

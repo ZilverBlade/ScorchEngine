@@ -11,5 +11,5 @@ layout(set = 2, binding = 0) uniform samplerCube skybox;
 
 
 void main() {    
-    outColor = vec4(textureLod(skybox, uv, 0.0).rgb * scene.skybox.tint.rgb * scene.skybox.tint.a, 1.0);
+    outColor = vec4(textureLod(skybox, uv, 0.0).rgb * scene.skyLights[0].tint.rgb * scene.skyLights[0].tint.a, 1.0);
 }

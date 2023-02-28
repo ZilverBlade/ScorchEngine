@@ -55,18 +55,19 @@ namespace ScorchEngine::Apps {
 			sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
 
 			auto& sbc = skyboxActor.addComponent<Components::SkyboxComponent>();
+			auto& slc = skyboxActor.addComponent<Components::SkyLightComponent>();
 			sbc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
-
 			cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
 			{
 				Actor lightActor = level->createActor("sun");
 				lightActor.addComponent<Components::DirectionalLightComponent>();
 				lightActor.getTransform().rotation.x = 0.5f;
 				lightActor.getTransform().rotation.z = 0.25f;
+				lightActor.getComponent< DirectionalLightComponent>().intensity = 2.0f;
 			}
 			{
-				cameraActor.addComponent<Components::PointLightComponent>().emission = { 1.0, 0.0, 0.0 };
-				cameraActor.getTransform().translation = { 1.0, 1.0, 3.0f };
+				//cameraActor.addComponent<Components::PointLightComponent>().emission = { 1.0, 0.0, 0.0 };
+				//cameraActor.getTransform().translation = { 1.0, 1.0, 3.0f };
 			}
 		}
 		VkSampleCountFlagBits msaa = VK_SAMPLE_COUNT_8_BIT;
@@ -82,6 +83,7 @@ namespace ScorchEngine::Apps {
 		SkyLightSystem* skyLightSystem = new SkyLightSystem(
 			seDevice,
 			*staticPool,
+			skyLightDescriptorLayout,
 			seSwapChain->getImageCount()
 		);
 		SkyboxSystem* skyboxSystem = new SkyboxSystem(
@@ -129,9 +131,9 @@ namespace ScorchEngine::Apps {
 			camera.setViewYXZ(cameraActor.getTransform().translation, cameraActor.getTransform().rotation);
 			camera.setPerspectiveProjection(70.0f, seSwapChain->extentAspectRatio(), 0.01f, 128.f);
 
-			incrementTime += frameTime * 1.0;
-			resourceSystem->getSurfaceMaterial(clearCoatMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
-			resourceSystem->getSurfaceMaterial(clearCoatMaterial)->updateParams();
+			//incrementTime += frameTime * 1.0;
+			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
+			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->updateParams();
 
 			uint32_t frameIndex = seSwapChain->getImageIndex();
 			if (VkResult result = seSwapChain->acquireNextImage(&frameIndex); result == VK_SUCCESS) {
@@ -175,6 +177,7 @@ namespace ScorchEngine::Apps {
 				renderSystem->renderEarlyDepth(frameInfo);
 
 				renderSystem->beginOpaquePass(frameInfo);
+				frameInfo.skyLight = skyLightSystem->getDescriptorSet(frameIndex);
 				renderSystem->renderOpaque(frameInfo);
 				if (pickedCube) {
 					skyboxSystem->render(frameInfo, skyLightSystem->getDescriptorSet(frameIndex));
