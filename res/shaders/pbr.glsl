@@ -62,12 +62,12 @@ float F_SchlickRoughness(float F0, float dv, float roughness){
 	float x4 = x2*x2;
 	float Fc = x4*x;
 	
-    return F0 + (max(1.0 - roughness, F0) - F0)  * Fc;
+    return F0 + (max(1.0 - roughness, F0) - F0) * Fc;
 }
 
 vec3 pbrSchlickBeckmannBRDF(PrivateStaticPBRData pbrSData, PrivatePBRData pbrData, PrivateLightingData lightingData) {
 	float F = F_Schlick(pbrSData.F0, pbrData.HdL);
-    float V = Vis_Schlick(pbrSData.NdV, pbrData.NdL, pbrSData.m);
+    float V = GVis_SchlickGGX(pbrSData.NdV, pbrData.NdL, pbrData.NdH, pbrData.VdH, pbrSData.m);
     float D = D_beckmann(pbrData.NdH, pbrSData.m2);
 
 	float brdfResult = pbrData.NdL * F * D * V;
@@ -112,14 +112,14 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 
 	const vec3 prefilteredColor = textureLod(environmentPrefilteredMap, R, pbrSData.m * maxEnvMapMipLevel).rgb;
 	const vec2 envBRDF = textureLod(brdfLUT, vec2(pbrSData.NdV, fragment.roughness), 0.0).xy;
-	specular += prefilteredColor * (fresnelTotalInternalReflection * envBRDF.x + envBRDF.y);
+	specular += prefilteredColor * (F_SchlickRoughness(F0, pbrSData.NdV, fragment.roughness) * envBRDF.x + envBRDF.y);
 	if (enableClearCoatBRDF) {
 		const vec3 ccprefilteredColor = textureLod(environmentPrefilteredMap, R, ccpbrSData.m * maxEnvMapMipLevel).rgb;
 		const vec2 ccenvBRDF = textureLod(brdfLUT, vec2(pbrSData.NdV, fragmentcc.clearCoatRoughness), 0.0).xy;
-		clearCoat += ccprefilteredColor * (fresnelTotalInternalReflection * ccenvBRDF.x + ccenvBRDF.y);
+		clearCoat += ccprefilteredColor * (F_SchlickRoughness(F0, pbrSData.NdV, fragmentcc.clearCoatRoughness) * ccenvBRDF.x + ccenvBRDF.y);
 	}
 	
-	vec3 diffuse = textureLod(irradianceMap, R, 0.0).rgb * scene.skyLights[0].tint.rgb * scene.skyLights[0].tint.a * fragment.diffuse ; // ambient lighting
+	vec3 diffuse = textureLod(irradianceMap, R, 0.0).rgb * scene.skyLights[0].tint.rgb * scene.skyLights[0].tint.a * fragment.diffuse; // ambient lighting
 	
 	for (uint i = 0; i < scene.pointLightCount; i++) {
 		vec3 fragToLight = scene.pointLights[i].position - fragment.position;

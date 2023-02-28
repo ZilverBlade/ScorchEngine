@@ -30,11 +30,12 @@ void main() {
 		if (NdL > 0.0) {
 			float NdH = max(H.z, 0.0);
 			float VdH = max(dot(V, H), 0.0);
-			float Vis = Vis_Schlick(NdV, NdL, m);
+			float G = G_SchlickGGX_IBL(NdV, NdL, m);
+			float G_Vis = (G * VdH) / max(NdH * NdV, 1e-7);
 			float Fc = pow(1.0 - VdH, 5.0);
 			
-			integratedBRDF.x += (1.0 - Fc) * Vis;
-			integratedBRDF.y += Fc * Vis;
+			integratedBRDF.x += (1.0 - Fc) * G_Vis;
+			integratedBRDF.y += Fc * G_Vis;
 		}
     }
 	

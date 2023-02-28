@@ -19,8 +19,9 @@ layout (push_constant) uniform Push {
 void main() {
 	const vec3 N = normalize(vec3(fragUV.x, -fragUV.y, fragUV.z));
 	
-	const vec3 up = vec3(0.0, 1.0, 0.0);
+	vec3 up = vec3(0.0, 1.0, 0.0);
 	const vec3 right = normalize(cross(up, N));
+    up = cross(N, right);
 	
 	vec3 irradiance = vec3(0.0); 
 	
