@@ -70,7 +70,7 @@ namespace ScorchEngine {
 					subSubresourceRanges[i][j].baseMipLevel = j;
 					subSubresourceRanges[i][j].levelCount = 1;
 					subSubresourceRanges[i][j].baseArrayLayer = i;
-					subSubresourceRanges[i][j].layerCount = 1;
+					subSubresourceRanges[i][j].layerCount = 1; // wtf is this value supposed to be????
 					subImageViewCreateInfo.subresourceRange = subSubresourceRanges[i][j];
 					subImageViewCreateInfo.image = image;
 
