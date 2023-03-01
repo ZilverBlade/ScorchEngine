@@ -45,8 +45,8 @@ namespace ScorchEngine::Apps {
 		sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
 
 		Actor skyboxActor = level->createActor("skyboxActor");
-		auto& sbc = skyboxActor.addComponent<Components::SkyboxComponent>();
-		sbc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
+		auto& slc = skyboxActor.addComponent<Components::SkyLightComponent>();
+		slc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
 
 		Actor cameraActor = level->createActor("camera actor");
 		cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };

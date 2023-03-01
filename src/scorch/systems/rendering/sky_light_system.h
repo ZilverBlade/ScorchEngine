@@ -14,7 +14,7 @@ namespace ScorchEngine {
 		SkyLightSystem(const SkyLightSystem&) = delete;
 		SkyLightSystem& operator=(const SkyLightSystem&) = delete;
 
-		void update(FrameInfo& frameInfo, SETextureCube* skyLight);
+		void update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer, SETextureCube* skyLight);
 		VkDescriptorSet getDescriptorSet(uint32_t frameIndex) {
 			return descriptorSet[frameIndex];
 		}

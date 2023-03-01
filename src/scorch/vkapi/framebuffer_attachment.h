@@ -38,11 +38,10 @@ namespace ScorchEngine {
 		VkImageSubresourceRange getImageSubresourceRange() { return subresourceRange; }
 		VkImageView getImageView() { return imageView; }
 		VkImageView getSubImageView(uint32_t layer, uint32_t mipLevel) {
-			if (subImageViews.size()) {
-				return subImageViews[layer][mipLevel];
-			} else { // if layerCount == 1 and mipLevels == 1, there is no need for special image views for renderpasses
+			if (subImageViews.empty()) { // if layerCount == 1 and mipLevels == 1, there is no need for special image views for renderpasses
 				return imageView;
 			}
+			return subImageViews[layer][mipLevel];
 		}
 		VkSampler getSampler() { return sampler; }
 		VkImageLayout getImageLayout() { return attachmentDescription.layout; }

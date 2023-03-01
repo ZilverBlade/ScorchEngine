@@ -21,7 +21,6 @@ namespace ScorchEngine {
 		SkyboxSystem(const SkyboxSystem&) = delete;
 		SkyboxSystem& operator=(const SkyboxSystem&) = delete;
 
-		void update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer);
 		void render(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor);
 	private:
 		SEDevice& seDevice;

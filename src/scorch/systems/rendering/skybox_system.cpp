@@ -30,14 +30,6 @@ namespace ScorchEngine {
 	SkyboxSystem::~SkyboxSystem()
 	{
 	}
-	void SkyboxSystem::update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer) {
-		frameInfo.level->getRegistry().view<Components::SkyboxComponent>().each(
-			[&](auto& skybox) {
-			sceneBuffer.skyLights[0].tint = { skybox.tint, skybox.intensity };
-			sceneBuffer.skyLightCount = 1; // hack for now
-		}
-		);
-	}
 	void SkyboxSystem::render(FrameInfo& frameInfo, VkDescriptorSet skyboxDescriptor) {
 		pipeline->bind(frameInfo.commandBuffer);
 		VkDescriptorSet sets[3]{

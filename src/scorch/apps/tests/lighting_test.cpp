@@ -56,7 +56,7 @@ namespace ScorchEngine::Apps {
 
 			auto& sbc = skyboxActor.addComponent<Components::SkyboxComponent>();
 			auto& slc = skyboxActor.addComponent<Components::SkyLightComponent>();
-			sbc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
+			slc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
 			cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
 			{
 				Actor lightActor = level->createActor("sun");
@@ -161,15 +161,14 @@ namespace ScorchEngine::Apps {
 
 				lightSystem.update(frameInfo, *renderData[frameIndex].sceneSSBO);
 				SETextureCube* pickedCube = nullptr;
-				frameInfo.level->getRegistry().view<Components::SkyboxComponent>().each(
-				[&](auto& skybox) {
-					pickedCube = resourceSystem->getTextureCube({ skybox.environmentMap, true, true });
+				frameInfo.level->getRegistry().view<Components::SkyLightComponent>().each(
+				[&](auto& skylight) {
+					pickedCube = resourceSystem->getTextureCube({ skylight.environmentMap, true, true });
 				}
 				);
 				if (pickedCube) {
-					skyLightSystem->update(frameInfo, pickedCube);
+					skyLightSystem->update(frameInfo, *renderData[frameIndex].sceneSSBO, pickedCube);
 				}
-				skyboxSystem->update(frameInfo, *renderData[frameIndex].sceneSSBO);
 
 				renderData[frameIndex].ssboBuffer->writeToBuffer(renderData[frameIndex].sceneSSBO.get());
 				renderData[frameIndex].ssboBuffer->flush();

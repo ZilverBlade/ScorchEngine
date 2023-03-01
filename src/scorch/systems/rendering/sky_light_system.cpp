@@ -17,7 +17,7 @@ namespace ScorchEngine {
 			delete envMap; 
 		}
 	}
-	void SkyLightSystem::update(FrameInfo& frameInfo, SETextureCube* skyLight) {
+	void SkyLightSystem::update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer, SETextureCube* skyLight) {
 		if (envCubeToMap.find(skyLight) == envCubeToMap.end()) {
 			envCubeToMap[skyLight] = new SEEnvironmentMap(seDevice, seDescriptorPool, skyLightDescriptorLayout, skyLight->getImageInfo(), { skyLight->getExtent().width, skyLight->getExtent().height }, false);
 			VkCommandBuffer commandBuffer = seDevice.beginSingleTimeCommands();
@@ -27,5 +27,15 @@ namespace ScorchEngine {
 			seDevice.endSingleTimeCommands(commandBuffer);
 		} 
 		descriptorSet[frameInfo.frameIndex] = envCubeToMap[skyLight]->getEnvironmentMapDescriptor();
+		
+
+		uint32_t skyLightIndex = 0;
+		frameInfo.level->getRegistry().view<Components::SkyLightComponent>().each(
+			[&](auto& skylight) {
+			sceneBuffer.skyLights[skyLightIndex].tint = { skylight.tint, skylight.intensity };
+			skyLightIndex++;
+		}
+		);
+		sceneBuffer.skyLightCount = skyLightIndex;
 	}
 }
