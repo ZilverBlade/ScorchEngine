@@ -119,7 +119,8 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 		clearCoat += ccprefilteredColor * (F_SchlickRoughness(F0, pbrSData.NdV, fragmentcc.clearCoatRoughness) * ccenvBRDF.x + ccenvBRDF.y);
 	}
 	
-	vec3 diffuse = textureLod(irradianceMap, R, 0.0).rgb * scene.skyLights[0].tint.rgb * scene.skyLights[0].tint.a * fragment.diffuse; // ambient lighting
+	vec3 irradiance = textureLod(irradianceMap, R, 0.0).rgb * scene.skyLights[0].tint.rgb * scene.skyLights[0].tint.a * fragment.diffuse * (1.0 - fragment.metallic);
+	vec3 diffuse = vec3(0.0);
 	
 	for (uint i = 0; i < scene.pointLightCount; i++) {
 		vec3 fragToLight = scene.pointLights[i].position - fragment.position;
@@ -167,6 +168,6 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	vec3 reflectedDiffuse = diffuse * fragment.diffuse * (1.0 - fragment.metallic) * (1.0 - fresnelTotalInternalReflection);
 	vec3 reflectedSpecular = mix(specular, specular * fragment.diffuse, fragment.metallic) * fragment.specular;
 	vec3 reflectedClearCoat = clearCoat * fragmentcc.clearCoat;
-	return reflectedDiffuse + reflectedSpecular + reflectedClearCoat;
+	return irradiance + reflectedDiffuse + reflectedSpecular + reflectedClearCoat;
 }
 #endif
