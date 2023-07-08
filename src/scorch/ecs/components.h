@@ -7,3 +7,4 @@
 #include <scorch/ecs/components/sky_light_component.h>
 #include <scorch/ecs/components/directional_light_component.h>
 #include <scorch/ecs/components/point_light_component.h>
+#include <scorch/ecs/components/light_propagation_volume_component.h>

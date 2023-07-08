@@ -37,8 +37,8 @@ namespace ScorchEngine {
 	public:
 		SEGraphicsPipeline(
 			SEDevice& device,
-			const std::vector<SEShader>& shaders,
-			const SEGraphicsPipelineConfigInfo& configInfo
+			const SEGraphicsPipelineConfigInfo& configInfo,
+			const std::vector<SEShader>& shaders
 		);
 		~SEGraphicsPipeline();
 		

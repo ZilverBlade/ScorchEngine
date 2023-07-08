@@ -47,8 +47,14 @@ namespace ScorchEngine {
 		ResourceID loadSurfaceMaterial(std::string path);
 		SESurfaceMaterial* getSurfaceMaterial(ResourceID id);
 
+		// returns false if a surface material with that ID already is present
+		bool insertSurfaceMaterial(ResourceID id, SESurfaceMaterial* sfMaterial);
+
 		SETexture2D* getMissingTexture2D() {
 			return special_MissingTexture2D;
+		}
+		SEDescriptorPool& getDescriptorPool() {
+			return seDescriptorPool;
 		}
 	private:
 		SEDevice& seDevice;

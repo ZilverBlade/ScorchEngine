@@ -184,6 +184,7 @@ namespace ScorchEngine {
 		enabledFeatures.sampleRateShading = VK_TRUE;
 		enabledFeatures.fillModeNonSolid = VK_TRUE;
 		enabledFeatures.wideLines = VK_TRUE;
+		enabledFeatures.fragmentStoresAndAtomics = VK_TRUE;
 		return enabledFeatures;
 	}
 
@@ -194,7 +195,8 @@ namespace ScorchEngine {
 			features.samplerAnisotropy &
 			features.sampleRateShading &
 			features.fillModeNonSolid &
-			features.wideLines;
+			features.wideLines &
+			features.fragmentStoresAndAtomics;
 	}
 	
 	bool SEDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
@@ -700,8 +702,15 @@ namespace ScorchEngine {
 
 			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		} else if (
+			oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_GENERAL) {
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT | VK_ACCESS_MEMORY_WRITE_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+			destinationStage = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 		} else {
-			throw std::runtime_error("Unsupported layout transition!");
+			throw std::runtime_error("Layout transition not implemented!");
 		}
 		vkCmdPipelineBarrier(
 			commandBuffer,

@@ -54,16 +54,18 @@ namespace ScorchEngine {
 			nullptr
 		);
 		
+		renderMeshes(frameInfo, push, earlyDepthPipelineLayout->getPipelineLayout(), 1, false, false);
 		renderMeshes(frameInfo, push, earlyDepthPipelineLayout->getPipelineLayout(), 1, false, true);
 
 		earlyDepthRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
 	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo) {
 		opaquePipeline->bind(frameInfo.commandBuffer);
-		VkDescriptorSet sets[3]{
+		VkDescriptorSet sets[4]{
 			frameInfo.globalUBO,
 			frameInfo.sceneSSBO,
-			frameInfo.skyLight
+			frameInfo.skyLight,
+			frameInfo.shadowMap
 		};
 
 		vkCmdBindDescriptorSets(
@@ -71,13 +73,14 @@ namespace ScorchEngine {
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			opaquePipelineLayout->getPipelineLayout(),
 			0,
-			3,
+			4,
 			sets,
 			0,
 			nullptr
 		);
 
-		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 3, false, true);
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, false, false);
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, false, true);
 	}
 
 	void ForwardRenderSystem::beginOpaquePass(FrameInfo& frameInfo) {
@@ -194,8 +197,8 @@ namespace ScorchEngine {
 		earlyDepthPipelineConfigInfo.pipelineLayout = earlyDepthPipelineLayout->getPipelineLayout();
 		earlyDepthPipeline = new SEGraphicsPipeline(
 			seDevice,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/depth.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/depth.fsh.spv") },
-			earlyDepthPipelineConfigInfo
+			earlyDepthPipelineConfigInfo,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/depth.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/depth.fsh.spv") }
 		);
 
 		std::vector<VkDescriptorSetLayout> setLayouts = descriptorSetLayouts;
@@ -211,8 +214,8 @@ namespace ScorchEngine {
 		pipelineConfigInfo.pipelineLayout = opaquePipelineLayout->getPipelineLayout();
 		opaquePipeline = new SEGraphicsPipeline(
 			seDevice,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") },
-			pipelineConfigInfo
+			pipelineConfigInfo,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") }
 		);
 
 		

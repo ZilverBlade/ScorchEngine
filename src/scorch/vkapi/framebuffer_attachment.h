@@ -20,6 +20,7 @@ namespace ScorchEngine {
 		SEFramebufferAttachmentType framebufferType;
 		bool linearFiltering = true;
 		VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
+		bool isShadowMap = false;
 		uint32_t mipLevels = 1;
 		uint32_t layerCount = 1;
 	};

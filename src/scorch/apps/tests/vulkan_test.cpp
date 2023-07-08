@@ -24,9 +24,8 @@ namespace ScorchEngine::Apps {
 		//pipelineConfigInfo.wireframe(1.f);
 
 		SEGraphicsPipeline* pipeline = new SEGraphicsPipeline(
-			seDevice,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/triangle.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/triangle.fsh.spv") },
-			pipelineConfigInfo
+			seDevice, pipelineConfigInfo,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/triangle.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/triangle.fsh.spv") }
 		);
 
 		std::vector<std::unique_ptr<SECommandBuffer>> commandBuffers{};

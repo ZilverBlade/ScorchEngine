@@ -8,6 +8,12 @@ struct SkyLight {
 struct DirectionalLight {
 	vec3 direction;
 	vec4 color; // w = intensity
+	mat4 vp;
+};
+struct LPV {
+	vec3 center;
+	vec3 extent;
+	vec3 boost;
 };
 struct PointLight {
 	vec3 position;
@@ -15,11 +21,13 @@ struct PointLight {
 };
 
 layout (set = 1, binding = 0) readonly buffer SceneSSBO {
-	SkyLight[16] skyLights;
-	DirectionalLight directionalLights[16];
-	PointLight pointLights[512];
-	uint skyLightCount;
-	uint directionalLightCount;
+	SkyLight skyLight;
+	DirectionalLight directionalLight;
+	LPV lpv;
+	PointLight pointLights[128];
+	bool hasSkyLight;
+	bool hasDirectionalLight;
+	bool hasLPV;
 	uint pointLightCount;
 } scene;
 #endif

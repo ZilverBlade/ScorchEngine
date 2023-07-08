@@ -126,6 +126,6 @@ namespace ScorchEngine {
         std::vector<VkFence> inFlightFences{};
         std::vector<VkFence> imagesInFlight{};
         size_t currentFrame = 0;
-        uint32_t imageCount = 3;
+        uint32_t imageCount = MAX_FRAMES_IN_FLIGHT;
 	};
 }

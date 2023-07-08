@@ -3,7 +3,9 @@
 namespace ScorchEngine {
 	enum class SEShaderType {
 		Vertex,
-		Fragment
+		Geometry,
+		Fragment,
+		Compute
 	};
 	class SEShader {
 	public:
@@ -19,9 +21,13 @@ namespace ScorchEngine {
 			switch (type) {
 			case ScorchEngine::SEShaderType::Vertex:
 				return VK_SHADER_STAGE_VERTEX_BIT;
-				
+			case ScorchEngine::SEShaderType::Geometry:
+				return VK_SHADER_STAGE_GEOMETRY_BIT;
 			case ScorchEngine::SEShaderType::Fragment:
 				return VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			case ScorchEngine::SEShaderType::Compute:
+				return VK_SHADER_STAGE_COMPUTE_BIT;
 			}
 		}
 	private:

@@ -69,11 +69,10 @@ namespace ScorchEngine::PostFX {
 		pipelineConfig.pipelineLayout = ppfxPipelineLayout->getPipelineLayout();
 		pipelineConfig.renderPass = renderPass;
 		ppfxPipeline = std::make_unique<SEGraphicsPipeline>(
-			seDevice, std::vector<SEShader>{
+			seDevice,		pipelineConfig, std::vector<SEShader>{
 			SEShader{ SEShaderType::Vertex, "res/shaders/spirv/full_screen.vsh.spv" },
 				fragmentShader
-		},
-			pipelineConfig
+		}
 		);
 	}
 	void ScreenCorrection::createSceneDescriptors() {

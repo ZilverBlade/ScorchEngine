@@ -75,7 +75,7 @@ namespace ScorchEngine::Apps {
 			seDevice, 
 			resolution, { 
 				globalUBODescriptorLayout->getDescriptorSetLayout(),
-				sceneSSBODescriptorLayout->getDescriptorSetLayout(),
+				sceneDescriptorLayout->getDescriptorSetLayout(),
 				skyLightDescriptorLayout->getDescriptorSetLayout()
 			},
 			msaa
@@ -90,7 +90,7 @@ namespace ScorchEngine::Apps {
 			seDevice,
 			renderSystem->getOpaqueRenderPass()->getRenderPass(),
 			globalUBODescriptorLayout->getDescriptorSetLayout(),
-			sceneSSBODescriptorLayout->getDescriptorSetLayout(),
+			sceneDescriptorLayout->getDescriptorSetLayout(),
 			skyLightDescriptorLayout->getDescriptorSetLayout(),
 			msaa
 		);
@@ -213,6 +213,8 @@ namespace ScorchEngine::Apps {
 		MaterialSystem::destroyDescriptorSetLayout();
 		delete renderSystem;
 		delete screenCorrection;
+		delete skyLightSystem;
+		delete skyboxSystem;
 
 		delete resourceSystem;
 	}

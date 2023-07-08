@@ -11,6 +11,9 @@ namespace ScorchEngine {
 		for (auto& [id, texture] : texture2DAssets) {
 			delete texture;
 		}
+		for (auto& [id, texture] : textureCubeAssets) {
+			delete texture;
+		}
 		for (auto& [id, material] : surfaceMaterialAssets) {
 			delete material;
 		}
@@ -35,6 +38,7 @@ namespace ScorchEngine {
 		auto bdr = SETexture::Builder();
 		bdr.loadSTB2DImage(path);
 		bdr.srgb = srgb;
+		bdr.linearSampler = linearSampler;
 		
 		TextureResourceIDAttributes attribid{};
 		attribid.id = id;
@@ -94,5 +98,13 @@ namespace ScorchEngine {
 		} else {
 			return (*iter).second;
 		}
+	}
+	bool ResourceSystem::insertSurfaceMaterial(ResourceID id, SESurfaceMaterial* sfMaterial) {
+		auto iter = surfaceMaterialAssets.find(id);
+		if (iter == surfaceMaterialAssets.end()) {
+			surfaceMaterialAssets[id] = sfMaterial;
+			return true;
+		} 
+		return false;
 	}
 }

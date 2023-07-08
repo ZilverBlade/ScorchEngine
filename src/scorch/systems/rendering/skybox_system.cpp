@@ -22,10 +22,10 @@ namespace ScorchEngine {
 		pipelineConfigInfo.pipelineLayout = pipelineLayout->getPipelineLayout();
 		pipelineConfigInfo.setSampleCount(msaaSamples);
 
-		pipeline = new SEGraphicsPipeline(seDevice, {
+		pipeline = new SEGraphicsPipeline(seDevice, pipelineConfigInfo, {
 			SEShader(SEShaderType::Vertex, "res/shaders/spirv/skybox.vsh.spv"),
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/skybox.fsh.spv")
-		}, pipelineConfigInfo);
+		});
 	}
 	SkyboxSystem::~SkyboxSystem()
 	{

@@ -11,6 +11,7 @@ namespace ScorchEngine {
 		const std::vector<VkDescriptorImageInfo>& inputAttachments,
 		VkFormat framebufferFormat,
 		VkImageViewType viewType,
+		const std::vector<VkDescriptorSetLayout>& extraDescriptorSetLayouts,
 		uint32_t layers,
 		uint32_t mipLevels
 	) : seDevice(device), inputAttachments(inputAttachments), ppfxFramebufferFormat(framebufferFormat), ppfxFramebufferViewType(viewType), descriptorPool(descriptorPool), layerCount(layers), mipLevels(mipLevels) {
@@ -23,7 +24,7 @@ namespace ScorchEngine {
 		}
 		createSceneDescriptors();
 		createRenderPass(resolution);
-		createPipelineLayout();
+		createPipelineLayout(extraDescriptorSetLayouts);
 		createPipeline(fragmentShader);
 	}
 
@@ -45,7 +46,7 @@ namespace ScorchEngine {
 			vkCmdBindDescriptorSets(commandBuffer,
 				VK_PIPELINE_BIND_POINT_GRAPHICS,
 				ppfxPipelineLayout->getPipelineLayout(),
-				0,
+				descriptorSetOffset,
 				1,
 				&ppfxSceneDescriptorSet,
 				0,
@@ -65,8 +66,8 @@ namespace ScorchEngine {
 		createSceneDescriptors();
 	}
 
-	void SEPostProcessingEffect::createPipelineLayout() {
-		std::vector<VkDescriptorSetLayout> descriptorSetLayouts{};
+	void SEPostProcessingEffect::createPipelineLayout(std::vector<VkDescriptorSetLayout> descriptorSetLayouts) {
+		descriptorSetOffset = descriptorSetLayouts.size();
 		if (inputAttachments.size() != 0) {
 			descriptorSetLayouts.push_back(ppfxSceneDescriptorLayout->getDescriptorSetLayout());
 		}
@@ -86,11 +87,10 @@ namespace ScorchEngine {
 		pipelineConfig.pipelineLayout = ppfxPipelineLayout->getPipelineLayout();
 		pipelineConfig.renderPass = ppfxRenderPass->getRenderPass();
 		ppfxPipeline = std::make_unique<SEGraphicsPipeline>(
-			seDevice, std::vector<SEShader>{
+			seDevice, pipelineConfig, std::vector<SEShader>{
 			SEShader{ SEShaderType::Vertex, ppfxFramebufferViewType == VK_IMAGE_VIEW_TYPE_CUBE ? "res/shaders/spirv/full_screen_cube.vsh.spv" : "res/shaders/spirv/full_screen.vsh.spv" },
 				fragmentShader
-			},
-			pipelineConfig
+			}
 		);
 	}
 

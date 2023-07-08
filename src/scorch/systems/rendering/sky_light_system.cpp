@@ -29,13 +29,12 @@ namespace ScorchEngine {
 		descriptorSet[frameInfo.frameIndex] = envCubeToMap[skyLight]->getEnvironmentMapDescriptor();
 		
 
-		uint32_t skyLightIndex = 0;
+		sceneBuffer.hasSkyLight = VK_FALSE;
 		frameInfo.level->getRegistry().view<Components::SkyLightComponent>().each(
 			[&](auto& skylight) {
-			sceneBuffer.skyLights[skyLightIndex].tint = { skylight.tint, skylight.intensity };
-			skyLightIndex++;
+			sceneBuffer.skyLight.tint = { skylight.tint, skylight.intensity };
+			sceneBuffer.hasSkyLight = VK_TRUE;
 		}
 		);
-		sceneBuffer.skyLightCount = skyLightIndex;
 	}
 }

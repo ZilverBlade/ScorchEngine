@@ -33,6 +33,6 @@ namespace ScorchEngine::Apps {
 		std::unique_ptr<SEDescriptorPool> staticPool{};
 		std::vector<InFlightRenderData> renderData{};
 		std::unique_ptr<SEDescriptorSetLayout> globalUBODescriptorLayout{};
-		std::unique_ptr<SEDescriptorSetLayout> sceneSSBODescriptorLayout{};
+		std::unique_ptr<SEDescriptorSetLayout> sceneDescriptorLayout{};
 	};
 }

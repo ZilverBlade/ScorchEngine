@@ -88,7 +88,7 @@ namespace ScorchEngine {
 			samplerInfo.magFilter = attachmentCreateInfo.linearFiltering ? VK_FILTER_LINEAR :  VK_FILTER_NEAREST;
 			samplerInfo.minFilter = attachmentCreateInfo.linearFiltering ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
 			samplerInfo.mipmapMode = attachmentCreateInfo.linearFiltering ? VK_SAMPLER_MIPMAP_MODE_LINEAR : VK_SAMPLER_MIPMAP_MODE_NEAREST;
-			samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+			samplerInfo.addressModeU = attachmentCreateInfo.isShadowMap ? VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			samplerInfo.mipLodBias = 0.0f;
 			samplerInfo.maxAnisotropy = 1.0f;
 			samplerInfo.minLod = 0.0f;
@@ -96,6 +96,9 @@ namespace ScorchEngine {
 			samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 			samplerInfo.addressModeV = samplerInfo.addressModeU;
 			samplerInfo.addressModeW = samplerInfo.addressModeU;
+			samplerInfo.compareEnable = attachmentCreateInfo.isShadowMap;
+			samplerInfo.compareOp = VK_COMPARE_OP_LESS;
+
 			if (vkCreateSampler(device.getDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
 				throw std::runtime_error("Failed to create sampler");
 			}

@@ -34,6 +34,7 @@ namespace ScorchEngine {
 				{ envMapImageInfo },
 				VK_FORMAT_R8G8B8A8_UNORM,
 				VK_IMAGE_VIEW_TYPE_CUBE,
+				{},
 				6,
 				envPrefilteredMipLevels
 			);
@@ -45,6 +46,7 @@ namespace ScorchEngine {
 				{ envMapImageInfo },
 				VK_FORMAT_R8G8B8A8_UNORM,
 				VK_IMAGE_VIEW_TYPE_CUBE,
+				{},
 				6,
 				1
 			);

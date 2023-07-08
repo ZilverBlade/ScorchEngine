@@ -5,6 +5,7 @@
 namespace ScorchEngine {
 	SETexture2D::SETexture2D(SEDevice& device, const SETexture::Builder& builder) : SETexture(device) {
 		anisotropy = 16.0;
+		filter = builder.linearSampler ? VK_FILTER_LINEAR : VK_FILTER_NEAREST;
 		createTextureImage(builder);
 		createTextureImageView(VK_IMAGE_VIEW_TYPE_2D);
 		createTextureSampler();

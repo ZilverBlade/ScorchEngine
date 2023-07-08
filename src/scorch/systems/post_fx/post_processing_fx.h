@@ -20,6 +20,7 @@ namespace ScorchEngine {
 			const std::vector<VkDescriptorImageInfo>& inputAttachments,
 			VkFormat framebufferFormat,
 			VkImageViewType viewType,
+			const std::vector<VkDescriptorSetLayout>& extraDescriptorSetLayouts = {},
 			uint32_t layers = 1,
 			uint32_t mipLevels = 1
 		);
@@ -31,11 +32,15 @@ namespace ScorchEngine {
 		void render(VkCommandBuffer commandBuffer, const void* pushData, uint32_t layer = 0, uint32_t mipLevel = 0);
 		void resize(glm::vec2 newResolution, const std::vector<VkDescriptorImageInfo>& inputAttachments);
 
+		VkPipelineLayout getPipelineLayout() {
+			return ppfxPipelineLayout->getPipelineLayout();
+		}
+
 		SEFramebufferAttachment* getAttachment() {
 			return ppfxRenderTarget;
 		}
 	private:
-		void createPipelineLayout();
+		void createPipelineLayout(std::vector<VkDescriptorSetLayout> descriptorSetLayouts);
 		void createPipeline(const SEShader& fragmentShader);
 		void createSceneDescriptors();
 		void createRenderPass(glm::vec2 resolution);
@@ -45,6 +50,8 @@ namespace ScorchEngine {
 
 		uint32_t mipLevels = 1;
 		uint32_t layerCount = 1;
+
+		uint32_t descriptorSetOffset = 0;
 
 		std::vector<std::vector<SEFramebuffer*>> ppfxSubFramebuffers{};
 		SERenderPass* ppfxRenderPass{};

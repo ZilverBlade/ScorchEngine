@@ -4,6 +4,7 @@
 #include <scorch/log.h>
 #include <scorch/vkapi/queue.h>
 
+#define MAX_FRAMES_IN_FLIGHT 3
 namespace ScorchEngine {
 	struct QueueFamilyIndices {
 		uint32_t presentFamily = 0;

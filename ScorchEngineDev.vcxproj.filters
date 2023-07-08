@@ -210,6 +210,15 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
+    <ClInclude Include="src\scorch\systems\rendering\shadow_map_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\vkapi\voxel_texture.h">
+      <Filter>vkapi</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\ecs\components\light_propagation_volume_component.h">
+      <Filter>ecs\components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
@@ -334,5 +343,17 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />
+    <ClCompile Include="src\scorch\systems\rendering\shadow_map_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\voxel_texture.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\compute_pipeline.h">
+      <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\vkapi\compute_pipeline.cpp">
+      <Filter>vkapi</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

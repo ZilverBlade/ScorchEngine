@@ -17,11 +17,14 @@ float random(vec2 coords) {
 void main() {
 	vec2 flippedCoord = vec2(fragUV.x, 1.0 - fragUV.y);
 
-	vec3 color = textureLod(inputImage, flippedCoord, 0.0).rgb;
+	vec3 hdr = textureLod(inputImage, flippedCoord, 0.0).rgb;
 
-	//color.r += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
-	//color.g += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
-	//color.b += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
+	// tonemap
+	vec3 color = vec3(1.0) - exp(-hdr);
+
+	color.r += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
+	color.g += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
+	color.b += mix(-push.ditherIntensity, push.ditherIntensity, random(gl_FragCoord.xy));
 	
 	vec3 gammaCorrected = pow(color, vec3(push.invGamma));
 	

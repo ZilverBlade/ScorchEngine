@@ -9,6 +9,13 @@ namespace ScorchEngine {
 	struct DirectionalLight {
 		alignas(16)glm::vec3 direction;
 		alignas(16)glm::vec4 color; // w = intensity
+		alignas(16)glm::mat4 vp;
+	};
+
+	struct LPV {
+		alignas(16)glm::vec3 center;
+		alignas(16)glm::vec3 extent;
+		alignas(16)glm::vec3 boost;
 	};
 	struct PointLight {
 		alignas(16)glm::vec3 position;
@@ -16,11 +23,13 @@ namespace ScorchEngine {
 	};
 
 	struct SceneSSBO {
-		SkyLight skyLights[16];
-		DirectionalLight directionalLights[16];
-		PointLight pointLights[512];
-		uint32_t skyLightCount;
-		uint32_t directionalLightCount;
+		SkyLight skyLight;
+		DirectionalLight directionalLight;
+		LPV lpv;
+		PointLight pointLights[128];
+		VkBool32 hasSkyLight;
+		VkBool32 hasDirectionalLight;
+		VkBool32 hasLPV;
 		uint32_t pointLightCount;
 	};
 }

@@ -85,13 +85,13 @@ namespace ScorchEngine {
 			{ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, 0 }, // position
 			{ 1, 1, VK_FORMAT_R32G32_SFLOAT, 0 },    // uv
 			{ 2, 2, VK_FORMAT_R32G32B32_SFLOAT, 0 }, // normal
-			{ 3, 3, VK_FORMAT_R32G32B32_SFLOAT, 0 }, // tangent
+			{ 3, 3, VK_FORMAT_R32G32B32_SFLOAT, 0 }  // tangent
 		};
 		bindingDescriptions = {
 			{ 0, 12, VK_VERTEX_INPUT_RATE_VERTEX }, // position
 			{ 1, 8, VK_VERTEX_INPUT_RATE_VERTEX },  // uv
 			{ 2, 12, VK_VERTEX_INPUT_RATE_VERTEX }, // normal
-			{ 3, 12, VK_VERTEX_INPUT_RATE_VERTEX }, // tangent
+			{ 3, 12, VK_VERTEX_INPUT_RATE_VERTEX }  // tangent
 		};
 	}
 
@@ -135,7 +135,7 @@ namespace ScorchEngine {
 		depthStencilInfo.depthWriteEnable = VK_FALSE;
 	}
 
-	SEGraphicsPipeline::SEGraphicsPipeline(SEDevice& device, const std::vector<SEShader>& shaders, const SEGraphicsPipelineConfigInfo& configInfo) : seDevice(device) {
+	SEGraphicsPipeline::SEGraphicsPipeline(SEDevice& device, const SEGraphicsPipelineConfigInfo& configInfo, const std::vector<SEShader>& shaders) : seDevice(device) {
 		assert(configInfo.pipelineLayout != nullptr &&
 				"Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
 		assert(configInfo.renderPass != nullptr &&

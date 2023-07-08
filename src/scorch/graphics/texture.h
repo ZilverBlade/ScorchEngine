@@ -15,6 +15,7 @@ namespace ScorchEngine {
             size_t dataSize;
             int layers;
             bool srgb;
+            bool linearSampler;
             std::vector<void*> pixels;
         };
         SETexture(SEDevice& device);

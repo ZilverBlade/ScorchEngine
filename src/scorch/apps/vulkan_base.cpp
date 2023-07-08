@@ -9,7 +9,7 @@ namespace ScorchEngine::Apps {
 		globalUBODescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 			.build();
-		sceneSSBODescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
+		sceneDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
 			.build();
 
@@ -49,7 +49,7 @@ namespace ScorchEngine::Apps {
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 			);
 			data.ssboBuffer->map();
-			SEDescriptorWriter(*sceneSSBODescriptorLayout, *inFlightPool)
+			SEDescriptorWriter(*sceneDescriptorLayout, *inFlightPool)
 				.writeBuffer(0, &data.ssboBuffer->getDescriptorInfo())
 				.build(data.ssboDescriptorSet);
 			renderData.push_back(std::move(data));
