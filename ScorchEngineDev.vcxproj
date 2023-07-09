@@ -102,7 +102,6 @@
   <ItemGroup>
     <ClInclude Include="src\scorch\apps\app.h" />
     <ClInclude Include="src\scorch\apps\renderers\render_app.h" />
-    <ClInclude Include="src\scorch\apps\tests\lighting_test.h" />
     <ClInclude Include="src\scorch\apps\tests\vulkan_test.h" />
     <ClInclude Include="src\scorch\apps\tests\window_test.h" />
     <ClInclude Include="src\scorch\apps\vulkan_base.h" />
@@ -164,7 +163,6 @@
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp" />
     <ClCompile Include="src\scorch\apps\renderers\render_app.cpp" />
-    <ClCompile Include="src\scorch\apps\tests\lighting_test.cpp" />
     <ClCompile Include="src\scorch\apps\tests\vulkan_test.cpp" />
     <ClCompile Include="src\scorch\apps\tests\window_test.cpp" />
     <ClCompile Include="src\scorch\apps\vulkan_base.cpp" />

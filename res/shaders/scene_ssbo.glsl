@@ -10,10 +10,20 @@ struct DirectionalLight {
 	vec4 color; // w = intensity
 	mat4 vp;
 };
+struct LPVCascadeData {
+	vec3 extent;
+	vec3 virtualPropagatedGridRedUVMin;
+	vec3 virtualPropagatedGridRedUVMax;
+	vec3 virtualPropagatedGridGreenUVMin;
+	vec3 virtualPropagatedGridGreenUVMax;
+	vec3 virtualPropagatedGridBlueUVMin;
+	vec3 virtualPropagatedGridBlueUVMax;
+};
 struct LPV {
 	vec3 center;
-	vec3 extent;
 	vec3 boost;
+	LPVCascadeData cascades[4];
+	uint cascadeCount;
 };
 struct PointLight {
 	vec3 position;

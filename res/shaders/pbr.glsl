@@ -11,9 +11,7 @@ layout (set = 2, binding = 1) uniform samplerCube irradianceMap;
 layout (set = 2, binding = 2) uniform sampler2D brdfLUT;
 
 layout (set = 3, binding = 0) uniform sampler2DShadow shadowMapPCF;
-layout (set = 3, binding = 1) uniform sampler3D LPV_Red;
-layout (set = 3, binding = 2) uniform sampler3D LPV_Green;
-layout (set = 3, binding = 3) uniform sampler3D LPV_Blue;
+layout (set = 3, binding = 1) uniform sampler3D virtual_PropagatedLPV;
 
 struct FragmentLitPBRData {
 	vec3 position;
@@ -95,12 +93,12 @@ float sampleShadow(sampler2DShadow shadow, vec3 world, mat4 vp) {
 	float texelSize = 1.0 / float(textureSize(shadow, 0).x);
 	for (int x = -PCF_KERNEL; x <= PCF_KERNEL; x++) {
 		for (int y = 0; y <= PCF_KERNEL; y++) {
-			vec2 offset = vec2(x, y) * texelSize;
-			accum += textureLod(shadow, vec3(projCoords.xy + offset, projCoords.z - BIAS), 0.0);
+			vec2 off = vec2(float(x), float(y)) * texelSize;
+			accum += texture(shadow, vec3(projCoords.xy + off, projCoords.z - BIAS));
 			samples+=1.0;
 		}
 	}
-	return accum /= float(samples);
+	return accum / samples;
 }
 
 const float SH_C0 = 0.282094792; // 1 / 2sqrt(pi)
@@ -108,8 +106,8 @@ const float SH_C1 = 0.488602512; // sqrt(3/pi) / 2
 vec4 dirToSH(vec3 dir) {
 	return vec4(SH_C0, -SH_C1 * dir.y, SH_C1 * dir.z, -SH_C1 * dir.x);
 }
-vec3 worldToUV(vec3 world) {
-	return ( (world - scene.lpv.center) / scene.lpv.extent + 1.0) / 2.0;
+vec3 worldToUV(vec3 world, vec3 center, vec3 extent) {
+	return ( (world - center) / extent + 1.0) / 2.0;
 }
 vec3 shToIrradiance(vec3 normal, vec4 shR, vec4 shG, vec4 shB) {
 	vec4 SHintensity = dirToSH(-normal);
@@ -121,6 +119,40 @@ vec3 shToIrradiance(vec3 normal, vec4 shR, vec4 shG, vec4 shB) {
 	
 	return (1.0 / PI) * max(vec3(0.0), lpvIntensity);
 }
+
+const int SAMPLER_MODE_REPEAT = 0;
+const int SAMPLER_MODE_CLAMP_EDGE = 1;
+const int SAMPLER_MODE_CLAMP_BORDER = 2;
+
+	// shift the sampling away from the border to prevent leaking from nearby textures
+vec3 limitSamplerEdge(sampler3D atlas, vec3 uv) {
+	vec3 half_Texel = 0.5 / textureSize(atlas, 0).xyz;
+	vec3 UV_LIMIT_MAX = 1.0 - half_Texel;
+	vec3 UV_LIMIT_MIN = half_Texel;
+	return clamp(uv, UV_LIMIT_MIN, UV_LIMIT_MAX);
+}
+vec4 sampleVirtual3D(sampler3D atlas, in vec3 uv, vec3 minc, vec3 maxc, int samplerMode, vec4 borderColor) {	
+	vec3 delta = maxc - minc;
+	vec3 textureCoord;
+	if (samplerMode == SAMPLER_MODE_REPEAT) {
+		uv = limitSamplerEdge(atlas, fract(uv));
+		
+		textureCoord = mod(uv * delta, delta) + minc;
+	} else if (samplerMode == SAMPLER_MODE_CLAMP_EDGE) {
+		uv = limitSamplerEdge(atlas, uv);
+		
+		textureCoord = uv * delta + minc;
+	}else if (samplerMode == SAMPLER_MODE_CLAMP_BORDER) {
+		if (any(greaterThan(abs(uv * 2.0 - 1.0), vec3(1.0, 1.0, 1.0)))) {
+			return borderColor;
+		}
+		uv = limitSamplerEdge(atlas, uv);
+		textureCoord = uv * delta + minc;
+	}
+	
+	return textureLod(atlas, textureCoord, 0.0);
+}
+
 
 vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData fragmentcc) {
 	vec3 cameraPosWorld = ubo.invViewMatrix[3].xyz;
@@ -155,13 +187,18 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	vec3 diffuse = vec3(0.0);
 	
 	if (scene.hasLPV) {
-		vec3 lpvUV = worldToUV(fragment.position);
-		irradiance += scene.lpv.boost * 200.0 * shToIrradiance(
-			fragment.normal,
-			textureLod(LPV_Red, lpvUV, 0.0),
-			textureLod(LPV_Green,lpvUV, 0.0),
-			textureLod(LPV_Blue,lpvUV, 0.0)
-		) * fragment.diffuse * (1.0 - fragment.metallic); 
+		vec3 lpvAccum = vec3(0.0);
+		for (int i = 0; i < scene.lpv.cascadeCount; i++) {
+			vec3 lpvUV = worldToUV(fragment.position, scene.lpv.center, scene.lpv.cascades[i].extent);
+			 lpvAccum += scene.lpv.boost * 100.0 * shToIrradiance(
+				fragment.normal,
+				sampleVirtual3D(virtual_PropagatedLPV, lpvUV, scene.lpv.cascades[i].virtualPropagatedGridRedUVMin, scene.lpv.cascades[i].virtualPropagatedGridRedUVMax, SAMPLER_MODE_CLAMP_BORDER, vec4(0.0)),
+				sampleVirtual3D(virtual_PropagatedLPV, lpvUV, scene.lpv.cascades[i].virtualPropagatedGridGreenUVMin, scene.lpv.cascades[i].virtualPropagatedGridGreenUVMax, SAMPLER_MODE_CLAMP_BORDER, vec4(0.0)),
+				sampleVirtual3D(virtual_PropagatedLPV, lpvUV, scene.lpv.cascades[i].virtualPropagatedGridBlueUVMin, scene.lpv.cascades[i].virtualPropagatedGridBlueUVMax, SAMPLER_MODE_CLAMP_BORDER, vec4(0.0))
+				
+			) ; 
+		}
+		irradiance += lpvAccum;
 	}
 	
 	if (scene.hasSkyLight) {
@@ -224,9 +261,10 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 			clearCoat += shadow * pbrSchlickBeckmannBRDF(ccpbrSData, pbrData, lightingData);
 		}
 	}
+	vec3 reflectedIrradiance = irradiance * fragment.diffuse * (1.0 - fragment.metallic);
 	vec3 reflectedDiffuse = diffuse * fragment.diffuse * (1.0 - fragment.metallic) * (1.0 - fresnelTotalInternalReflection);
 	vec3 reflectedSpecular = mix(specular, specular * fragment.diffuse, fragment.metallic) * fragment.specular;
 	vec3 reflectedClearCoat = clearCoat * fragmentcc.clearCoat;
-	return irradiance + reflectedDiffuse + reflectedSpecular + reflectedClearCoat;
+	return reflectedIrradiance + reflectedDiffuse + reflectedSpecular + reflectedClearCoat;
 }
 #endif

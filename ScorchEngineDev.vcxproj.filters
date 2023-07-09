@@ -51,9 +51,6 @@
     <ClInclude Include="src\scorch\apps\renderers\render_app.h">
       <Filter>apps\renderers</Filter>
     </ClInclude>
-    <ClInclude Include="src\scorch\apps\tests\lighting_test.h">
-      <Filter>apps\tests</Filter>
-    </ClInclude>
     <ClInclude Include="src\scorch\apps\tests\vulkan_test.h">
       <Filter>apps\tests</Filter>
     </ClInclude>
@@ -226,9 +223,6 @@
     </ClCompile>
     <ClCompile Include="src\scorch\apps\renderers\render_app.cpp">
       <Filter>apps\renderers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\apps\tests\lighting_test.cpp">
-      <Filter>apps\tests</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\apps\tests\vulkan_test.cpp">
       <Filter>apps\tests</Filter>

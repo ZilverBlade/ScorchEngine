@@ -2,26 +2,22 @@
 #extension GL_GOOGLE_include_directive : enable
 
 layout (location  = 0) out int xxx;
-layout (set = 0, binding = 0) uniform LPVInjectData {
-	mat4 rsmInvProj;
-	mat4 rsmInvView;
-	mat4 rsmVP;
+
+layout (push_constant) uniform Push {
 	vec3 lpvExtent;
-	vec3 lpvCenter;
 	vec3 lpvCellSize;
-	vec3 lightDirection;
-	vec3 lightIntensity;
-	float temporalMix;
-} injection;
-layout (set = 0, binding = 1) uniform sampler2D rsmDepth;
-layout (set = 0, binding = 2) uniform sampler2D rsmNormal;
-layout (set = 0, binding = 3) uniform sampler2D rsmFlux;
-layout (set = 0, binding = 4, rgba16f) uniform image3D LPV_RedSH;
-layout (set = 0, binding = 5, rgba16f) uniform image3D LPV_GreenSH;
-layout (set = 0, binding = 6, rgba16f) uniform image3D LPV_BlueSH;
-layout (set = 0, binding = 7, rgba16f) uniform image3D LPV_PropagatedRedSH;
-layout (set = 0, binding = 8, rgba16f) uniform image3D LPV_PropagatedGreenSH;
-layout (set = 0, binding = 9, rgba16f) uniform image3D LPV_PropagatedBlueSH;
+	ivec3 virtualPropagatedGridRedCoords;
+	ivec3 virtualPropagatedGridGreenCoords;
+	ivec3 virtualPropagatedGridBlueCoords;
+	int pingPongIndex;
+} push;
+
+layout (set = 0, binding = 4, rgba16f) uniform image3D LPV_Inout_RedSH;
+layout (set = 0, binding = 5, rgba16f) uniform image3D LPV_Inout_GreenSH;
+layout (set = 0, binding = 6, rgba16f) uniform image3D LPV_Inout_BlueSH;
+layout (set = 0, binding = 7, rgba16f) uniform image3D LPV_Inout2_RedSH;
+layout (set = 0, binding = 8, rgba16f) uniform image3D LPV_Inout2_GreenSH;
+layout (set = 0, binding = 9, rgba16f) uniform image3D LPV_Inout2_BlueSH;
 
 const float SH_C0 = 0.282094792; // 1 / 2sqrt(pi)
 const float SH_C1 = 0.488602512; // sqrt(3/pi) / 2
@@ -80,10 +76,33 @@ vec4 dirToSH(vec3 dir) {
 	return vec4(SH_C0, -SH_C1 * dir.y, SH_C1 * dir.z, -SH_C1 * dir.x);
 }
 
+
 void main() {
 	ivec3 cellIndex = ivec3(gl_FragCoord.xyz);
-	for (int i = 0; i < imageSize(LPV_RedSH).z; i++) {
+	
+	for (int i = 0; i < imageSize(LPV_Inout_RedSH).z; i++) {
 		cellIndex.z = i;
+		
+		vec4 old_cR = vec4(0.0);
+		vec4 old_cG = vec4(0.0);
+		vec4 old_cB = vec4(0.0);
+		
+		if (push.pingPongIndex == 1) {
+			old_cR = imageLoad(LPV_Inout_RedSH, cellIndex).xyzw;
+		} else {
+			old_cR = imageLoad(LPV_Inout2_RedSH, cellIndex).xyzw;
+		}
+		if (push.pingPongIndex == 1) {
+			old_cG = imageLoad(LPV_Inout_GreenSH, cellIndex).xyzw;
+		} else {
+			old_cG = imageLoad(LPV_Inout2_GreenSH, cellIndex).xyzw;
+		}
+		if (push.pingPongIndex == 1) {
+			old_cB = imageLoad(LPV_Inout_BlueSH, cellIndex).xyzw;
+		} else {
+			old_cB = imageLoad(LPV_Inout2_BlueSH, cellIndex).xyzw;
+		}
+		
 		// contribution
 		vec4 cR = vec4(0.0);
 		vec4 cG = vec4(0.0);
@@ -91,13 +110,27 @@ void main() {
 		
 		for (uint neighbour = 0; neighbour < 6; neighbour++) {
 			mat3 orientation = neighbourOrientations[neighbour];
-			// TODO: transpose all orientation matrices and use row indexing instead? ie int3( orientation[2] )
 			vec3 mainDirection = orientation * vec3(0, 0, 1);
 			
 			ivec3 neighbourIndex = cellIndex - ivec3(directions[neighbour]);
-			vec4 rCoeffsNeighbour = imageLoad(LPV_RedSH, neighbourIndex);
-			vec4 gCoeffsNeighbour = imageLoad(LPV_GreenSH, neighbourIndex);
-			vec4 bCoeffsNeighbour = imageLoad(LPV_BlueSH, neighbourIndex);
+			vec4 rCoeffsNeighbour;
+			vec4 gCoeffsNeighbour;
+			vec4 bCoeffsNeighbour;
+			if (push.pingPongIndex == 0) {
+				rCoeffsNeighbour = imageLoad(LPV_Inout_RedSH, neighbourIndex).xyzw;
+			} else {
+				rCoeffsNeighbour = imageLoad(LPV_Inout2_RedSH, neighbourIndex).xyzw;
+			}
+			if (push.pingPongIndex == 0) {
+				gCoeffsNeighbour = imageLoad(LPV_Inout_GreenSH, neighbourIndex).xyzw;
+			} else {
+				gCoeffsNeighbour = imageLoad(LPV_Inout2_GreenSH, neighbourIndex).xyzw;
+			}
+			if (push.pingPongIndex == 0) {
+				bCoeffsNeighbour = imageLoad(LPV_Inout_BlueSH, neighbourIndex).xyzw;
+			} else {
+				bCoeffsNeighbour = imageLoad(LPV_Inout2_BlueSH, neighbourIndex).xyzw;
+			}
 			
 			const float directFaceSubtendedSolidAngle = 0.4006696846 / PI / 2.0;
 			const float sideFaceSubtendedSolidAngle = 0.4234413544 / PI / 3.0;
@@ -113,7 +146,7 @@ void main() {
 				cG += sideFaceSubtendedSolidAngle * dot(gCoeffsNeighbour, evalDirectionSH) * reprojDirectionCosineLobeSH;
 				cB += sideFaceSubtendedSolidAngle * dot(bCoeffsNeighbour, evalDirectionSH) * reprojDirectionCosineLobeSH;
 			}
-				
+			
 			vec3 curDir = directions[neighbour];
 			vec4 curCosLobe = dirToCosineLobe(curDir);
 			vec4 curDirSH = dirToSH(curDir);
@@ -124,14 +157,21 @@ void main() {
 			cG += directFaceSubtendedSolidAngle * max(0.0, dot(gCoeffsNeighbour, curDirSH)) * curCosLobe;
 			cB += directFaceSubtendedSolidAngle * max(0.0, dot(bCoeffsNeighbour, curDirSH)) * curCosLobe;
 		}
-		
-		const float TEMPORAL_MIX = 0.125;
-		vec4 oldCR = imageLoad(LPV_PropagatedRedSH, cellIndex.xyz);
-		vec4 oldCG = imageLoad(LPV_PropagatedGreenSH, cellIndex.xyz);
-		vec4 oldCB = imageLoad(LPV_PropagatedBlueSH, cellIndex.xyz);
-		imageStore(LPV_PropagatedRedSH, cellIndex.xyz, mix(oldCR, cR, TEMPORAL_MIX));
-		imageStore(LPV_PropagatedGreenSH, cellIndex.xyz, mix(oldCG, cG, TEMPORAL_MIX));
-		imageStore(LPV_PropagatedBlueSH, cellIndex.xyz, mix(oldCB, cB, TEMPORAL_MIX));
+		if (push.pingPongIndex == 1) {
+			imageStore(LPV_Inout_RedSH, cellIndex, old_cR + cR);
+		} else {
+			imageStore(LPV_Inout2_RedSH, cellIndex, old_cR + cR);
+		}
+		if (push.pingPongIndex == 1) {
+			imageStore(LPV_Inout_GreenSH, cellIndex, old_cG + cG);
+		} else {
+			imageStore(LPV_Inout2_GreenSH, cellIndex, old_cG + cG);
+		}
+		if (push.pingPongIndex == 1) {
+			imageStore(LPV_Inout_BlueSH, cellIndex, old_cB + cB);
+		} else {
+			imageStore(LPV_Inout2_BlueSH, cellIndex, old_cB + cB);
+		}
 	
 	}
 	xxx = 0;

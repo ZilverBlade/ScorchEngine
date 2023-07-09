@@ -3,23 +3,28 @@
 
 layout (location  = 0) out int xxx;
 
+layout (push_constant) uniform Push {
+	vec3 lpvExtent;
+	vec3 lpvCellSize;
+	ivec3 virtualPropagatedGridRedCoords;
+	ivec3 virtualPropagatedGridGreenCoords;
+	ivec3 virtualPropagatedGridBlueCoords;
+	int pingPongIndex;
+} push;
 layout (set = 0, binding = 0) uniform LPVInjectData {
 	mat4 rsmInvProj;
 	mat4 rsmInvView;
 	mat4 rsmVP;
-	vec3 lpvExtent;
 	vec3 lpvCenter;
-	vec3 lpvCellSize;
 	vec3 lightDirection;
 	vec3 lightIntensity;
-	float temporalMix;
 } injection;
 layout (set = 0, binding = 1) uniform sampler2D rsmDepth;
 layout (set = 0, binding = 2) uniform sampler2D rsmNormal;
 layout (set = 0, binding = 3) uniform sampler2D rsmFlux;
-layout (set = 0, binding = 4, rgba16f) uniform image3D LPV_RedSH;
-layout (set = 0, binding = 5, rgba16f) uniform image3D LPV_GreenSH;
-layout (set = 0, binding = 6, rgba16f) uniform image3D LPV_BlueSH;
+layout (set = 0, binding = 4, rgba16f) uniform image3D LPV_Inout_RedSH;
+layout (set = 0, binding = 5, rgba16f) uniform image3D LPV_Inout_GreenSH;
+layout (set = 0, binding = 6, rgba16f) uniform image3D LPV_Inout_BlueSH;
 
 const float SH_C0 = 0.282094792; // 1 / 2sqrt(pi)
 const float SH_C1 = 0.488602512; // sqrt(3/pi) / 2
@@ -29,7 +34,7 @@ const float SH_cosLobe_C0 = 0.886226925; // sqrt(pi)/2
 const float SH_cosLobe_C1 = 1.023326707; // sqrt(pi/3)
 const float PI = 3.1415926;
 
-const float POS_BIAS_NORMAL = 2.0;
+const float POS_BIAS_NORMAL = 1.0;
 const float POS_BIAS_LIGHT = 1.0;
 
 const float SURFEL_WEIGHT = 0.15;
@@ -76,10 +81,10 @@ vec4 dirToSH(vec3 dir) {
 }
 
 vec3 uvToWorld(vec3 uv) {
-	return (uv * 2.0 - 1.0) * injection.lpvExtent + injection.lpvCenter;
+	return (uv * 2.0 - 1.0) * push.lpvExtent + injection.lpvCenter;
 }
 vec3 worldToUV(vec3 world) {
-	return ( (world - injection.lpvCenter) / injection.lpvExtent + 1.0 ) / 2.0;
+	return ( (world - injection.lpvCenter) / push.lpvExtent + 1.0 ) / 2.0;
 }
 
 void main() {
@@ -99,7 +104,7 @@ void main() {
 			if (data.normal == vec3(0.0)) continue;
 			float texLum = Luminance(data);
 			if (texLum > maxLuminance) {
-				brightestCellIndex = worldToUV(data.position) * vec3(imageSize(LPV_RedSH).xyz - 1);
+				brightestCellIndex = worldToUV(data.position) * vec3(imageSize(LPV_Inout_RedSH).xyz - 1);
 				maxLuminance = texLum;
 			}
 		}
@@ -114,7 +119,7 @@ void main() {
 		for (uint x = 0; x < KERNEL_SIZE; x += STEP_SIZE) {
 			ivec2 txi = rsmCoords.xy + ivec2(x, y);
 			RSMData data = fetchRSMData(txi);
-			vec3 texelIndex = worldToUV(data.position) * vec3(imageSize(LPV_RedSH).xyz - 1);
+			vec3 texelIndex = worldToUV(data.position) * vec3(imageSize(LPV_Inout_RedSH).xyz - 1);
 			vec3 deltaGrid = texelIndex - brightestCellIndex;
 			if (dot(deltaGrid, deltaGrid) < 10) { // If cell proximity is good enough 
 				// Sample from texel
@@ -136,11 +141,11 @@ void main() {
 		result.flux /= numSamples;
 	}
 	
-	ivec3 worldCoords = ivec3(worldToUV(result.position) * imageSize(LPV_RedSH).xyz);
+	ivec3 worldCoords = ivec3(worldToUV(result.position) * imageSize(LPV_Inout_RedSH).xyz);
 	vec4 coef = (dirToCosineLobe(result.normal) / PI) * SURFEL_WEIGHT;
-	imageStore(LPV_RedSH, worldCoords, imageLoad(LPV_RedSH, worldCoords) + coef * result.flux.r);
-	imageStore(LPV_GreenSH, worldCoords, imageLoad(LPV_GreenSH, worldCoords) + coef * result.flux.g);
-	imageStore(LPV_BlueSH, worldCoords, imageLoad(LPV_BlueSH, worldCoords) + coef * result.flux.b);
+	imageStore(LPV_Inout_RedSH, worldCoords, coef * result.flux.r);
+	imageStore(LPV_Inout_GreenSH, worldCoords,  coef * result.flux.g);
+	imageStore(LPV_Inout_BlueSH, worldCoords, coef * result.flux.b);
 	
 	xxx = 0;
 }

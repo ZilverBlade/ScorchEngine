@@ -26,8 +26,19 @@ namespace ScorchEngine {
 		frameInfo.level->getRegistry().view<Components::TransformComponent, Components::LightPropagationVolumeComponent>().each(
 			[&](auto& transform, auto& lpv) {
 				sceneBuffer.lpv.boost = lpv.boost;
-				sceneBuffer.lpv.extent = lpv.extent;
 				sceneBuffer.lpv.center = lpv.center;
+
+				for (int i = 0; i < lpv.cascadeCount; i++) {
+					glm::vec3 cascadeExtent = lpv.maxExtent / powf(2, lpv.cascadeCount - i - 1);
+					sceneBuffer.lpv.cascades[i].extent = cascadeExtent;
+					sceneBuffer.lpv.cascades[i].virtualPropagatedGridRedUVMin = lpv.cascades[i].virtualPropagatedGridRedUVMin;
+					sceneBuffer.lpv.cascades[i].virtualPropagatedGridRedUVMax = lpv.cascades[i].virtualPropagatedGridRedUVMax;
+					sceneBuffer.lpv.cascades[i].virtualPropagatedGridGreenUVMin = lpv.cascades[i].virtualPropagatedGridGreenUVMin;
+					sceneBuffer.lpv.cascades[i].virtualPropagatedGridGreenUVMax = lpv.cascades[i].virtualPropagatedGridGreenUVMax;
+					sceneBuffer.lpv.cascades[i].virtualPropagatedGridBlueUVMin = lpv.cascades[i].virtualPropagatedGridBlueUVMin;
+					sceneBuffer.lpv.cascades[i].virtualPropagatedGridBlueUVMax = lpv.cascades[i].virtualPropagatedGridBlueUVMax;
+				}
+				sceneBuffer.lpv.cascadeCount = lpv.cascadeCount;
 				sceneBuffer.hasLPV = VK_TRUE;
 			}
 		);

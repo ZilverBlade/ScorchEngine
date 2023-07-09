@@ -20,6 +20,7 @@
 namespace ScorchEngine {
 	const uint32_t SHADOW_MAP_RESOLUTION = 1024U;
 	const uint32_t SHADOW_MAP_RSM_RESOLUTION = 256U;
+	const uint32_t VIRTUAL_VOXEL_ATLAS_SIZE = 128U; // more than enough for several voxels
 	const uint32_t LPV_RESOLUTION = 32U; // dont make different from multiple of 16 due to the dispatch config
 	const uint32_t LPV_PROPGATION_FASES = 1U; // propagate light X times, higher is better propagation, keep at 1 due to the current setup
 
@@ -62,12 +63,14 @@ namespace ScorchEngine {
 		SEGraphicsPipeline* shadowMapPipeline{};
 
 		std::unique_ptr<SEBuffer> lpvInjectionData[MAX_FRAMES_IN_FLIGHT];
-		SEVoxelTexture* lpvRedSH{};
-		SEVoxelTexture* lpvGreenSH{};
-		SEVoxelTexture* lpvBlueSH{};
-		SEVoxelTexture* lpvPropRedSH{};
-		SEVoxelTexture* lpvPropGreenSH{};
-		SEVoxelTexture* lpvPropBlueSH{};
+		SEVoxelTexture* lpvInoutRedSH{};
+		SEVoxelTexture* lpvInoutGreenSH{};
+		SEVoxelTexture* lpvInoutBlueSH{};
+		// ping pong textures for the propagation fase
+		SEVoxelTexture* lpvInout2RedSH{};
+		SEVoxelTexture* lpvInout2GreenSH{};
+		SEVoxelTexture* lpvInout2BlueSH{};
+		SEVoxelTexture* lpvPropagatedAtlasSH{};
 
 		std::unique_ptr<SEDescriptorSetLayout> lpvGenerationDataDescriptorSetLayout{};
 		VkDescriptorSet lpvGenerationDataDescriptorSet[MAX_FRAMES_IN_FLIGHT];
@@ -82,8 +85,11 @@ namespace ScorchEngine {
 		SEGraphicsPipeline* rsmPipeline{};
 
 
-		SEPipelineLayout* lpvPipelineLayout{};
+		SEPipelineLayout* lpvComputeClearPipelineLayout{};
 		SEComputePipeline* lpvComputeClear{};
+		SEPushConstant lpvComputeTemporalBlendPush{};
+		SEPipelineLayout* lpvComputeTemporalBlendPipelineLayout{};
+		SEComputePipeline* lpvComputeTemporalBlend{};
 		SEPostProcessingEffect* lpvComputeInjection{};
 		SEPostProcessingEffect* lpvComputePropagation{};
 	};

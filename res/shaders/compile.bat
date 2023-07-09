@@ -27,6 +27,7 @@ glslc.exe -O -fshader-stage=fragment envirrgen.fsh -o spirv/envirrgen.fsh.spv
 glslc.exe -O -fshader-stage=fragment envprefiltergen.fsh -o spirv/envprefiltergen.fsh.spv
 glslc.exe -O -fshader-stage=fragment envbrdfgen.fsh -o spirv/envbrdfgen.fsh.spv
 
+glslc.exe -O -fshader-stage=compute lpv_temporal_blend.csh -o spirv/lpv_temporal_blend.csh.spv
 glslc.exe -O -fshader-stage=compute lpv_clear.csh -o spirv/lpv_clear.csh.spv
 glslc.exe -O -g -fshader-stage=fragment lpv_injection.fsh -o spirv/lpv_injection.fsh.spv
 glslc.exe -O -g -fshader-stage=fragment lpv_propagation.fsh -o spirv/lpv_propagation.fsh.spv

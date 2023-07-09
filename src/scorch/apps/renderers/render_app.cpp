@@ -114,7 +114,7 @@ namespace ScorchEngine::Apps {
 			auto& sbc = skyboxActor.addComponent<SkyboxComponent>();
 			auto& slc = skyboxActor.addComponent<SkyLightComponent>();
 			slc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
-			slc.intensity = 0.08f;
+			slc.intensity = 0.00f;
 			cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
 			{
 				lightActor.addComponent<DirectionalLightComponent>();
@@ -123,7 +123,9 @@ namespace ScorchEngine::Apps {
 				lightActor.getTransform().rotation.z = 0.25f;
 				lightActor.getComponent<DirectionalLightComponent>().intensity = 8.0f;
 				lightActor.getComponent<DirectionalLightComponent>().shadow.maxDistance = 30.0f;
-				lightActor.getComponent<LightPropagationVolumeComponent>().extent = { 64.0, 64.0, 64.0 }; // coverage should be large for better results
+				lightActor.getComponent<LightPropagationVolumeComponent>().maxExtent = { 32, 32, 32 }; // coverage should be large for better results
+				lightActor.getComponent<LightPropagationVolumeComponent>().cascadeCount = 1;
+				lightActor.getComponent<LightPropagationVolumeComponent>().propagationIterations = 1;
 			}
 			{
 				//cameraActor.addComponent<Components::PointLightComponent>().emission = { 1.0, 0.0, 0.0 };
@@ -131,7 +133,7 @@ namespace ScorchEngine::Apps {
 			}
 		}
 
-
+		float flPropCount = 1.0f;
 		float incrementTime = 0;
 		auto oldTime = std::chrono::high_resolution_clock::now();
 		while (!seWindow.shouldClose()) {
@@ -162,6 +164,27 @@ namespace ScorchEngine::Apps {
 				lightActor.getComponent<LightPropagationVolumeComponent>().boost -= glm::vec3(4.0 * frameTime);
 				lightActor.getComponent<LightPropagationVolumeComponent>().boost = glm::max(lightActor.getComponent<LightPropagationVolumeComponent>().boost, glm::vec3(0.0));
 			}
+			if (seWindow.isKeyDown(GLFW_KEY_1)) {
+				lightActor.getComponent<LightPropagationVolumeComponent>().cascadeCount = 1;
+			}
+			if (seWindow.isKeyDown(GLFW_KEY_2)) {
+				lightActor.getComponent<LightPropagationVolumeComponent>().cascadeCount = 2;
+			}
+			if (seWindow.isKeyDown(GLFW_KEY_3)) {
+				lightActor.getComponent<LightPropagationVolumeComponent>().cascadeCount = 3;
+			}
+			if (seWindow.isKeyDown(GLFW_KEY_4)) {
+				lightActor.getComponent<LightPropagationVolumeComponent>().cascadeCount = 4;
+			}
+			if (seWindow.isKeyDown(GLFW_KEY_R)) {
+				flPropCount -= frameTime;
+				flPropCount = glm::max(flPropCount, 1.0f);
+			}
+			if (seWindow.isKeyDown(GLFW_KEY_T)) {
+				flPropCount += frameTime;
+			}
+			
+			lightActor.getComponent<LightPropagationVolumeComponent>().propagationIterations = flPropCount;
 
 			camera.setViewYXZ(cameraActor.getTransform().translation, cameraActor.getTransform().rotation);
 			camera.setPerspectiveProjection(70.0f, seSwapChain->extentAspectRatio(), 0.01f, 128.f);

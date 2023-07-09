@@ -15,11 +15,41 @@ namespace ScorchEngine {
 		glm::mat4 rsmInvProj;
 		glm::mat4 rsmInvView;
 		glm::mat4 rsmVP;
-		alignas(16)glm::vec3 lpvExtent;
 		alignas(16)glm::vec3 lpvCenter;
-		alignas(16)glm::vec3 lpvCellSize;
 		alignas(16)glm::vec3 lightDirection;
 		alignas(16)glm::vec3 lightIntensity;
+	};
+
+	struct LPVPush {
+		alignas(16)glm::vec3 lpvExtent;
+		alignas(16)glm::vec3 lpvCellSize;
+		alignas(16)glm::ivec3 virtualPropagatedGridRedCoords;
+		alignas(16)glm::ivec3 virtualPropagatedGridGreenCoords;
+		alignas(16)glm::ivec3 virtualPropagatedGridBlueCoords;
+		int pingPongIndex;
+	};
+
+	struct LPVMix {
+		alignas(16)glm::ivec3 virtualPropagatedGridRedCoords;
+		alignas(16)glm::ivec3 virtualPropagatedGridGreenCoords;
+		alignas(16)glm::ivec3 virtualPropagatedGridBlueCoords;
+		int pingPongIndex;
+		float temporalBlend;
+	};
+
+	static glm::ivec3 virtualGridCoordinates[4][3]{
+		{ // Cascade 0
+			{0, 0, 0}, {LPV_RESOLUTION, 0, 0}, {2 * LPV_RESOLUTION, 0, 0}, // LPV R, G, B
+		},
+		{ // Cascade 1
+			{ 0, LPV_RESOLUTION, 0 }, {LPV_RESOLUTION, LPV_RESOLUTION, 0}, {2 * LPV_RESOLUTION, LPV_RESOLUTION, 0}, // LPV R, G, B
+		},
+		{ // Cascade 2
+			{ 0, 2 * LPV_RESOLUTION, 0 }, {LPV_RESOLUTION, 2 * LPV_RESOLUTION, 0}, {2 * LPV_RESOLUTION, 2 * LPV_RESOLUTION, 0} // LPV R, G, B
+		},
+		{ // Cascade 3
+			{ 0, 3 * LPV_RESOLUTION, 0 }, {LPV_RESOLUTION, 3 * LPV_RESOLUTION, 0}, {2 * LPV_RESOLUTION, 3 * LPV_RESOLUTION, 0} // LPV R, G, B
+		}
 	};
 
 	ShadowMapSystem::ShadowMapSystem(
@@ -50,16 +80,21 @@ namespace ScorchEngine {
 		delete rsmFluxAttachment;
 		delete rsmFramebuffer;
 		delete rsmRenderPass;
-		delete lpvRedSH;
-		delete lpvGreenSH;
-		delete lpvBlueSH;
+		delete lpvInoutRedSH;
+		delete lpvInoutGreenSH;
+		delete lpvInoutBlueSH;
+		delete lpvInout2RedSH;
+		delete lpvInout2GreenSH;
+		delete lpvInout2BlueSH;
+		delete lpvPropagatedAtlasSH;
 
 		delete shadowMapPipelineLayout;
 		delete shadowMapPipeline;
 		delete rsmPipelineLayout;
 		delete rsmPipeline;
 
-		delete lpvPipelineLayout;
+		delete lpvComputeClearPipelineLayout;
+		delete lpvComputeTemporalBlendPipelineLayout;
 		delete lpvComputeInjection;
 		delete lpvComputePropagation;
 	}
@@ -71,20 +106,23 @@ namespace ScorchEngine {
 		vx.linearFiltering = true;
 		vx.voxelFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 		vx.usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		lpvRedSH = new SEVoxelTexture(seDevice, vx);
-		lpvGreenSH = new SEVoxelTexture(seDevice, vx);
-		lpvBlueSH = new SEVoxelTexture(seDevice, vx);
-		lpvPropRedSH = new SEVoxelTexture(seDevice, vx);
-		lpvPropGreenSH = new SEVoxelTexture(seDevice, vx);
-		lpvPropBlueSH = new SEVoxelTexture(seDevice, vx);
+		lpvInoutRedSH = new SEVoxelTexture(seDevice, vx);
+		lpvInoutGreenSH = new SEVoxelTexture(seDevice, vx);
+		lpvInoutBlueSH = new SEVoxelTexture(seDevice, vx);
+		lpvInout2RedSH = new SEVoxelTexture(seDevice, vx);
+		lpvInout2GreenSH = new SEVoxelTexture(seDevice, vx);
+		lpvInout2BlueSH = new SEVoxelTexture(seDevice, vx);
+		vx.dimensions = { VIRTUAL_VOXEL_ATLAS_SIZE ,VIRTUAL_VOXEL_ATLAS_SIZE,VIRTUAL_VOXEL_ATLAS_SIZE };
+		lpvPropagatedAtlasSH = new SEVoxelTexture(seDevice, vx);
 
 		VkCommandBuffer cb = seDevice.beginSingleTimeCommands();
-		seDevice.transitionImageLayout(cb, lpvRedSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvGreenSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvBlueSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvPropRedSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvPropGreenSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvPropBlueSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInoutRedSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInoutGreenSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInoutBlueSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInout2RedSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInout2GreenSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInout2BlueSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvPropagatedAtlasSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
 		seDevice.endSingleTimeCommands(cb);
 
 		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -103,21 +141,12 @@ namespace ScorchEngine {
 		shadowMapDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
 		auto shadowMapImageInfo = shadowMapAttachment->getDescriptor();
-		auto lpvPropRedSHImageInfo = lpvPropRedSH->getDescriptor();
-		auto lpvPropGreenSHImageInfo = lpvPropGreenSH->getDescriptor();
-		auto lpvPropBlueSHImageInfo = lpvPropBlueSH->getDescriptor();
-		auto lpvRedSHImageInfo = lpvRedSH->getDescriptor();
-		auto lpvGreenSHImageInfo = lpvGreenSH->getDescriptor();
-		auto lpvBlueSHImageInfo = lpvBlueSH->getDescriptor();
+		auto lpvPropAtlasSHImageInfo = lpvPropagatedAtlasSH->getDescriptor();
 		SEDescriptorWriter(*shadowMapDescriptorSetLayout, seDescriptorPool)
 			.writeImage(0, &shadowMapImageInfo)
-			.writeImage(1, &lpvPropRedSHImageInfo)
-			.writeImage(2, &lpvPropGreenSHImageInfo)
-			.writeImage(3, &lpvPropBlueSHImageInfo)
+			.writeImage(1, &lpvPropAtlasSHImageInfo)
 			.build(shadowMapDescriptorSet);
 
 		lpvGenerationDataDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
@@ -131,15 +160,23 @@ namespace ScorchEngine {
 			.addBinding(7, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.addBinding(8, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.addBinding(9, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(10, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
 
+		auto lpvInoutRedSHImageInfo = lpvInoutRedSH->getDescriptor();
+		auto lpvInoutGreenSHImageInfo = lpvInoutGreenSH->getDescriptor();
+		auto lpvInoutBlueSHImageInfo = lpvInoutBlueSH->getDescriptor();
+		auto lpvInout2RedSHImageInfo = lpvInout2RedSH->getDescriptor();
+		auto lpvInout2GreenSHImageInfo = lpvInout2GreenSH->getDescriptor();
+		auto lpvInout2BlueSHImageInfo = lpvInout2BlueSH->getDescriptor();
 		// remove the samplers since we are using this as a storage image for the following descriptor
-		lpvRedSHImageInfo.sampler = VK_NULL_HANDLE;
-		lpvGreenSHImageInfo.sampler = VK_NULL_HANDLE;
-		lpvBlueSHImageInfo.sampler = VK_NULL_HANDLE;
-		lpvPropRedSHImageInfo.sampler = VK_NULL_HANDLE;
-		lpvPropGreenSHImageInfo.sampler = VK_NULL_HANDLE;
-		lpvPropBlueSHImageInfo.sampler = VK_NULL_HANDLE;
+		lpvInoutRedSHImageInfo.sampler = VK_NULL_HANDLE;
+		lpvInoutGreenSHImageInfo.sampler = VK_NULL_HANDLE;
+		lpvInoutBlueSHImageInfo.sampler = VK_NULL_HANDLE;
+		lpvInout2RedSHImageInfo.sampler = VK_NULL_HANDLE;
+		lpvInout2GreenSHImageInfo.sampler = VK_NULL_HANDLE;
+		lpvInout2BlueSHImageInfo.sampler = VK_NULL_HANDLE;
+		lpvPropAtlasSHImageInfo.sampler = VK_NULL_HANDLE;
 
 		auto rsmDepthData = rsmDepthAttachment->getDescriptor();
 		auto rsmNormalData = rsmNormalAttachment->getDescriptor();
@@ -152,12 +189,13 @@ namespace ScorchEngine {
 				.writeImage(1, &rsmDepthData)
 				.writeImage(2, &rsmNormalData)
 				.writeImage(3, &rsmFluxData)
-				.writeImage(4, &lpvRedSHImageInfo)
-				.writeImage(5, &lpvGreenSHImageInfo)
-				.writeImage(6, &lpvBlueSHImageInfo)
-				.writeImage(7, &lpvPropRedSHImageInfo)
-				.writeImage(8, &lpvPropGreenSHImageInfo)
-				.writeImage(9, &lpvPropBlueSHImageInfo)
+				.writeImage(4, &lpvInoutRedSHImageInfo)
+				.writeImage(5, &lpvInoutGreenSHImageInfo)
+				.writeImage(6, &lpvInoutBlueSHImageInfo)
+				.writeImage(7, &lpvInout2RedSHImageInfo)
+				.writeImage(8, &lpvInout2GreenSHImageInfo)
+				.writeImage(9, &lpvInout2BlueSHImageInfo)
+				.writeImage(10, &lpvPropAtlasSHImageInfo)
 				.build(lpvGenerationDataDescriptorSet[i]);
 		}
 	}
@@ -285,9 +323,7 @@ namespace ScorchEngine {
 		LPVInjectData lpvInject{};
 		lpvInject.lightDirection = glm::normalize(realTransform[2]);
 		lpvInject.lightIntensity = light->intensity * light->emission;
-		lpvInject.lpvCellSize = lpv->extent / glm::vec3(LPV_RESOLUTION);
 		lpvInject.lpvCenter = realTransform[3];
-		lpvInject.lpvExtent = lpv->extent;
 		lpvInject.rsmVP = vpRSM;
 		lpvInject.rsmInvProj = shadowMapCamera.getInverseProjection();
 		lpvInject.rsmInvView = shadowMapCamera.getInverseView();
@@ -297,56 +333,95 @@ namespace ScorchEngine {
 
 			// pick random point, doesn't matter
 			glm::vec3 originPoint = glm::vec4(0.0, 0.0, 0.0, 1.0);
-			glm::vec3 uv = (originPoint - lpvInject.lpvCenter) / lpvInject.lpvExtent;
+			glm::vec3 uv = (originPoint - lpvInject.lpvCenter) / lpv->maxExtent;
 			glm::vec3 full = floor(uv * halfRes);
 
-			glm::vec3 newWorld = full / lpvInject.lpvExtent + lpvInject.lpvCenter;
+			glm::vec3 newWorld = full / lpv->maxExtent + lpvInject.lpvCenter;
 			glm::vec3 difference = originPoint - newWorld;
 			lpvInject.lpvCenter += difference;
 		}
 		lpv->center = lpvInject.lpvCenter;
-
 		lpvInjectionData[frameInfo.frameIndex]->writeToBuffer(&lpvInject);
 		lpvInjectionData[frameInfo.frameIndex]->flush();
-		// LPV passes
 
-		vkCmdBindDescriptorSets(
-			frameInfo.commandBuffer,
-			VK_PIPELINE_BIND_POINT_COMPUTE,
-			lpvPipelineLayout->getPipelineLayout(),
-			0,
-			1,
-			&lpvGenerationDataDescriptorSet[frameInfo.frameIndex],
-			0,
-			nullptr
-		);
 
-		lpvComputeClear->bind(frameInfo.commandBuffer);
-		vkCmdDispatch(frameInfo.commandBuffer, LPV_RESOLUTION / 16U, LPV_RESOLUTION / 16U, LPV_RESOLUTION);
+		for (int i = 0; i < lpv->cascadeCount; i++) {
+			// LPV passes
 
-		vkCmdBindDescriptorSets(
-			frameInfo.commandBuffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			lpvComputeInjection->getPipelineLayout(),
-			0,
-			1,
-			&lpvGenerationDataDescriptorSet[frameInfo.frameIndex],
-			0,
-			nullptr
-		);
-		lpvComputeInjection->render(frameInfo.commandBuffer, nullptr);
-		vkCmdBindDescriptorSets(
-			frameInfo.commandBuffer,
-			VK_PIPELINE_BIND_POINT_GRAPHICS,
-			lpvComputePropagation->getPipelineLayout(),
-			0,
-			1,
-			&lpvGenerationDataDescriptorSet[frameInfo.frameIndex],
-			0,
-			nullptr
-		);
-		for (int i = 0; i < LPV_PROPGATION_FASES; i++) {
-			lpvComputePropagation->render(frameInfo.commandBuffer, nullptr);
+			vkCmdBindDescriptorSets(
+				frameInfo.commandBuffer,
+				VK_PIPELINE_BIND_POINT_COMPUTE,
+				lpvComputeClearPipelineLayout->getPipelineLayout(),
+				0,
+				1,
+				&lpvGenerationDataDescriptorSet[frameInfo.frameIndex],
+				0,
+				nullptr
+			);
+
+			lpvComputeClear->bind(frameInfo.commandBuffer);
+			vkCmdDispatch(frameInfo.commandBuffer, LPV_RESOLUTION / 16U, LPV_RESOLUTION / 16U, LPV_RESOLUTION);
+
+			glm::vec3 cascadeExtent = lpv->maxExtent / powf(2, lpv->cascadeCount - i - 1);
+			LPVPush push;
+			push.lpvCellSize = cascadeExtent / glm::vec3(LPV_RESOLUTION);
+			push.lpvExtent = cascadeExtent;
+			push.virtualPropagatedGridRedCoords = virtualGridCoordinates[i][0];
+			push.virtualPropagatedGridGreenCoords = virtualGridCoordinates[i][1];
+			push.virtualPropagatedGridBlueCoords = virtualGridCoordinates[i][2];
+
+			lpv->cascades[i].virtualPropagatedGridRedUVMin = glm::vec3(virtualGridCoordinates[i][0]) / glm::vec3(VIRTUAL_VOXEL_ATLAS_SIZE);
+			lpv->cascades[i].virtualPropagatedGridRedUVMax = glm::vec3(virtualGridCoordinates[i][0] + glm::ivec3(LPV_RESOLUTION)) / glm::vec3(VIRTUAL_VOXEL_ATLAS_SIZE);
+			lpv->cascades[i].virtualPropagatedGridGreenUVMin = glm::vec3(virtualGridCoordinates[i][1]) / glm::vec3(VIRTUAL_VOXEL_ATLAS_SIZE);
+			lpv->cascades[i].virtualPropagatedGridGreenUVMax = glm::vec3(virtualGridCoordinates[i][1] + glm::ivec3(LPV_RESOLUTION)) / glm::vec3(VIRTUAL_VOXEL_ATLAS_SIZE);
+			lpv->cascades[i].virtualPropagatedGridBlueUVMin = glm::vec3(virtualGridCoordinates[i][2]) / glm::vec3(VIRTUAL_VOXEL_ATLAS_SIZE);
+			lpv->cascades[i].virtualPropagatedGridBlueUVMax = glm::vec3(virtualGridCoordinates[i][2] + glm::ivec3(LPV_RESOLUTION)) / glm::vec3(VIRTUAL_VOXEL_ATLAS_SIZE);
+
+
+			vkCmdBindDescriptorSets(
+				frameInfo.commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				lpvComputeInjection->getPipelineLayout(),
+				0,
+				1,
+				&lpvGenerationDataDescriptorSet[frameInfo.frameIndex],
+				0,
+				nullptr
+			);
+			lpvComputeInjection->render(frameInfo.commandBuffer, &push);
+			vkCmdBindDescriptorSets(
+				frameInfo.commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				lpvComputePropagation->getPipelineLayout(),
+				0,
+				1,
+				&lpvGenerationDataDescriptorSet[frameInfo.frameIndex],
+				0,
+				nullptr
+			);
+			for (int p = 0; p < lpv->propagationIterations; p++) {
+				push.pingPongIndex = p % 2;
+				lpvComputePropagation->render(frameInfo.commandBuffer, &push);
+			}
+			vkCmdBindDescriptorSets(
+				frameInfo.commandBuffer,
+				VK_PIPELINE_BIND_POINT_COMPUTE,
+				lpvComputeTemporalBlendPipelineLayout->getPipelineLayout(),
+				0,
+				1,
+				&lpvGenerationDataDescriptorSet[frameInfo.frameIndex],
+				0,
+				nullptr
+			);
+			lpvComputeTemporalBlend->bind(frameInfo.commandBuffer);
+			LPVMix pushM{};
+			pushM.virtualPropagatedGridRedCoords = push.virtualPropagatedGridRedCoords;
+			pushM.virtualPropagatedGridGreenCoords = push.virtualPropagatedGridGreenCoords;
+			pushM.virtualPropagatedGridBlueCoords = push.virtualPropagatedGridBlueCoords;
+			pushM.pingPongIndex = (lpv->propagationIterations) % 2;
+			pushM.temporalBlend = 1.0f / 8.0f; // higher values are faster updates, but more susceptible to flickering, lower values update slower, but flicker less
+			lpvComputeTemporalBlendPush.push(frameInfo.commandBuffer, lpvComputeTemporalBlendPipelineLayout->getPipelineLayout(), &pushM);
+			vkCmdDispatch(frameInfo.commandBuffer, LPV_RESOLUTION / 16U, LPV_RESOLUTION / 16U, LPV_RESOLUTION);
 		}
 	}
 
@@ -474,12 +549,20 @@ namespace ScorchEngine {
 		);
 
 
-		lpvPipelineLayout = new SEPipelineLayout(seDevice, { }, { lpvGenerationDataDescriptorSetLayout->getDescriptorSetLayout() });
+		lpvComputeClearPipelineLayout = new SEPipelineLayout(seDevice, { }, { lpvGenerationDataDescriptorSetLayout->getDescriptorSetLayout() });
 		lpvComputeClear = new SEComputePipeline(
 			seDevice,
-			lpvPipelineLayout->getPipelineLayout(),
+			lpvComputeClearPipelineLayout->getPipelineLayout(),
 			{ SEShader(SEShaderType::Compute, "res/shaders/spirv/lpv_clear.csh.spv")}
 		);
+		lpvComputeTemporalBlendPush = SEPushConstant(sizeof(LPVMix), VK_SHADER_STAGE_COMPUTE_BIT);
+		lpvComputeTemporalBlendPipelineLayout = new SEPipelineLayout(seDevice, { lpvComputeTemporalBlendPush.getRange() }, { lpvGenerationDataDescriptorSetLayout->getDescriptorSetLayout() });
+		lpvComputeTemporalBlend = new SEComputePipeline(
+			seDevice,
+			lpvComputeTemporalBlendPipelineLayout->getPipelineLayout(),
+			{ SEShader(SEShaderType::Compute, "res/shaders/spirv/lpv_temporal_blend.csh.spv") }
+		);
+
 		lpvComputeInjection = new SEPostProcessingEffect(
 			seDevice,
 			{SHADOW_MAP_RSM_RESOLUTION, SHADOW_MAP_RSM_RESOLUTION},
@@ -500,5 +583,6 @@ namespace ScorchEngine {
 			VK_IMAGE_VIEW_TYPE_2D,
 			{ lpvGenerationDataDescriptorSetLayout->getDescriptorSetLayout() }
 		);
+		
 	}
 }

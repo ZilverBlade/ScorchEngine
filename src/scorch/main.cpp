@@ -1,6 +1,5 @@
 #include <scorch/apps/tests/window_test.h>
 #include <scorch/apps/tests/vulkan_test.h>
-#include <scorch/apps/tests/lighting_test.h>
 #include <scorch/apps/renderers/render_app.h>
 
 #ifdef _WIN32	
