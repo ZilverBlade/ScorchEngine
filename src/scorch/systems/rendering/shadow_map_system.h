@@ -23,6 +23,7 @@ namespace ScorchEngine {
 	const uint32_t VIRTUAL_VOXEL_ATLAS_SIZE = 128U; // more than enough for several voxels
 	const uint32_t LPV_RESOLUTION = 32U; // dont make different from multiple of 16 due to the dispatch config
 	const uint32_t LPV_PROPGATION_FASES = 1U; // propagate light X times, higher is better propagation, keep at 1 due to the current setup
+	const uint32_t VFAO_MAP_RESOLUTION = 1024U; // low resolution for large distance is fine as we only need the fields 
 
 	class ShadowMapSystem {
 	public:
@@ -43,6 +44,7 @@ namespace ScorchEngine {
 		void createFramebufferAttachments();
 		void createRenderPasses();
 		void createFramebuffers();
+		void createDescriptorSetLayouts();
 		void createGraphicsPipelines();
 
 		void createLPV();
@@ -61,6 +63,19 @@ namespace ScorchEngine {
 		SEPushConstant shadowPush{};
 		SEPipelineLayout* shadowMapPipelineLayout{};
 		SEGraphicsPipeline* shadowMapPipeline{};
+
+
+
+		SEFramebufferAttachment* vfaoMapDepthAttachment{};
+		SEFramebufferAttachment* vfaoMapVarianceAttachment{};
+		SEFramebuffer* vfaoMapFramebuffer{};
+		SERenderPass* vfaoMapRenderPass{};
+
+		SEPipelineLayout* vfaoMapPipelineLayout{};
+		SEGraphicsPipeline* vfaoMapPipeline{};
+		SEPostProcessingEffect* vfaoComputeFields{};
+		SEPostProcessingEffect* vfaoBlurFieldsH{};
+		SEPostProcessingEffect* vfaoBlurFieldsV{};
 
 		std::unique_ptr<SEBuffer> lpvInjectionData[MAX_FRAMES_IN_FLIGHT];
 		SEVoxelTexture* lpvInoutRedSH{};

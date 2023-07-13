@@ -33,6 +33,7 @@ namespace ScorchEngine {
 		frameInfo.level->getRegistry().view<Components::SkyLightComponent>().each(
 			[&](auto& skylight) {
 			sceneBuffer.skyLight.tint = { skylight.tint, skylight.intensity };
+			sceneBuffer.skyLight.vfaovp = skylight.vfao.vp;
 			sceneBuffer.hasSkyLight = VK_TRUE;
 		}
 		);

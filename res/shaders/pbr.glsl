@@ -12,6 +12,7 @@ layout (set = 2, binding = 2) uniform sampler2D brdfLUT;
 
 layout (set = 3, binding = 0) uniform sampler2DShadow shadowMapPCF;
 layout (set = 3, binding = 1) uniform sampler3D virtual_PropagatedLPV;
+layout (set = 3, binding = 2) uniform sampler2D skyLightVFAOmap;
 
 struct FragmentLitPBRData {
 	vec3 position;
@@ -99,6 +100,35 @@ float sampleShadow(sampler2DShadow shadow, vec3 world, mat4 vp) {
 		}
 	}
 	return accum / samples;
+}
+
+float sampleVFAO(sampler2D vfaoMap, vec3 world, mat4 vfaoVP) {
+	vec4 projCoords = vfaoVP * vec4(world, 1.0);
+	projCoords.xy /= projCoords.w;
+	vec2 uv = projCoords.xy * 0.5 + 0.5;
+	float currentDepth = projCoords.z;
+	
+	vec4 variance_fields = texture(vfaoMap, uv).xyzw;
+	
+	vec2 moments = variance_fields.xy;
+	vec2 fields = variance_fields.zw;
+	
+	float p = step(currentDepth, moments.x);
+	float variance = max(moments.y - moments.x * moments.x, 0.00002);
+	float d = projCoords.z - moments.x;
+	float pMax = variance / (variance + d*d);
+	float ls = smoothstep(0.0, 1.0, pMax);
+	float baseOcclusion = min(max(p, ls), 1.0);
+	
+	const float neighbouringOcclusionPower = 4.0; // higher values are sharper AO values
+	
+	float ddxy = fwidth(currentDepth);
+	float mean = exp(-1.2 * abs(ddxy / currentDepth));
+	
+	float diff = exp(pow(abs(mean - fields.x), 1.0 / 4.0)) - 1.0;
+	float visDelta = clamp(log(exp(fields.x) + pow(fields.y, neighbouringOcclusionPower)), 0.0, 1.0);
+	
+	return mix(baseOcclusion, visDelta, diff);
 }
 
 const float SH_C0 = 0.282094792; // 1 / 2sqrt(pi)
@@ -202,9 +232,10 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	}
 	
 	if (scene.hasSkyLight) {
+		float AO = sampleVFAO(skyLightVFAOmap, fragment.position, scene.skyLight.vfaovp);
 		const float maxEnvMapMipLevel = float(textureQueryLevels(environmentPrefilteredMap)) - 1.0;
 	
-		const vec3 skyLightTint = scene.skyLight.tint.rgb * scene.skyLight.tint.a;
+		const vec3 skyLightTint = AO * scene.skyLight.tint.rgb * scene.skyLight.tint.a;
 		const vec3 prefilteredColor = skyLightTint * textureLod(environmentPrefilteredMap, R, pbrSData.m * maxEnvMapMipLevel).rgb;
 		const vec2 envBRDF = textureLod(brdfLUT, vec2(pbrSData.NdV, fragment.roughness), 0.0).xy;
 		specular += prefilteredColor * (F_SchlickRoughness(F0, pbrSData.NdV, fragment.roughness) * envBRDF.x + envBRDF.y);

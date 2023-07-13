@@ -5,6 +5,7 @@
 namespace ScorchEngine {
 	struct SkyLight {
 		alignas(16)glm::vec4 tint; // w = intensity
+		alignas(16)glm::mat4 vfaovp;
 	};
 	struct DirectionalLight {
 		alignas(16)glm::vec3 direction;

@@ -17,11 +17,18 @@ glslc.exe -O -fshader-stage=fragment depth.fsh -o spirv/depth.fsh.spv
 glslc.exe -O -fshader-stage=fragment skybox.fsh -o spirv/skybox.fsh.spv
 glslc.exe -O -fshader-stage=vertex skybox.vsh -o spirv/skybox.vsh.spv
 
+glslc.exe -O -fshader-stage=fragment gaussian_h.fsh -o spirv/gaussian_h.fsh.spv
+glslc.exe -O -fshader-stage=fragment gaussian_v.fsh -o spirv/gaussian_v.fsh.spv
+
 glslc.exe -O -fshader-stage=fragment shadow.fsh -o spirv/shadow.fsh.spv
 glslc.exe -O -fshader-stage=vertex shadow.vsh -o spirv/shadow.vsh.spv
 
 glslc.exe -O -fshader-stage=fragment shadow_rsm.fsh -o spirv/shadow_rsm.fsh.spv
 glslc.exe -O -fshader-stage=vertex shadow_rsm.vsh -o spirv/shadow_rsm.vsh.spv
+
+glslc.exe -O -fshader-stage=fragment vfao.fsh -o spirv/vfao.fsh.spv
+glslc.exe -O -fshader-stage=vertex vfao.vsh -o spirv/vfao.vsh.spv
+glslc.exe -O -g -fshader-stage=fragment vfao_fields.fsh -o spirv/vfao_fields.fsh.spv
 
 glslc.exe -O -fshader-stage=fragment envirrgen.fsh -o spirv/envirrgen.fsh.spv
 glslc.exe -O -fshader-stage=fragment envprefiltergen.fsh -o spirv/envprefiltergen.fsh.spv

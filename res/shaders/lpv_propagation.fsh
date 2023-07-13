@@ -83,25 +83,25 @@ void main() {
 	for (int i = 0; i < imageSize(LPV_Inout_RedSH).z; i++) {
 		cellIndex.z = i;
 		
-		vec4 old_cR = vec4(0.0);
-		vec4 old_cG = vec4(0.0);
-		vec4 old_cB = vec4(0.0);
+		//vec4 old_cR = vec4(0.0);
+		//vec4 old_cG = vec4(0.0);
+		//vec4 old_cB = vec4(0.0);
 		
-		if (push.pingPongIndex == 1) {
-			old_cR = imageLoad(LPV_Inout_RedSH, cellIndex).xyzw;
-		} else {
-			old_cR = imageLoad(LPV_Inout2_RedSH, cellIndex).xyzw;
-		}
-		if (push.pingPongIndex == 1) {
-			old_cG = imageLoad(LPV_Inout_GreenSH, cellIndex).xyzw;
-		} else {
-			old_cG = imageLoad(LPV_Inout2_GreenSH, cellIndex).xyzw;
-		}
-		if (push.pingPongIndex == 1) {
-			old_cB = imageLoad(LPV_Inout_BlueSH, cellIndex).xyzw;
-		} else {
-			old_cB = imageLoad(LPV_Inout2_BlueSH, cellIndex).xyzw;
-		}
+		//if (push.pingPongIndex == 1) {
+		//	old_cR = imageLoad(LPV_Inout_RedSH, cellIndex).xyzw;
+		//} else {
+		//	old_cR = imageLoad(LPV_Inout2_RedSH, cellIndex).xyzw;
+		//}
+		//if (push.pingPongIndex == 1) {
+		//	old_cG = imageLoad(LPV_Inout_GreenSH, cellIndex).xyzw;
+		//} else {
+		//	old_cG = imageLoad(LPV_Inout2_GreenSH, cellIndex).xyzw;
+		//}
+		//if (push.pingPongIndex == 1) {
+		//	old_cB = imageLoad(LPV_Inout_BlueSH, cellIndex).xyzw;
+		//} else {
+		//	old_cB = imageLoad(LPV_Inout2_BlueSH, cellIndex).xyzw;
+		//}
 		
 		// contribution
 		vec4 cR = vec4(0.0);
@@ -158,19 +158,19 @@ void main() {
 			cB += directFaceSubtendedSolidAngle * max(0.0, dot(bCoeffsNeighbour, curDirSH)) * curCosLobe;
 		}
 		if (push.pingPongIndex == 1) {
-			imageStore(LPV_Inout_RedSH, cellIndex, old_cR + cR);
+			imageStore(LPV_Inout_RedSH, cellIndex,  cR);
 		} else {
-			imageStore(LPV_Inout2_RedSH, cellIndex, old_cR + cR);
+			imageStore(LPV_Inout2_RedSH, cellIndex,  cR);
 		}
 		if (push.pingPongIndex == 1) {
-			imageStore(LPV_Inout_GreenSH, cellIndex, old_cG + cG);
+			imageStore(LPV_Inout_GreenSH, cellIndex,  cG);
 		} else {
-			imageStore(LPV_Inout2_GreenSH, cellIndex, old_cG + cG);
+			imageStore(LPV_Inout2_GreenSH, cellIndex,  cG);
 		}
 		if (push.pingPongIndex == 1) {
-			imageStore(LPV_Inout_BlueSH, cellIndex, old_cB + cB);
+			imageStore(LPV_Inout_BlueSH, cellIndex,  cB);
 		} else {
-			imageStore(LPV_Inout2_BlueSH, cellIndex, old_cB + cB);
+			imageStore(LPV_Inout2_BlueSH, cellIndex,  cB);
 		}
 	
 	}

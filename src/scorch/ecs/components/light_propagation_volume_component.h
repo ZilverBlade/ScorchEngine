@@ -9,7 +9,7 @@ namespace ScorchEngine {
 			glm::vec3 center;
 			glm::vec3 boost = glm::vec3(1.0);
 			int cascadeCount = 1;
-			int propagationIterations = 1;
+			int propagationIterations = 2;
 			struct LPVCascadeData {
 				glm::vec3 virtualPropagatedGridRedUVMin;
 				glm::vec3 virtualPropagatedGridRedUVMax;

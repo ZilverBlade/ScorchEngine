@@ -103,6 +103,18 @@ namespace ScorchEngine::Apps {
 			}
 			sponzaActor.getTransform().rotation = { -3.1415926f / 2.f, 0.f, 0.f };
 
+			//Actor carActor = level->createActor("carActor");
+			//auto& msc22= carActor.addComponent<MeshComponent>();
+			//const char* carFBX = "E:/sexcarsmoment/SexCars/carlist/yakisoba/bikini/models/bikini_EXPERIMENTAL.fbx";
+			//msc22.mesh = resourceSystem->loadModel(carFBX);
+			//
+			//for (const std::string& mapto: resourceSystem->getModel(msc22.mesh)->getSubmeshes()) {
+			//	msc22.materials[mapto] = clearCoatMaterial;
+			//}
+			//carActor.getTransform().translation = { 0.f, 0.f, 1.f };
+			
+
+
 			auto& msc2 = sphereActor.addComponent<MeshComponent>();
 			msc2.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
 			for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
@@ -114,7 +126,7 @@ namespace ScorchEngine::Apps {
 			auto& sbc = skyboxActor.addComponent<SkyboxComponent>();
 			auto& slc = skyboxActor.addComponent<SkyLightComponent>();
 			slc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
-			slc.intensity = 0.00f;
+			slc.intensity = 0.60f;
 			cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
 			{
 				lightActor.addComponent<DirectionalLightComponent>();
@@ -125,7 +137,7 @@ namespace ScorchEngine::Apps {
 				lightActor.getComponent<DirectionalLightComponent>().shadow.maxDistance = 30.0f;
 				lightActor.getComponent<LightPropagationVolumeComponent>().maxExtent = { 32, 32, 32 }; // coverage should be large for better results
 				lightActor.getComponent<LightPropagationVolumeComponent>().cascadeCount = 1;
-				lightActor.getComponent<LightPropagationVolumeComponent>().propagationIterations = 1;
+				lightActor.getComponent<LightPropagationVolumeComponent>().propagationIterations = 2;
 			}
 			{
 				//cameraActor.addComponent<Components::PointLightComponent>().emission = { 1.0, 0.0, 0.0 };
@@ -133,7 +145,7 @@ namespace ScorchEngine::Apps {
 			}
 		}
 
-		float flPropCount = 1.0f;
+		float flPropCount = 2.0f;
 		float incrementTime = 0;
 		auto oldTime = std::chrono::high_resolution_clock::now();
 		while (!seWindow.shouldClose()) {

@@ -25,7 +25,7 @@ namespace ScorchEngine {
 		sceneBuffer.hasLPV = VK_FALSE;
 		frameInfo.level->getRegistry().view<Components::TransformComponent, Components::LightPropagationVolumeComponent>().each(
 			[&](auto& transform, auto& lpv) {
-				sceneBuffer.lpv.boost = lpv.boost;
+				sceneBuffer.lpv.boost = lpv.boost * powf(2, lpv.cascadeCount - 1);
 				sceneBuffer.lpv.center = lpv.center;
 
 				for (int i = 0; i < lpv.cascadeCount; i++) {

@@ -55,12 +55,9 @@ namespace ScorchEngine {
 	ShadowMapSystem::ShadowMapSystem(
 		SEDevice& device, SEDescriptorPool& descriptorPool) : seDevice(device), seDescriptorPool(descriptorPool) {
 		init();
-		createGraphicsPipelines();
 	}
 	ShadowMapSystem::~ShadowMapSystem() {
 		destroy();
-		delete shadowMapPipeline;
-		delete shadowMapPipelineLayout;
 	}
 
 	void ShadowMapSystem::init() {
@@ -68,6 +65,8 @@ namespace ScorchEngine {
 		createRenderPasses();
 		createFramebuffers();
 		createLPV();
+		createDescriptorSetLayouts();
+		createGraphicsPipelines();
 		writeDescriptor();
 	}
 
@@ -75,6 +74,10 @@ namespace ScorchEngine {
 		delete shadowMapAttachment;
 		delete shadowMapFramebuffer;
 		delete shadowMapRenderPass;
+		delete vfaoMapDepthAttachment;
+		delete vfaoMapVarianceAttachment;
+		delete vfaoMapFramebuffer;
+		delete vfaoMapRenderPass;
 		delete rsmDepthAttachment;
 		delete rsmNormalAttachment;
 		delete rsmFluxAttachment;
@@ -90,6 +93,8 @@ namespace ScorchEngine {
 
 		delete shadowMapPipelineLayout;
 		delete shadowMapPipeline;
+		delete vfaoMapPipelineLayout;
+		delete vfaoMapPipeline;
 		delete rsmPipelineLayout;
 		delete rsmPipeline;
 
@@ -138,31 +143,16 @@ namespace ScorchEngine {
 	}
 
 	void ShadowMapSystem::writeDescriptor() {
-		shadowMapDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
-			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
-			.build();
 		auto shadowMapImageInfo = shadowMapAttachment->getDescriptor();
 		auto lpvPropAtlasSHImageInfo = lpvPropagatedAtlasSH->getDescriptor();
+		auto vfaoMapImageInfo = vfaoBlurFieldsV->getAttachment()->getDescriptor();
 		SEDescriptorWriter(*shadowMapDescriptorSetLayout, seDescriptorPool)
 			.writeImage(0, &shadowMapImageInfo)
 			.writeImage(1, &lpvPropAtlasSHImageInfo)
+			.writeImage(2, &vfaoMapImageInfo)
 			.build(shadowMapDescriptorSet);
 
-		lpvGenerationDataDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
-			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(4, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(5, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(6, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(7, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(8, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(9, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.addBinding(10, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
-			.build();
-
+	
 		auto lpvInoutRedSHImageInfo = lpvInoutRedSH->getDescriptor();
 		auto lpvInoutGreenSHImageInfo = lpvInoutGreenSH->getDescriptor();
 		auto lpvInoutBlueSHImageInfo = lpvInoutBlueSH->getDescriptor();
@@ -423,6 +413,71 @@ namespace ScorchEngine {
 			lpvComputeTemporalBlendPush.push(frameInfo.commandBuffer, lpvComputeTemporalBlendPipelineLayout->getPipelineLayout(), &pushM);
 			vkCmdDispatch(frameInfo.commandBuffer, LPV_RESOLUTION / 16U, LPV_RESOLUTION / 16U, LPV_RESOLUTION);
 		}
+
+
+		const float VFAOBounds = 50.0f;
+		SECamera vfaoMapCamera;
+		vfaoMapCamera.setViewDirection(frameInfo.camera.getPosition() + glm::vec3{ 0.0, 200.0, 0.0 }, { 0.0, -1.0, 0.0 }, {0.0, 0.0, 1.0});
+		vfaoMapCamera.setOrthographicProjection(
+			-VFAOBounds,
+			VFAOBounds,
+			-VFAOBounds,
+			VFAOBounds,
+			-220.000f, 380.000f
+		);
+
+		SkyLightComponent* skl;
+
+		// iterate over candidates
+		for (auto& a : frameInfo.level->getRegistry().view<SkyLightComponent>()) {
+			Actor actor = { a, frameInfo.level.get() };
+
+			skl = &actor.getComponent<SkyLightComponent>();
+		}
+		skl->vfao.vp = vfaoMapCamera.getProjection() * vfaoMapCamera.getView();
+
+
+		{
+			// avoid jaggedness on static objects when moving the camera by snapping the position to the nearest original pixel
+			float halfRes = static_cast<float>(VFAO_MAP_RESOLUTION) / 2.0f;
+
+			// pick random point, doesn't matter
+			glm::vec4 originPoint = glm::vec4(0.0, 0.0, 0.0, 1.0);
+			glm::vec4 clip = skl->vfao.vp * originPoint;
+
+			clip /= clip.w;
+			glm::vec2 full = glm::floor(clip * halfRes);
+			glm::vec4 newClip = vfaoMapCamera.getInverseProjection() * glm::vec4(full / halfRes, clip.z, 1.0);
+			newClip /= newClip.w;
+			glm::vec4 newWorld = vfaoMapCamera.getInverseView() * newClip;
+			glm::vec4 difference = originPoint - newWorld;
+			vfaoMapCamera.setViewDirection(frameInfo.camera.getPosition() + glm::vec3{ 0.0, 200.0, 0.0 } + glm::vec3(difference), { 0.0, -1.0, 0.0 }, { 0.0, 0.0, 1.0 });
+			skl->vfao.vp = vfaoMapCamera.getProjection() * vfaoMapCamera.getView();
+		}
+
+		// regular shadow map pass
+		vfaoMapRenderPass->beginRenderPass(frameInfo.commandBuffer, vfaoMapFramebuffer);
+		vfaoMapPipeline->bind(frameInfo.commandBuffer);
+
+		frameInfo.level->getRegistry().view<Components::TransformComponent, Components::MeshComponent>().each(
+			[&](auto& tfc, auto& msc) {
+				SEModel* model = frameInfo.resourceSystem->getModel(msc.mesh);
+				glm::mat4 mpv = skl->vfao.vp * tfc.getTransformMatrix();
+				shadowPush.push(frameInfo.commandBuffer, vfaoMapPipelineLayout->getPipelineLayout(), &mpv);
+
+				for (const auto& [mapTo, matAsset] : msc.materials) {
+					SESurfaceMaterial* material = frameInfo.resourceSystem->getSurfaceMaterial(matAsset);
+					if (material->translucent) continue; // no need to bind materials as vfao doesnt care about alpha masks
+					model->bind(frameInfo.commandBuffer, mapTo);
+					model->draw(frameInfo.commandBuffer);
+				}
+			}
+		);
+
+		vfaoMapRenderPass->endRenderPass(frameInfo.commandBuffer);
+		vfaoComputeFields->render(frameInfo.commandBuffer, &skl->vfao.vp);
+		vfaoBlurFieldsH->render(frameInfo.commandBuffer, nullptr);
+		vfaoBlurFieldsV->render(frameInfo.commandBuffer, nullptr);
 	}
 
 
@@ -479,6 +534,30 @@ namespace ScorchEngine {
 		rsmFluxAttachmentCreateInfo.linearFiltering = true;
 		rsmFluxAttachmentCreateInfo.isShadowMap = false;
 		rsmFluxAttachment = new SEFramebufferAttachment(seDevice, rsmFluxAttachmentCreateInfo);
+
+
+		SEFramebufferAttachmentCreateInfo vfaoDepthAttachmentCreateInfo{};
+		vfaoDepthAttachmentCreateInfo.dimensions = glm::ivec3(VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION, 1);
+		vfaoDepthAttachmentCreateInfo.framebufferFormat = VK_FORMAT_D16_UNORM;
+		vfaoDepthAttachmentCreateInfo.framebufferType = SEFramebufferAttachmentType::Depth;
+		vfaoDepthAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+		vfaoDepthAttachmentCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		vfaoDepthAttachmentCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		vfaoDepthAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		vfaoDepthAttachmentCreateInfo.sampleCount = VK_SAMPLE_COUNT_1_BIT;
+		vfaoDepthAttachmentCreateInfo.linearFiltering = false;
+		vfaoMapDepthAttachment = new SEFramebufferAttachment(seDevice, vfaoDepthAttachmentCreateInfo);
+		SEFramebufferAttachmentCreateInfo vfaoVarianceAttachmentCreateInfo{};
+		vfaoVarianceAttachmentCreateInfo.dimensions = glm::ivec3(VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION, 1);
+		vfaoVarianceAttachmentCreateInfo.framebufferFormat = VK_FORMAT_R16G16_UNORM;
+		vfaoVarianceAttachmentCreateInfo.framebufferType = SEFramebufferAttachmentType::Color;
+		vfaoVarianceAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
+		vfaoVarianceAttachmentCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		vfaoVarianceAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		vfaoVarianceAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		vfaoVarianceAttachmentCreateInfo.sampleCount = VK_SAMPLE_COUNT_1_BIT;
+		vfaoVarianceAttachmentCreateInfo.linearFiltering = true;
+		vfaoMapVarianceAttachment = new SEFramebufferAttachment(seDevice, vfaoVarianceAttachmentCreateInfo);
 	}
 
 	void ShadowMapSystem::createRenderPasses() {
@@ -505,11 +584,47 @@ namespace ScorchEngine {
 		rsmFluxAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		rsmFluxAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		rsmRenderPass = new SERenderPass(seDevice, { rsmDepthAttachmentInfo, rsmNormalAttachmentInfo,  rsmFluxAttachmentInfo });
+
+		SEAttachmentInfo vfaoDepthAttachmentInfo{};
+		vfaoDepthAttachmentInfo.framebufferAttachment = vfaoMapDepthAttachment;
+		vfaoDepthAttachmentInfo.clear.depth = { 1.0, 0 };
+		vfaoDepthAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		vfaoDepthAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		SEAttachmentInfo vfaoVarianceAttachmentInfo{};
+		vfaoVarianceAttachmentInfo.framebufferAttachment = vfaoMapVarianceAttachment;
+		vfaoVarianceAttachmentInfo.clear.color = { 0.0, 0.0 };
+		vfaoVarianceAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		vfaoVarianceAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		vfaoMapRenderPass = new SERenderPass(seDevice, { vfaoDepthAttachmentInfo, vfaoVarianceAttachmentInfo });
+
 	}
 
 	void ShadowMapSystem::createFramebuffers() {
 		shadowMapFramebuffer = new SEFramebuffer(seDevice, shadowMapRenderPass, { shadowMapAttachment });
 		rsmFramebuffer = new SEFramebuffer(seDevice, rsmRenderPass, { rsmDepthAttachment, rsmNormalAttachment, rsmFluxAttachment });
+		vfaoMapFramebuffer = new SEFramebuffer(seDevice, vfaoMapRenderPass, { vfaoMapDepthAttachment, vfaoMapVarianceAttachment });
+	}
+
+	void ShadowMapSystem::createDescriptorSetLayouts() {
+		shadowMapDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
+		lpvGenerationDataDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(4, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(5, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(6, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(7, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(8, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(9, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(10, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
+
 	}
 
 	void ShadowMapSystem::createGraphicsPipelines() {
@@ -583,6 +698,55 @@ namespace ScorchEngine {
 			VK_IMAGE_VIEW_TYPE_2D,
 			{ lpvGenerationDataDescriptorSetLayout->getDescriptorSetLayout() }
 		);
-		
+
+		vfaoMapPipelineLayout = new SEPipelineLayout(seDevice, { shadowPush.getRange() }, { });
+
+		SEGraphicsPipelineConfigInfo vfaoPipelineConfigInfo{};
+		vfaoPipelineConfigInfo.enableVertexDescriptions();
+		// remove uvs, normals and tangents, we dont need them
+		vfaoPipelineConfigInfo.attributeDescriptions.pop_back();
+		vfaoPipelineConfigInfo.attributeDescriptions.pop_back();
+		vfaoPipelineConfigInfo.attributeDescriptions.pop_back();
+		vfaoPipelineConfigInfo.bindingDescriptions.pop_back();
+		vfaoPipelineConfigInfo.bindingDescriptions.pop_back();
+		vfaoPipelineConfigInfo.bindingDescriptions.pop_back();
+
+		vfaoPipelineConfigInfo.renderPass = vfaoMapRenderPass->getRenderPass();
+		vfaoPipelineConfigInfo.pipelineLayout = vfaoMapPipelineLayout->getPipelineLayout();
+		vfaoMapPipeline = new SEGraphicsPipeline(
+			seDevice,
+			vfaoPipelineConfigInfo,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/vfao.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/vfao.fsh.spv") }
+		);
+
+		vfaoComputeFields = new SEPostProcessingEffect(
+			seDevice,
+			{ VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION },
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/vfao_fields.fsh.spv"),
+			seDescriptorPool,
+			{ vfaoMapVarianceAttachment->getDescriptor() },
+			VK_FORMAT_R16G16B16A16_UNORM,
+			VK_IMAGE_VIEW_TYPE_2D
+		);
+
+
+		vfaoBlurFieldsH = new SEPostProcessingEffect(
+			seDevice,
+			{ VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION },
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_h.fsh.spv"),
+			seDescriptorPool,
+			{ vfaoComputeFields->getAttachment()->getDescriptor() },
+			VK_FORMAT_R16G16B16A16_UNORM,
+			VK_IMAGE_VIEW_TYPE_2D
+		);
+		vfaoBlurFieldsV = new SEPostProcessingEffect(
+			seDevice,
+			{ VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION },
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_v.fsh.spv"),
+			seDescriptorPool,
+			{ vfaoBlurFieldsH->getAttachment()->getDescriptor() },
+			VK_FORMAT_R16G16B16A16_UNORM,
+			VK_IMAGE_VIEW_TYPE_2D
+		);
 	}
 }

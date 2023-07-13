@@ -3,6 +3,7 @@
 
 struct SkyLight {
 	vec4 tint; // w = intensity
+	mat4 vfaovp;
 };
 
 struct DirectionalLight {
