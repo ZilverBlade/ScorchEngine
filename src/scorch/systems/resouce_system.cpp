@@ -28,7 +28,7 @@ namespace ScorchEngine {
 	SEModel* ResourceSystem::getModel(ResourceID id) {
 		auto iter = modelAssets.find(id);
 		if (iter == modelAssets.end()) {
-			throw std::runtime_error("model '" + id.getAsset() + "'not found");
+			throw std::runtime_error("model '" + id.getAsset() + "' not found");
 		} else {
 			return (*iter).second;
 		}

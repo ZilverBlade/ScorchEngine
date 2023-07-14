@@ -5,6 +5,7 @@
 #include "global_ubo.glsl"
 #include "scene_ssbo.glsl"
 #include "pbr_math.glsl"
+#include "fixed_precision.glsl"
 
 layout (set = 2, binding = 0) uniform samplerCube environmentPrefilteredMap;
 layout (set = 2, binding = 1) uniform samplerCube irradianceMap;
@@ -13,6 +14,7 @@ layout (set = 2, binding = 2) uniform sampler2D brdfLUT;
 layout (set = 3, binding = 0) uniform sampler2DShadow shadowMapPCF;
 layout (set = 3, binding = 1) uniform sampler3D virtual_PropagatedLPV;
 layout (set = 3, binding = 2) uniform sampler2D skyLightVFAOmap;
+layout (set = 3, binding = 3) uniform sampler2D causticMap;
 
 struct FragmentLitPBRData {
 	vec3 position;
@@ -81,7 +83,24 @@ vec3 pbrSchlickBeckmannBRDF(PrivateStaticPBRData pbrSData, PrivatePBRData pbrDat
 vec3 pbrLambertDiffuseBRDF(PrivateStaticPBRData pbrSData, PrivatePBRData pbrData, PrivateLightingData lightingData) {
     return (1.0 / PI) * lightingData.radiance * pbrData.NdL;
 }
-
+const vec2 poissonDisk[16] = vec2[]( 
+   vec2( 0.94558609, -0.76890725 ), 
+   vec2( 0.79197514, 0.19090188 ), 
+   vec2( 0.34495938, 0.29387760 ), 
+   vec2( -0.094184101, -0.92938870 ), 
+   vec2( -0.91588581, 0.45771432 ), 
+   vec2( -0.81544232, -0.87912464 ), 
+   vec2( -0.38277543, 0.27676845 ), 
+   vec2( -0.94201624, -0.39906216 ), 
+   vec2( 0.97484398, 0.75648379 ), 
+   vec2( 0.44323325, -0.97511554 ), 
+   vec2( 0.53742981, -0.47373420 ), 
+   vec2( -0.26496911, -0.41893023 ), 
+   vec2( -0.24188840, 0.99706507 ), 
+   vec2( -0.81409955, 0.91437590 ), 
+   vec2( 0.19984126, 0.78641367 ), 
+   vec2( 0.14383161, -0.14100790 ) 
+);
 float sampleShadow(sampler2DShadow shadow, vec3 world, mat4 vp) {
 	const float BIAS = 0.002;
 	const int PCF_KERNEL = 1;
@@ -91,15 +110,17 @@ float sampleShadow(sampler2DShadow shadow, vec3 world, mat4 vp) {
 	projCoords.xy = projCoords.xy * 0.5 + 0.5;
 	float accum = 0.0;
 	float samples = 0.0;
-	float texelSize = 1.0 / float(textureSize(shadow, 0).x);
+	float texelSize = 1.0 / float(textureSize(shadowMapPCF, 0).x);
 	for (int x = -PCF_KERNEL; x <= PCF_KERNEL; x++) {
 		for (int y = 0; y <= PCF_KERNEL; y++) {
-			vec2 off = vec2(float(x), float(y)) * texelSize;
+			vec2 off = texelSize * vec2(float(x), float(y));
 			accum += texture(shadow, vec3(projCoords.xy + off, projCoords.z - BIAS));
 			samples+=1.0;
 		}
 	}
-	return accum / samples;
+	float causticAccum = texture(causticMap, projCoords.xy).x;
+	
+	return 0.5 * accum / samples + causticAccum;
 }
 
 float sampleVFAO(sampler2D vfaoMap, vec3 world, mat4 vfaoVP) {
@@ -117,16 +138,17 @@ float sampleVFAO(sampler2D vfaoMap, vec3 world, mat4 vfaoVP) {
 	float variance = max(moments.y - moments.x * moments.x, 0.00002);
 	float d = projCoords.z - moments.x;
 	float pMax = variance / (variance + d*d);
-	float ls = smoothstep(0.0, 1.0, pMax);
+	float ddp = fwidth(pMax);
+	float ls = smoothstep(max(pow(ddp, 1.0 / 32.0), 0.0), 1.0, pMax);
 	float baseOcclusion = min(max(p, ls), 1.0);
 	
 	const float neighbouringOcclusionPower = 4.0; // higher values are sharper AO values
 	
-	float ddxy = fwidth(currentDepth);
-	float mean = exp(-1.2 * abs(ddxy / currentDepth));
+	float df = exp(pow(-1.012 * fields.x, 256.0));
+	float visDelta = clamp(log(fields.x + pow(fields.y, neighbouringOcclusionPower)), 0.0, 1.0);
+	float diff = (1.0 - abs(projCoords.z - moments.x)) / fields.x;
+	diff = 0.0; // temporary
 	
-	float diff = exp(pow(abs(mean - fields.x), 1.0 / 4.0)) - 1.0;
-	float visDelta = clamp(log(exp(fields.x) + pow(fields.y, neighbouringOcclusionPower)), 0.0, 1.0);
 	
 	return mix(baseOcclusion, visDelta, diff);
 }
@@ -232,7 +254,7 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 	}
 	
 	if (scene.hasSkyLight) {
-		float AO = sampleVFAO(skyLightVFAOmap, fragment.position, scene.skyLight.vfaovp);
+		float AO = 1.0; //sampleVFAO(skyLightVFAOmap, fragment.position, scene.skyLight.vfaovp);
 		const float maxEnvMapMipLevel = float(textureQueryLevels(environmentPrefilteredMap)) - 1.0;
 	
 		const vec3 skyLightTint = AO * scene.skyLight.tint.rgb * scene.skyLight.tint.a;
@@ -285,8 +307,8 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 		lightingData.radiance = radiance;
 		
 		float shadow = sampleShadow(shadowMapPCF, fragment.position, scene.directionalLight.vp);
-		
 		diffuse += shadow * (1.0 - F_Schlick(F0, pbrData.NdL)) * pbrLambertDiffuseBRDF(pbrSData, pbrData, lightingData);
+		diffuse += 
 		specular += shadow *  pbrSchlickBeckmannBRDF(pbrSData, pbrData, lightingData);
 		if (enableClearCoatBRDF) {
 			clearCoat += shadow * pbrSchlickBeckmannBRDF(ccpbrSData, pbrData, lightingData);

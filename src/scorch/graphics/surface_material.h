@@ -50,6 +50,9 @@ namespace ScorchEngine {
 		float clearCoatFactor = 1.0f;
 		float clearCoatRoughnessFactor = 0.0f;
 
+		float opacityFactor = 1.0f;
+		float IOR = 1.0f;
+
 		glm::vec2 uvScale{ 1.f };
 		glm::vec2 uvOffset{ 0.f };
 

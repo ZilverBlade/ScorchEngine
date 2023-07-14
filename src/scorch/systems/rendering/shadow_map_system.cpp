@@ -10,7 +10,13 @@ namespace ScorchEngine {
 		glm::mat4 vp;
 		glm::mat4 modelMatrix;
 	};
-
+	struct CausticPush {
+		glm::mat4 vp;
+		glm::mat4 modelMatrix;
+		glm::mat4 vpnotrans;
+		glm::vec4 dir;
+		float ior;
+	};
 	struct LPVInjectData {
 		glm::mat4 rsmInvProj;
 		glm::mat4 rsmInvView;
@@ -105,29 +111,50 @@ namespace ScorchEngine {
 	}
 
 	void ShadowMapSystem::createLPV() {
-		SEVoxelTextureCreateInfo vx{};
+		SEEmptyTextureCreateInfo vx{};
 		vx.dimensions = { LPV_RESOLUTION ,LPV_RESOLUTION,LPV_RESOLUTION };
 		vx.layout = VK_IMAGE_LAYOUT_GENERAL;
 		vx.linearFiltering = true;
-		vx.voxelFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+		vx.viewType = VK_IMAGE_VIEW_TYPE_3D;
+		vx.imageType = VK_IMAGE_TYPE_3D;
+		vx.format = VK_FORMAT_R16G16B16A16_SFLOAT;
 		vx.usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		lpvInoutRedSH = new SEVoxelTexture(seDevice, vx);
-		lpvInoutGreenSH = new SEVoxelTexture(seDevice, vx);
-		lpvInoutBlueSH = new SEVoxelTexture(seDevice, vx);
-		lpvInout2RedSH = new SEVoxelTexture(seDevice, vx);
-		lpvInout2GreenSH = new SEVoxelTexture(seDevice, vx);
-		lpvInout2BlueSH = new SEVoxelTexture(seDevice, vx);
+		lpvInoutRedSH = new SEEmptyTexture(seDevice, vx);
+		lpvInoutGreenSH = new SEEmptyTexture(seDevice, vx);
+		lpvInoutBlueSH = new SEEmptyTexture(seDevice, vx);
+		lpvInout2RedSH = new SEEmptyTexture(seDevice, vx);
+		lpvInout2GreenSH = new SEEmptyTexture(seDevice, vx);
+		lpvInout2BlueSH = new SEEmptyTexture(seDevice, vx);
 		vx.dimensions = { VIRTUAL_VOXEL_ATLAS_SIZE ,VIRTUAL_VOXEL_ATLAS_SIZE,VIRTUAL_VOXEL_ATLAS_SIZE };
-		lpvPropagatedAtlasSH = new SEVoxelTexture(seDevice, vx);
+		lpvPropagatedAtlasSH = new SEEmptyTexture(seDevice, vx);
+
+		SEEmptyTextureCreateInfo caust{};
+		caust.dimensions = { SHADOW_MAP_RESOLUTION ,SHADOW_MAP_RESOLUTION,1 };
+		caust.layout = VK_IMAGE_LAYOUT_GENERAL;
+		caust.linearFiltering = false; // not supported on integer attachments
+		caust.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		caust.imageType = VK_IMAGE_TYPE_2D;
+		caust.format = seDevice.findSupportedFormat(VK_FORMAT_FEATURE_STORAGE_IMAGE_ATOMIC_BIT, {
+			//VK_FORMAT_R8_SINT,
+			//VK_FORMAT_R16_SINT,
+			//VK_FORMAT_R32_SINT,
+			//VK_FORMAT_R8_UINT,
+			//VK_FORMAT_R16_UINT,
+			VK_FORMAT_R32_UINT
+
+			});
+		caust.usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		causticValueMap = new SEEmptyTexture(seDevice, caust);
 
 		VkCommandBuffer cb = seDevice.beginSingleTimeCommands();
-		seDevice.transitionImageLayout(cb, lpvInoutRedSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvInoutGreenSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvInoutBlueSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvInout2RedSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvInout2GreenSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvInout2BlueSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
-		seDevice.transitionImageLayout(cb, lpvPropagatedAtlasSH->getImage(), vx.voxelFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInoutRedSH->getImage(), vx.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInoutGreenSH->getImage(), vx.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInoutBlueSH->getImage(), vx.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInout2RedSH->getImage(), vx.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInout2GreenSH->getImage(), vx.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvInout2BlueSH->getImage(), vx.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, lpvPropagatedAtlasSH->getImage(), vx.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		seDevice.transitionImageLayout(cb, causticValueMap->getImage(), caust.format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
 		seDevice.endSingleTimeCommands(cb);
 
 		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -146,10 +173,13 @@ namespace ScorchEngine {
 		auto shadowMapImageInfo = shadowMapAttachment->getDescriptor();
 		auto lpvPropAtlasSHImageInfo = lpvPropagatedAtlasSH->getDescriptor();
 		auto vfaoMapImageInfo = vfaoBlurFieldsV->getAttachment()->getDescriptor();
+		auto causticMapImageInfo = causticBlurV->getAttachment()->getDescriptor();
+
 		SEDescriptorWriter(*shadowMapDescriptorSetLayout, seDescriptorPool)
 			.writeImage(0, &shadowMapImageInfo)
 			.writeImage(1, &lpvPropAtlasSHImageInfo)
 			.writeImage(2, &vfaoMapImageInfo)
+			.writeImage(3, &causticMapImageInfo)
 			.build(shadowMapDescriptorSet);
 
 	
@@ -188,6 +218,17 @@ namespace ScorchEngine {
 				.writeImage(10, &lpvPropAtlasSHImageInfo)
 				.build(lpvGenerationDataDescriptorSet[i]);
 		}
+
+
+		auto causticRefractionImageInfo = causticMapRefractionAttachment->getDescriptor();
+		auto causticFresnelImageInfo = causticMapFresnelAttachment->getDescriptor();
+		auto causticValueMapImageInfo = causticValueMap->getDescriptor();
+		causticValueMapImageInfo.sampler = VK_NULL_HANDLE;
+		SEDescriptorWriter(*causticInjectionDescriptorSetLayout, seDescriptorPool)
+			.writeImage(0, &causticRefractionImageInfo)
+			.writeImage(1, &causticFresnelImageInfo)
+			.writeImage(2, &causticValueMapImageInfo)
+			.build(causticInjectionDescriptorSet);
 	}
 
 	void ShadowMapSystem::render(FrameInfo& frameInfo) {
@@ -209,7 +250,7 @@ namespace ScorchEngine {
 		glm::mat4 realTransform = transform->getTransformMatrix();
 		realTransform = glm::rotate(realTransform, glm::half_pi<float>(), glm::vec3(1.f, 0.f, 0.f));
 		realTransform[3] = glm::vec4(frameInfo.camera.getPosition(), 1.0f);
-
+		glm::vec3 lightDirection = glm::normalize(realTransform[2]);
 		SECamera shadowMapCamera;
 		shadowMapCamera.setViewYXZ(realTransform);
 		shadowMapCamera.setOrthographicProjection(
@@ -255,7 +296,7 @@ namespace ScorchEngine {
 
 				for (const auto& [mapTo, matAsset] : msc.materials) {
 					SESurfaceMaterial* material = frameInfo.resourceSystem->getSurfaceMaterial(matAsset);
-					if (material->translucent) continue;
+				//	if (material->translucent) continue;
 					material->bind(frameInfo.commandBuffer, shadowMapPipelineLayout->getPipelineLayout(), 0);
 					model->bind(frameInfo.commandBuffer, mapTo);
 					model->draw(frameInfo.commandBuffer);
@@ -265,6 +306,61 @@ namespace ScorchEngine {
 
 		shadowMapRenderPass->endRenderPass(frameInfo.commandBuffer);
 
+		// TCM pass
+		causticMapRenderPass->beginRenderPass(frameInfo.commandBuffer, causticMapFramebuffer);
+		causticMapPipeline->bind(frameInfo.commandBuffer);
+
+		frameInfo.level->getRegistry().view<Components::TransformComponent, Components::MeshComponent>().each(
+			[&](auto& tfc, auto& msc) {
+				SEModel* model = frameInfo.resourceSystem->getModel(msc.mesh);
+				CausticPush push{};
+				push.modelMatrix = tfc.getTransformMatrix();
+				push.vp = light->shadow.vp;
+				push.dir = glm::vec4(lightDirection, 0);
+				push.vpnotrans = shadowMapCamera.getProjection() *glm::mat4(glm::mat3(shadowMapCamera.getView()));
+
+				for (const auto& [mapTo, matAsset] : msc.materials) {
+					SESurfaceMaterial* material = frameInfo.resourceSystem->getSurfaceMaterial(matAsset);
+					if (!material->translucent) continue;
+					push.ior = material->IOR;
+					causticPush.push(frameInfo.commandBuffer, causticMapPipelineLayout->getPipelineLayout(), &push);
+
+					material->bind(frameInfo.commandBuffer, causticMapPipelineLayout->getPipelineLayout(), 0);
+					model->bind(frameInfo.commandBuffer, mapTo);
+					model->draw(frameInfo.commandBuffer);
+				}
+			}
+		);
+
+		causticMapRenderPass->endRenderPass(frameInfo.commandBuffer);
+
+		causticClear->bind(frameInfo.commandBuffer);
+		vkCmdBindDescriptorSets(
+			frameInfo.commandBuffer,
+			VK_PIPELINE_BIND_POINT_COMPUTE,
+			causticComputeInjection->getPipelineLayout(),
+			0,
+			1,
+			&causticInjectionDescriptorSet,
+			0,
+			nullptr
+		);
+		vkCmdDispatch(frameInfo.commandBuffer, SHADOW_MAP_RESOLUTION / 16, SHADOW_MAP_RESOLUTION / 16, 1);
+		vkCmdBindDescriptorSets(
+			frameInfo.commandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			causticComputeInjection->getPipelineLayout(),
+			0,
+			1,
+			&causticInjectionDescriptorSet,
+			0,
+			nullptr
+		);
+		causticComputeInjection->render(frameInfo.commandBuffer, nullptr);
+		causticScale->render(frameInfo.commandBuffer, nullptr);
+		causticBlurH->render(frameInfo.commandBuffer, nullptr);
+		causticBlurV->render(frameInfo.commandBuffer, nullptr);
+			
 		glm::mat4 vpRSM;
 		{
 			// avoid jaggedness on static objects when moving the camera by snapping the position to the nearest original pixel
@@ -309,6 +405,8 @@ namespace ScorchEngine {
 		);
 
 		rsmRenderPass->endRenderPass(frameInfo.commandBuffer);
+
+
 
 		LPVInjectData lpvInject{};
 		lpvInject.lightDirection = glm::normalize(realTransform[2]);
@@ -558,6 +656,33 @@ namespace ScorchEngine {
 		vfaoVarianceAttachmentCreateInfo.sampleCount = VK_SAMPLE_COUNT_1_BIT;
 		vfaoVarianceAttachmentCreateInfo.linearFiltering = true;
 		vfaoMapVarianceAttachment = new SEFramebufferAttachment(seDevice, vfaoVarianceAttachmentCreateInfo);
+
+
+		SEFramebufferAttachmentCreateInfo causticsRefractionAttachmentCreateInfo{};
+		causticsRefractionAttachmentCreateInfo.dimensions = glm::ivec3(SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, 1);
+		causticsRefractionAttachmentCreateInfo.framebufferFormat = VK_FORMAT_R16G16_SFLOAT;
+		causticsRefractionAttachmentCreateInfo.framebufferType = SEFramebufferAttachmentType::Color;
+		causticsRefractionAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
+		causticsRefractionAttachmentCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		causticsRefractionAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		causticsRefractionAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		causticsRefractionAttachmentCreateInfo.sampleCount = VK_SAMPLE_COUNT_1_BIT;
+		causticsRefractionAttachmentCreateInfo.linearFiltering = true;
+		causticsRefractionAttachmentCreateInfo.isShadowMap = false;
+		causticMapRefractionAttachment = new SEFramebufferAttachment(seDevice, causticsRefractionAttachmentCreateInfo);
+
+		SEFramebufferAttachmentCreateInfo causticsFresnelAttachmentCreateInfo{};
+		causticsFresnelAttachmentCreateInfo.dimensions = glm::ivec3(SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, 1);
+		causticsFresnelAttachmentCreateInfo.framebufferFormat = VK_FORMAT_R8_UNORM;
+		causticsFresnelAttachmentCreateInfo.framebufferType = SEFramebufferAttachmentType::Color;
+		causticsFresnelAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_COLOR_BIT;
+		causticsFresnelAttachmentCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		causticsFresnelAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		causticsFresnelAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		causticsFresnelAttachmentCreateInfo.sampleCount = VK_SAMPLE_COUNT_1_BIT;
+		causticsFresnelAttachmentCreateInfo.linearFiltering = true;
+		causticsFresnelAttachmentCreateInfo.isShadowMap = false;
+		causticMapFresnelAttachment = new SEFramebufferAttachment(seDevice, causticsFresnelAttachmentCreateInfo);
 	}
 
 	void ShadowMapSystem::createRenderPasses() {
@@ -597,12 +722,25 @@ namespace ScorchEngine {
 		vfaoVarianceAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		vfaoMapRenderPass = new SERenderPass(seDevice, { vfaoDepthAttachmentInfo, vfaoVarianceAttachmentInfo });
 
+
+		SEAttachmentInfo causticRefractionAttachmentInfo{};
+		causticRefractionAttachmentInfo.framebufferAttachment = causticMapRefractionAttachment;
+		causticRefractionAttachmentInfo.clear.color = { 0.0, 0.0 };
+		causticRefractionAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		causticRefractionAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		SEAttachmentInfo causticFresnelAttachmentInfo{};
+		causticFresnelAttachmentInfo.framebufferAttachment = causticMapFresnelAttachment;
+		causticFresnelAttachmentInfo.clear.color = { 0.0 };
+		causticFresnelAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		causticFresnelAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		causticMapRenderPass = new SERenderPass(seDevice, { causticRefractionAttachmentInfo, causticFresnelAttachmentInfo });
 	}
 
 	void ShadowMapSystem::createFramebuffers() {
 		shadowMapFramebuffer = new SEFramebuffer(seDevice, shadowMapRenderPass, { shadowMapAttachment });
 		rsmFramebuffer = new SEFramebuffer(seDevice, rsmRenderPass, { rsmDepthAttachment, rsmNormalAttachment, rsmFluxAttachment });
 		vfaoMapFramebuffer = new SEFramebuffer(seDevice, vfaoMapRenderPass, { vfaoMapDepthAttachment, vfaoMapVarianceAttachment });
+		causticMapFramebuffer = new SEFramebuffer(seDevice, causticMapRenderPass, { causticMapRefractionAttachment, causticMapFresnelAttachment });
 	}
 
 	void ShadowMapSystem::createDescriptorSetLayouts() {
@@ -610,6 +748,7 @@ namespace ScorchEngine {
 			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
 		lpvGenerationDataDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -624,7 +763,11 @@ namespace ScorchEngine {
 			.addBinding(9, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.addBinding(10, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
-
+		causticInjectionDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_COMPUTE_BIT)
+			.build();
 	}
 
 	void ShadowMapSystem::createGraphicsPipelines() {
@@ -663,6 +806,72 @@ namespace ScorchEngine {
 			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/shadow_rsm.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/shadow_rsm.fsh.spv") }
 		);
 
+		causticPush = SEPushConstant(sizeof(CausticPush), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+		causticMapPipelineLayout = new SEPipelineLayout(seDevice, { causticPush.getRange() }, { MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout() });
+	
+		SEGraphicsPipelineConfigInfo causticPipelineConfigInfo{ 2 };
+		causticPipelineConfigInfo.enableVertexDescriptions();
+		//causticPipelineConfigInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
+		causticPipelineConfigInfo.colorBlendAttachments[0].blendEnable = true;
+		causticPipelineConfigInfo.colorBlendAttachments[0].colorBlendOp = VK_BLEND_OP_ADD;
+		causticPipelineConfigInfo.colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+		causticPipelineConfigInfo.colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+
+		causticPipelineConfigInfo.colorBlendAttachments[1].blendEnable = true;
+		causticPipelineConfigInfo.colorBlendAttachments[1].colorBlendOp = VK_BLEND_OP_ADD;
+		causticPipelineConfigInfo.colorBlendAttachments[1].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
+		causticPipelineConfigInfo.colorBlendAttachments[1].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+
+		causticPipelineConfigInfo.renderPass = causticMapRenderPass->getRenderPass();
+		causticPipelineConfigInfo.pipelineLayout = causticMapPipelineLayout->getPipelineLayout();
+		causticMapPipeline = new SEGraphicsPipeline(
+			seDevice,
+			causticPipelineConfigInfo,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/shadow_rsm.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/caustics.fsh.spv") }
+		);
+		causticComputeInjection = new SEPostProcessingEffect(
+			seDevice,
+			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/caustics_injection.fsh.spv"),
+			seDescriptorPool,
+			{},
+			VK_FORMAT_R8_UINT,
+			VK_IMAGE_VIEW_TYPE_2D,
+			{ causticInjectionDescriptorSetLayout->getDescriptorSetLayout() }
+		);
+		causticScale = new SEPostProcessingEffect(
+			seDevice,
+			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/caustics_scale.fsh.spv"),
+			seDescriptorPool,
+			{causticValueMap->getDescriptor()},
+			VK_FORMAT_R16_SFLOAT,
+			VK_IMAGE_VIEW_TYPE_2D
+		);
+
+		causticBlurH = new SEPostProcessingEffect(
+			seDevice,
+			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_h.fsh.spv"),
+			seDescriptorPool,
+			{ causticScale->getAttachment()->getDescriptor() },
+			VK_FORMAT_R16_SFLOAT,
+			VK_IMAGE_VIEW_TYPE_2D
+		);
+		causticBlurV = new SEPostProcessingEffect(
+			seDevice,
+			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_v.fsh.spv"),
+			seDescriptorPool,
+			{ causticBlurH->getAttachment()->getDescriptor() },
+			VK_FORMAT_R16_SFLOAT,
+			VK_IMAGE_VIEW_TYPE_2D
+		);
+		causticClear = new SEComputePipeline(
+			seDevice,
+			causticComputeInjection->getPipelineLayout(),
+			{ SEShader(SEShaderType::Compute, "res/shaders/spirv/caustics_clear.csh.spv") }
+		);
 
 		lpvComputeClearPipelineLayout = new SEPipelineLayout(seDevice, { }, { lpvGenerationDataDescriptorSetLayout->getDescriptorSetLayout() });
 		lpvComputeClear = new SEComputePipeline(
@@ -670,6 +879,7 @@ namespace ScorchEngine {
 			lpvComputeClearPipelineLayout->getPipelineLayout(),
 			{ SEShader(SEShaderType::Compute, "res/shaders/spirv/lpv_clear.csh.spv")}
 		);
+
 		lpvComputeTemporalBlendPush = SEPushConstant(sizeof(LPVMix), VK_SHADER_STAGE_COMPUTE_BIT);
 		lpvComputeTemporalBlendPipelineLayout = new SEPipelineLayout(seDevice, { lpvComputeTemporalBlendPush.getRange() }, { lpvGenerationDataDescriptorSetLayout->getDescriptorSetLayout() });
 		lpvComputeTemporalBlend = new SEComputePipeline(
@@ -677,6 +887,8 @@ namespace ScorchEngine {
 			lpvComputeTemporalBlendPipelineLayout->getPipelineLayout(),
 			{ SEShader(SEShaderType::Compute, "res/shaders/spirv/lpv_temporal_blend.csh.spv") }
 		);
+
+
 
 		lpvComputeInjection = new SEPostProcessingEffect(
 			seDevice,

@@ -9,6 +9,7 @@ namespace ScorchEngine {
 
 		virtual void renderEarlyDepth(FrameInfo& frameInfo) override;
 		virtual void renderOpaque(FrameInfo& frameInfo) override;
+		virtual void renderTranslucent(FrameInfo& frameInfo) override;
 		 
 		virtual void beginOpaquePass(FrameInfo& frameInfo) override;
 		virtual void endOpaquePass(FrameInfo& frameInfo) override;
@@ -44,6 +45,8 @@ namespace ScorchEngine {
 		SEPushConstant push{};
 		SEPipelineLayout* opaquePipelineLayout{};
 		SEGraphicsPipeline* opaquePipeline{};
+		SEGraphicsPipeline* translucentPipeline{};
+		
 
 		SEPipelineLayout* earlyDepthPipelineLayout{};
 		SEGraphicsPipeline* earlyDepthPipeline{};

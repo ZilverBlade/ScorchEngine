@@ -1,0 +1,17 @@
+{
+	"name": "Glass",
+	"class": "surface",
+	"model": "lit",
+	"config": {
+		"diffuseFactor": [ 1.0, 1.0, 1.0 ],
+		"specularFactor": 1.0,
+		"roughnessFactor": 0.0,
+		"metallicFactor": 1.0,
+		"opacityFactor": 0.5,
+		"IOR": 1.4
+	},
+	"uvScale": [ 1.0, 1.0 ],
+	"uvOffset": [ 0, 0 ],
+	"translucent": true,
+	"doubleSided": false
+}

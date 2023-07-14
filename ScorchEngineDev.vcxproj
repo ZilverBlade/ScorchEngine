@@ -145,6 +145,7 @@
     <ClInclude Include="src\scorch\vk.h" />
     <ClInclude Include="src\scorch\vkapi\buffer.h" />
     <ClInclude Include="src\scorch\vkapi\command_buffer.h" />
+    <ClInclude Include="src\scorch\vkapi\compute_pipeline.h" />
     <ClInclude Include="src\scorch\vkapi\descriptors.h" />
     <ClInclude Include="src\scorch\vkapi\device.h" />
     <ClInclude Include="src\scorch\vkapi\framebuffer.h" />
@@ -157,7 +158,7 @@
     <ClInclude Include="src\scorch\vkapi\renderer.h" />
     <ClInclude Include="src\scorch\vkapi\shader.h" />
     <ClInclude Include="src\scorch\vkapi\swap_chain.h" />
-    <ClInclude Include="src\scorch\vkapi\voxel_texture.h" />
+    <ClInclude Include="src\scorch\vkapi\empty_texture.h" />
     <ClInclude Include="src\scorch\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -192,9 +193,6 @@
     <ClCompile Include="src\scorch\vkapi\buffer.cpp" />
     <ClCompile Include="src\scorch\vkapi\command_buffer.cpp" />
     <ClCompile Include="src\scorch\vkapi\compute_pipeline.cpp" />
-    <ClCompile Include="src\scorch\vkapi\compute_pipeline.h">
-      <FileType>CppHeader</FileType>
-    </ClCompile>
     <ClCompile Include="src\scorch\vkapi\descriptors.cpp" />
     <ClCompile Include="src\scorch\vkapi\device.cpp" />
     <ClCompile Include="src\scorch\vkapi\framebuffer.cpp" />
@@ -206,7 +204,7 @@
     <ClCompile Include="src\scorch\vkapi\renderer.cpp" />
     <ClCompile Include="src\scorch\vkapi\shader.cpp" />
     <ClCompile Include="src\scorch\vkapi\swap_chain.cpp" />
-    <ClCompile Include="src\scorch\vkapi\voxel_texture.cpp" />
+    <ClCompile Include="src\scorch\vkapi\empty_texture.cpp" />
     <ClCompile Include="src\scorch\window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

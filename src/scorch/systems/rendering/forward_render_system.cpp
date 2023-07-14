@@ -83,6 +83,31 @@ namespace ScorchEngine {
 		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, false, true);
 	}
 
+	void ForwardRenderSystem::renderTranslucent(FrameInfo& frameInfo) {
+
+		translucentPipeline->bind(frameInfo.commandBuffer);
+		VkDescriptorSet sets[4]{
+			frameInfo.globalUBO,
+			frameInfo.sceneSSBO,
+			frameInfo.skyLight,
+			frameInfo.shadowMap
+		};
+
+		vkCmdBindDescriptorSets(
+			frameInfo.commandBuffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			opaquePipelineLayout->getPipelineLayout(),
+			0,
+			4,
+			sets,
+			0,
+			nullptr
+		);
+
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, true, false);
+		//renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, true, true);
+	}
+
 	void ForwardRenderSystem::beginOpaquePass(FrameInfo& frameInfo) {
 		opaqueRenderPass->beginRenderPass(frameInfo.commandBuffer, opaqueFramebuffer);
 	}
@@ -218,6 +243,18 @@ namespace ScorchEngine {
 			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") }
 		);
 
-		
+		SEGraphicsPipelineConfigInfo translucentPipelineConfigInfo{};
+		translucentPipelineConfigInfo.enableVertexDescriptions();
+		translucentPipelineConfigInfo.setSampleCount(sampleCount);
+		pipelineConfigInfo.setCullMode(VK_CULL_MODE_BACK_BIT);
+		translucentPipelineConfigInfo.disableDepthWrite(); // translucent objects must not write depth
+		translucentPipelineConfigInfo.enableAlphaBlending();
+		translucentPipelineConfigInfo.renderPass = opaqueRenderPass->getRenderPass();
+		translucentPipelineConfigInfo.pipelineLayout = opaquePipelineLayout->getPipelineLayout();
+		translucentPipeline = new SEGraphicsPipeline(
+			seDevice,
+			translucentPipelineConfigInfo,
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") }
+		);
 	}
 }

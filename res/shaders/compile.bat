@@ -30,6 +30,11 @@ glslc.exe -O -fshader-stage=fragment vfao.fsh -o spirv/vfao.fsh.spv
 glslc.exe -O -fshader-stage=vertex vfao.vsh -o spirv/vfao.vsh.spv
 glslc.exe -O -g -fshader-stage=fragment vfao_fields.fsh -o spirv/vfao_fields.fsh.spv
 
+glslc.exe -O -g -fshader-stage=fragment caustics.fsh -o spirv/caustics.fsh.spv
+glslc.exe -O -g -fshader-stage=fragment caustics_injection.fsh -o spirv/caustics_injection.fsh.spv
+glslc.exe -O -fshader-stage=compute caustics_clear.csh -o spirv/caustics_clear.csh.spv
+glslc.exe -O -fshader-stage=fragment caustics_scale.fsh -o spirv/caustics_scale.fsh.spv
+
 glslc.exe -O -fshader-stage=fragment envirrgen.fsh -o spirv/envirrgen.fsh.spv
 glslc.exe -O -fshader-stage=fragment envprefiltergen.fsh -o spirv/envprefiltergen.fsh.spv
 glslc.exe -O -fshader-stage=fragment envbrdfgen.fsh -o spirv/envbrdfgen.fsh.spv

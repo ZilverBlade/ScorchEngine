@@ -185,6 +185,7 @@ namespace ScorchEngine {
 		enabledFeatures.fillModeNonSolid = VK_TRUE;
 		enabledFeatures.wideLines = VK_TRUE;
 		enabledFeatures.fragmentStoresAndAtomics = VK_TRUE;
+		enabledFeatures.independentBlend = VK_TRUE;
 		return enabledFeatures;
 	}
 
@@ -196,7 +197,8 @@ namespace ScorchEngine {
 			features.sampleRateShading &
 			features.fillModeNonSolid &
 			features.wideLines &
-			features.fragmentStoresAndAtomics;
+			features.fragmentStoresAndAtomics &
+			features.independentBlend;
 	}
 	
 	bool SEDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {
@@ -416,6 +418,18 @@ namespace ScorchEngine {
 		vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 	}
 
+
+	VkFormat SEDevice::findSupportedFormat(VkFormatFeatureFlags flags, const std::vector<VkFormat>& candidates)
+	{
+		for (VkFormat format : candidates) {
+			VkFormatProperties properties;
+			vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &properties);
+			if (properties.optimalTilingFeatures & flags) {
+				return format;
+			}
+		}
+		throw std::runtime_error("unsupported format feature!!");
+	}
 
 	void SEDevice::createBuffer(
 		VkDeviceSize size,

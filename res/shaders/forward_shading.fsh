@@ -61,10 +61,10 @@ void main() {
 		FragmentClearCoatPBRData fragmentcc;
 		fragmentcc.clearCoat = 0.0;
 		vec3 lighting = pbrCalculateLighting(fragment, fragmentcc);
-		outColor = vec4(lighting + emission, 1.0);
+		outColor = vec4(lighting + emission,surfaceMaterialParams.opacity);
 	} 
 	else if (sfShadingModelUnlit()) {
-		outColor = vec4(emission, 1.0);
+		outColor = vec4(emission, surfaceMaterialParams.opacity);
 	} 
 	else if (sfShadingModelClearCoat()) {	
 		vec3 N = normalize(fragNormal);
@@ -101,6 +101,6 @@ void main() {
 		fragmentcc.clearCoat = surfaceMaterialParams.clearCoat;
 		fragmentcc.clearCoatRoughness = surfaceMaterialParams.clearCoatRoughness;
 		vec3 lighting = pbrCalculateLighting(fragment, fragmentcc);
-		outColor = vec4(lighting + emission, 1.0);
+		outColor = vec4(lighting + emission, surfaceMaterialParams.opacity);
 	} 
 }

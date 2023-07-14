@@ -207,7 +207,7 @@ namespace ScorchEngine {
 	void SEModel::bind(VkCommandBuffer commandBuffer, const std::string& submeshName) {
 		auto iter = submeshes.find(submeshName);
 		if (iter == submeshes.end()) {
-			throw std::runtime_error("submesh '" + submeshName + "'not found!");
+			throw std::runtime_error("submesh '" + submeshName + "' not found!");
 		}
 		boundSubmesh = submeshName;
 		Submesh& submesh = (*iter).second;

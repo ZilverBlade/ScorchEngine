@@ -84,24 +84,26 @@ namespace ScorchEngine::Apps {
 		ResourceID missingMaterial = resourceSystem->loadSurfaceMaterial("res/materials/missing_material.json");
 		ResourceID clearCoatMaterial = resourceSystem->loadSurfaceMaterial("res/materials/paint.json");
 		ResourceID blankMaterial = resourceSystem->loadSurfaceMaterial("res/materials/blank.json");
+		ResourceID glassMaterial = resourceSystem->loadSurfaceMaterial("res/materials/glass.json");
 		level = std::make_shared<Level>();
 		Actor cameraActor = level->createActor("cameraActor");
 		Actor lightActor = level->createActor("sun");
 		Actor sphereActor = level->createActor("sphereActor");
+		Actor floorActor = level->createActor("floorActor");
 		{
 
-			Actor sponzaActor = level->createActor("sponzaActor");
-			auto& msc = sponzaActor.addComponent<MeshComponent>();
-			const char* sponzaFBX = "D:/Directories/Downloads/TheRealMJP DeferredTexturing master Content-Models_Sponza/sponza.fbx";
-			msc.mesh = resourceSystem->loadModel(sponzaFBX);
-
-			auto bdr = SEModel::Builder();
-			bdr.loadModel(sponzaFBX);
-			auto sponzaMaterials = bdr.loadMaterials(seDevice, resourceSystem);
-			for (auto& [slot, id] : *sponzaMaterials) {
-				msc.materials[slot] = id;
-			}
-			sponzaActor.getTransform().rotation = { -3.1415926f / 2.f, 0.f, 0.f };
+			//Actor sponzaActor = level->createActor("sponzaActor");
+			//auto& msc = sponzaActor.addComponent<MeshComponent>();
+			//const char* sponzaFBX = "D:/Directories/Downloads/TheRealMJP DeferredTexturing master Content-Models_Sponza/sponza.fbx";
+			//msc.mesh = resourceSystem->loadModel(sponzaFBX);
+			//
+			//auto bdr = SEModel::Builder();
+			//bdr.loadModel(sponzaFBX);
+			//auto sponzaMaterials = bdr.loadMaterials(seDevice, resourceSystem);
+			//for (auto& [slot, id] : *sponzaMaterials) {
+			//	msc.materials[slot] = id;
+			//}
+			//sponzaActor.getTransform().rotation = { -3.1415926f / 2.f, 0.f, 0.f };
 
 			//Actor carActor = level->createActor("carActor");
 			//auto& msc22= carActor.addComponent<MeshComponent>();
@@ -112,15 +114,43 @@ namespace ScorchEngine::Apps {
 			//	msc22.materials[mapto] = clearCoatMaterial;
 			//}
 			//carActor.getTransform().translation = { 0.f, 0.f, 1.f };
-			
 
+			
+			auto& floorM = floorActor.addComponent<MeshComponent>();
+			floorM.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
+			for (const std::string& mapto : resourceSystem->getModel(floorM.mesh)->getSubmeshes()) {
+				floorM.materials[mapto] = blankMaterial;
+			}
+			floorActor.getTransform().translation = { 0.f, 0.f, 2.0f };
+			floorActor.getTransform().scale = { 50.0, 50.0, 0.01f };
 
 			auto& msc2 = sphereActor.addComponent<MeshComponent>();
-			msc2.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
+			msc2.mesh = resourceSystem->loadModel("res/models/cylinder.fbx");
 			for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
-				msc2.materials[mapto] = clearCoatMaterial;
+				msc2.materials[mapto] = glassMaterial;//clearCoatMaterial;
 			}
 			sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
+
+			{
+				Actor meshactor = level->createActor("some kind of mesh");
+				auto& meshactorm = meshactor.addComponent<MeshComponent>();
+				meshactorm.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
+				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
+					meshactorm.materials[mapto] = glassMaterial;
+				}
+				meshactor.getTransform().translation = { 0.f, 3.f, 3.0f };
+			}
+			{
+				Actor meshactor = level->createActor("some kind of mesh");
+				auto& meshactorm = meshactor.addComponent<MeshComponent>();
+				meshactorm.mesh = resourceSystem->loadModel("res/models/teapot.fbx");
+				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
+					meshactorm.materials[mapto] = glassMaterial;
+				}
+				meshactor.getTransform().translation = { 4.f, 3.f, 3.0f };
+				meshactor.getTransform().rotation = { -1.51, 0.0, 0.0 };
+				meshactor.getTransform().scale = { 100.0, 100.0, 100.0 };
+			}
 
 			Actor skyboxActor = level->createActor("skyboxActor");
 			auto& sbc = skyboxActor.addComponent<SkyboxComponent>();
@@ -133,8 +163,8 @@ namespace ScorchEngine::Apps {
 				lightActor.addComponent<LightPropagationVolumeComponent>();
 				lightActor.getTransform().rotation.x = 0.54f;
 				lightActor.getTransform().rotation.z = 0.25f;
-				lightActor.getComponent<DirectionalLightComponent>().intensity = 8.0f;
-				lightActor.getComponent<DirectionalLightComponent>().shadow.maxDistance = 30.0f;
+				lightActor.getComponent<DirectionalLightComponent>().intensity = 4.0f;
+				lightActor.getComponent<DirectionalLightComponent>().shadow.maxDistance = 16.0f;
 				lightActor.getComponent<LightPropagationVolumeComponent>().maxExtent = { 32, 32, 32 }; // coverage should be large for better results
 				lightActor.getComponent<LightPropagationVolumeComponent>().cascadeCount = 1;
 				lightActor.getComponent<LightPropagationVolumeComponent>().propagationIterations = 2;
@@ -203,7 +233,7 @@ namespace ScorchEngine::Apps {
 
 			sphereActor.getTransform().translation.x = (sin(incrementTime) * 5.0);
 
-			incrementTime += frameTime;
+			//incrementTime += frameTime;
 			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
 			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->updateParams();
 
@@ -257,6 +287,7 @@ namespace ScorchEngine::Apps {
 				if (pickedCube) {
 					skyboxSystem->render(frameInfo, skyLightSystem->getDescriptorSet(frameIndex));
 				}
+				renderSystem->renderTranslucent(frameInfo);
 				renderSystem->endOpaquePass(frameInfo);
 
 				seSwapChain->beginRenderPass(commandBuffer);

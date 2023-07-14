@@ -8,7 +8,7 @@
 #include <scorch/vkapi/framebuffer.h>
 
 #include <scorch/vkapi/buffer.h>
-#include <scorch/vkapi/voxel_texture.h>
+#include <scorch/vkapi/empty_texture.h>
 #include <scorch/vkapi/graphics_pipeline.h>
 #include <scorch/vkapi/compute_pipeline.h>
 #include <scorch/vkapi/pipeline_layout.h>
@@ -18,7 +18,7 @@
 #include <scorch/systems/post_fx/post_processing_fx.h>
 
 namespace ScorchEngine {
-	const uint32_t SHADOW_MAP_RESOLUTION = 1024U;
+	const uint32_t SHADOW_MAP_RESOLUTION = 2048U;
 	const uint32_t SHADOW_MAP_RSM_RESOLUTION = 256U;
 	const uint32_t VIRTUAL_VOXEL_ATLAS_SIZE = 128U; // more than enough for several voxels
 	const uint32_t LPV_RESOLUTION = 32U; // dont make different from multiple of 16 due to the dispatch config
@@ -64,7 +64,23 @@ namespace ScorchEngine {
 		SEPipelineLayout* shadowMapPipelineLayout{};
 		SEGraphicsPipeline* shadowMapPipeline{};
 
+		VkDescriptorSet causticInjectionDescriptorSet{};
+		std::unique_ptr<SEDescriptorSetLayout> causticInjectionDescriptorSetLayout{};
+		SEFramebufferAttachment* causticMapRefractionAttachment{};
+		SEFramebufferAttachment* causticMapFresnelAttachment{};
+		SEFramebuffer* causticMapFramebuffer{};
+		SERenderPass* causticMapRenderPass{};
 
+		SEPushConstant causticPush{};
+		SEPipelineLayout* causticMapPipelineLayout{};
+		SEPipelineLayout* causticMapInjectionPipelineLayout{};
+		SEGraphicsPipeline* causticMapPipeline{};
+		SEPostProcessingEffect* causticComputeInjection{};
+		SEPostProcessingEffect* causticScale{};
+		SEPostProcessingEffect* causticBlurH{};
+		SEPostProcessingEffect* causticBlurV{};
+		SEEmptyTexture* causticValueMap;
+		SEComputePipeline* causticClear{};
 
 		SEFramebufferAttachment* vfaoMapDepthAttachment{};
 		SEFramebufferAttachment* vfaoMapVarianceAttachment{};
@@ -78,14 +94,14 @@ namespace ScorchEngine {
 		SEPostProcessingEffect* vfaoBlurFieldsV{};
 
 		std::unique_ptr<SEBuffer> lpvInjectionData[MAX_FRAMES_IN_FLIGHT];
-		SEVoxelTexture* lpvInoutRedSH{};
-		SEVoxelTexture* lpvInoutGreenSH{};
-		SEVoxelTexture* lpvInoutBlueSH{};
+		SEEmptyTexture* lpvInoutRedSH{};
+		SEEmptyTexture* lpvInoutGreenSH{};
+		SEEmptyTexture* lpvInoutBlueSH{};
 		// ping pong textures for the propagation fase
-		SEVoxelTexture* lpvInout2RedSH{};
-		SEVoxelTexture* lpvInout2GreenSH{};
-		SEVoxelTexture* lpvInout2BlueSH{};
-		SEVoxelTexture* lpvPropagatedAtlasSH{};
+		SEEmptyTexture* lpvInout2RedSH{};
+		SEEmptyTexture* lpvInout2GreenSH{};
+		SEEmptyTexture* lpvInout2BlueSH{};
+		SEEmptyTexture* lpvPropagatedAtlasSH{};
 
 		std::unique_ptr<SEDescriptorSetLayout> lpvGenerationDataDescriptorSetLayout{};
 		VkDescriptorSet lpvGenerationDataDescriptorSet[MAX_FRAMES_IN_FLIGHT];

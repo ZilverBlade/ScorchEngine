@@ -30,6 +30,7 @@ namespace ScorchEngine {
 		uint32_t shadingModelFlag;
 		float clearCoat;
 		float clearCoatRoughness;
+		float opacity;
 	};
 
 	SESurfaceMaterial::SESurfaceMaterial(SEDevice& device, SEDescriptorPool& descriptorPool, ResourceSystem* resourceSystem) :
@@ -105,6 +106,11 @@ namespace ScorchEngine {
 		if (config["clearCoatRoughnessFactor"].error() == simdjson::error_code::SUCCESS)
 			this->clearCoatRoughnessFactor = config["clearCoatRoughnessFactor"].get_double().value();
 
+		if (config["opacityFactor"].error() == simdjson::error_code::SUCCESS)
+			this->opacityFactor = config["opacityFactor"].get_double().value();
+		if (config["IOR"].error() == simdjson::error_code::SUCCESS)
+			this->IOR = config["IOR"].get_double().value();
+
 		if (config["diffuseTexture"].error() == simdjson::error_code::SUCCESS)
 			this->diffuseTexture = std::string(config["diffuseTexture"].get_string().value());
 		if (config["emissiveTexture"].error() == simdjson::error_code::SUCCESS)
@@ -155,6 +161,7 @@ namespace ScorchEngine {
 		bufferInfo.ambientOcclusion = this->ambientOcclusionFactor;
 		bufferInfo.clearCoat = this->clearCoatFactor;
 		bufferInfo.clearCoatRoughness = this->clearCoatRoughnessFactor;
+		bufferInfo.opacity = this->opacityFactor;
 
 		bufferInfo.uvOffset = this->uvOffset;
 		bufferInfo.uvScale = this->uvScale;
@@ -195,6 +202,7 @@ namespace ScorchEngine {
 		bufferInfo.ambientOcclusion = this->ambientOcclusionFactor;
 		bufferInfo.clearCoat = this->clearCoatFactor;
 		bufferInfo.clearCoatRoughness = this->clearCoatRoughnessFactor;
+		bufferInfo.opacity = this->opacityFactor;
 
 		bufferInfo.uvOffset = this->uvOffset;
 		bufferInfo.uvScale = this->uvScale;

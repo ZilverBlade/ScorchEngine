@@ -68,6 +68,7 @@ namespace ScorchEngine {
 		QueueFamilyIndices findPhysicalQueueFamilies() {
 			return findQueueFamilies(physicalDevice);
 		}
+		VkFormat findSupportedFormat(VkFormatFeatureFlags flags, const std::vector<VkFormat>& candidates);
 
 		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
@@ -79,6 +80,7 @@ namespace ScorchEngine {
 		void copyImageToBuffer(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout layout, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount, uint32_t mipLevel);
 		void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t layerCount);
 		void generateMipMaps(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t layerCount, VkImageLayout finalLayout);		
+	
 	private:
 
 		VkPhysicalDeviceProperties deviceProperties{};

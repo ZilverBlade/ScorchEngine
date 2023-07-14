@@ -3,7 +3,7 @@
 
 namespace ScorchEngine {
 	SEPushConstant::SEPushConstant(size_t size, VkShaderStageFlags stages, uint32_t offset) {
-		assert(size <= 128, "Push Constant has a maximum recommended capacity of 128 bytes");
+		//assert(size <= 128, "Push Constant has a maximum recommended capacity of 128 bytes");
 		pushConstantRange.stageFlags = stages;
 		pushConstantRange.offset = offset;
 		pushConstantRange.size = static_cast<uint32_t>(size);

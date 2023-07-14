@@ -1,26 +1,27 @@
-#include "voxel_texture.h"
+#include "empty_texture.h"
 namespace ScorchEngine {
-	SEVoxelTexture::SEVoxelTexture(SEDevice& device, const SEVoxelTextureCreateInfo& createInfo)
-		: seDevice(device), voxelFormat(createInfo.voxelFormat), imageUsage(createInfo.usage), imageLayout(createInfo.layout) {
+	SEEmptyTexture::SEEmptyTexture(SEDevice& device, const SEEmptyTextureCreateInfo& createInfo)
+		: seDevice(device), format(createInfo.format), imageUsage(createInfo.usage), imageLayout(createInfo.layout) {
 		create(device, createInfo);
 	}
-	SEVoxelTexture::~SEVoxelTexture() {
+	SEEmptyTexture::~SEEmptyTexture() {
 		destroy();
 	}
 
-	void SEVoxelTexture::create(SEDevice& device, const SEVoxelTextureCreateInfo& createInfo) {
+	void SEEmptyTexture::create(SEDevice& device, const SEEmptyTextureCreateInfo& createInfo) {
 		VkImageCreateInfo imageCreateInfo{};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageCreateInfo.imageType = VK_IMAGE_TYPE_3D;
-		imageCreateInfo.format = createInfo.voxelFormat;
+		imageCreateInfo.imageType = createInfo.imageType;
+		imageCreateInfo.format = createInfo.format;
 		imageCreateInfo.extent.width = createInfo.dimensions.x;
 		imageCreateInfo.extent.height = createInfo.dimensions.y;
 		imageCreateInfo.extent.depth = createInfo.dimensions.z;
 		imageCreateInfo.mipLevels = createInfo.mipLevels;
-		imageCreateInfo.arrayLayers = 1;
+		imageCreateInfo.arrayLayers = createInfo.layers;
 		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageCreateInfo.usage = createInfo.usage;
+		//imageCreateInfo.
 		VkMemoryAllocateInfo memAlloc = {};
 		memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		VkMemoryRequirements memReqs;
@@ -42,8 +43,8 @@ namespace ScorchEngine {
 		
 		VkImageViewCreateInfo imageViewCreateInfo = {};
 		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
-		imageViewCreateInfo.format = createInfo.voxelFormat;
+		imageViewCreateInfo.viewType = createInfo.viewType;
+		imageViewCreateInfo.format = createInfo.format;
 		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresourceRange.baseMipLevel = 0;
 		subresourceRange.levelCount = createInfo.mipLevels;
@@ -78,7 +79,7 @@ namespace ScorchEngine {
 		}
 		dimensions = { createInfo.dimensions.x, createInfo.dimensions.y, createInfo.dimensions.z };
 	}
-	void SEVoxelTexture::destroy() {
+	void SEEmptyTexture::destroy() {
 		vkDestroyImageView(seDevice.getDevice(), imageView, nullptr);
 		vkDestroySampler(seDevice.getDevice(), sampler, nullptr);
 		vkDestroyImage(seDevice.getDevice(), image, nullptr);

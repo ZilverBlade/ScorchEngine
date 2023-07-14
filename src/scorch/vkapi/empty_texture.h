@@ -4,24 +4,27 @@
 #include <glm/glm.hpp>
 
 namespace ScorchEngine {
-	struct SEVoxelTextureCreateInfo {
-		VkFormat voxelFormat;
+	struct SEEmptyTextureCreateInfo {
+		VkFormat format;
+		VkImageType imageType;
+		VkImageViewType viewType;
 		glm::ivec3 dimensions;
 		VkImageUsageFlags usage;
 		VkImageLayout layout;
 		bool linearFiltering = true;
+		uint32_t layers = 1;
 		uint32_t mipLevels = 1;
 	};
 
-	class SEVoxelTexture {
+	class SEEmptyTexture {
 	public:
-		SEVoxelTexture(SEDevice& device, const SEVoxelTextureCreateInfo& createInfo);
-		~SEVoxelTexture();
+		SEEmptyTexture(SEDevice& device, const SEEmptyTextureCreateInfo& createInfo);
+		~SEEmptyTexture();
 
-		SEVoxelTexture(const SEVoxelTexture&) = delete;
-		SEVoxelTexture& operator=(const SEVoxelTexture&) = delete;
-		SEVoxelTexture(SEVoxelTexture&&) = delete;
-		SEVoxelTexture& operator=(SEVoxelTexture&&) = delete;
+		SEEmptyTexture(const SEEmptyTexture&) = delete;
+		SEEmptyTexture& operator=(const SEEmptyTexture&) = delete;
+		SEEmptyTexture(SEEmptyTexture&&) = delete;
+		SEEmptyTexture& operator=(SEEmptyTexture&&) = delete;
 
 		VkImage getImage() { return image; }
 		VkImageSubresourceRange getImageSubresourceRange() { return subresourceRange; }
@@ -39,7 +42,7 @@ namespace ScorchEngine {
 		}
 	private:
 		void destroy();
-		void create(SEDevice& device, const SEVoxelTextureCreateInfo& createInfo);
+		void create(SEDevice& device, const SEEmptyTextureCreateInfo& createInfo);
 
 		VkImage image{};
 		VkDeviceMemory imageMemory{};
@@ -47,7 +50,7 @@ namespace ScorchEngine {
 		VkImageSubresourceRange subresourceRange{};
 		VkImageView imageView{};
 
-		VkFormat voxelFormat;
+		VkFormat format;
 		glm::ivec3 dimensions;
 		VkImageUsageFlags imageUsage;
 		VkImageLayout imageLayout;
