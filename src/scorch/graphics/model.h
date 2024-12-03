@@ -17,6 +17,8 @@ extern "C" {
 namespace ScorchEngine {
 	class ResourceSystem;
 	class SESurfaceMaterial;
+	class SEVoxelSDF;
+	class SEDescriptorPool;
 	class SEModel {
 	public:
 		struct Submesh {
@@ -40,6 +42,8 @@ namespace ScorchEngine {
 			bool loadModel(const std::string &filepath);
 			void processNode(aiNode* node, const aiScene* scene);
 			void loadSubmesh(aiMesh* mesh, const aiScene* scene);
+			// pixels per metre
+			void setSDFQuality(glm::ivec3 resolution);
 			std::shared_ptr<std::unordered_map<std::string, ResourceID>> loadMaterials(SEDevice& device, ResourceSystem* resourceSystem);
 
 		private:
@@ -48,11 +52,13 @@ namespace ScorchEngine {
 			std::unordered_map<std::string, Submesh> submeshes{};
 			std::unordered_map<std::string, uint32_t> materialInfos;
 			std::string format;
+			std::string filePath;
 			std::string modelPath;
+			glm::ivec3 sdfResolution;
 			friend class SEModel;
 		};
 
-		SEModel(SEDevice& device, const SEModel::Builder& builder);
+		SEModel(SEDevice& device, SEDescriptorPool& descriptorPool, const SEModel::Builder& builder);
 		~SEModel();
 
 		SEModel(const SEModel &) = delete;
@@ -62,11 +68,18 @@ namespace ScorchEngine {
 		void draw(VkCommandBuffer commandBuffer);
 		
 		std::vector<std::string> getSubmeshes();
+
+		SEVoxelSDF& getSDF();
 	private:
+		void createSubmeshes(const SEModel::Builder& builder);
+		void createSDF(SEDescriptorPool& descriptorPool, const SEModel::Builder& builder);
+
 		template <typename T>
 		std::unique_ptr<SEBuffer> createBuffer(const std::vector<T> & data);
 
 		SEDevice &seDevice;
+
+		SEVoxelSDF* sdf;
 
 		std::string boundSubmesh{};
 		std::unordered_map<std::string, Submesh> submeshes{};

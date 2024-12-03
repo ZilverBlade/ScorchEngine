@@ -8,11 +8,10 @@ namespace ScorchEngine::Controllers {
 	void CameraController::moveTranslation(SEWindow& window, float dt, Actor actor) {
 		//actor = actor;
 
-		float yaw = actor.getComponent<Components::TransformComponent>().rotation.z;
-		float pitch = actor.getComponent<Components::TransformComponent>().rotation.x;
-		const glm::vec3 forwardDir{ sin(yaw), cos(yaw), -sin(pitch) };
-		const glm::vec3 rightDir{ forwardDir.y, -forwardDir.x, 0.f, };
-		const glm::vec3 upDir{ 0.f, 0.f, 1.f };
+		glm::mat4 matrix = actor.getComponent<Components::TransformComponent>().getTransformMatrix();
+		const glm::vec3 forwardDir = glm::normalize(glm::vec3(matrix[2]));
+		const glm::vec3 rightDir = glm::normalize(glm::vec3(matrix[0]));
+		const glm::vec3 upDir{ 0.f, 1.f, 0.f };
 
 		glm::vec3 moveDir{ 0.f };
 
@@ -68,7 +67,7 @@ namespace ScorchEngine::Controllers {
 		else { glfwSetInputMode(wnd, GLFW_CURSOR, GLFW_CURSOR_NORMAL); firstClick = true; }
 
 		if (glm::dot(orientation, orientation) > std::numeric_limits<float>::epsilon()) {
-			actor.getComponent<Components::TransformComponent>().rotation = { orientation.x, 0.f, orientation.y };
+			actor.getComponent<Components::TransformComponent>().rotation = { orientation.x, orientation.y, 0.f};
 		}
 	}
 	//bool EditorMovementController::mouseScrollEvent(Events::MouseScrollEvent& e) {

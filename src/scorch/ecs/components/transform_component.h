@@ -1,5 +1,6 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <string>
 #include <scorch/utils/uuid.h>
 #include <glm/glm.hpp>

@@ -11,7 +11,6 @@ namespace ScorchEngine {
 	public:
 		VkQueue queue;
 	private:
-		bool occupied = false;
 		SEQueueType type;
 		friend class SEDevice;
 	};

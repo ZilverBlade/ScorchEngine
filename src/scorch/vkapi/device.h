@@ -76,10 +76,10 @@ namespace ScorchEngine {
 		VkCommandBuffer beginSingleTimeCommands();
 		void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 		void copyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, VkDeviceSize srcOffset = 0, VkDeviceSize dstOffset = 0);
-		void copyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
-		void copyImageToBuffer(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout layout, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount, uint32_t mipLevel);
+		void copyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, VkExtent3D resolution, uint32_t layerCount);
+		void copyImageToBuffer(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout layout, VkBuffer buffer, VkExtent3D resolution, uint32_t layerCount, uint32_t mipLevel);
 		void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t layerCount);
-		void generateMipMaps(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t layerCount, VkImageLayout finalLayout);		
+		void generateMipMaps(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkExtent3D resolution, uint32_t mipLevels, uint32_t layerCount, VkImageLayout finalLayout);
 	
 	private:
 

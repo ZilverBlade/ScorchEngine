@@ -77,16 +77,14 @@ namespace ScorchEngine {
 			commandBuffer,
 			stagingBuffer,
 			image,
-			static_cast<uint32_t>(builder.width),
-			static_cast<uint32_t>(builder.height),
+			{ static_cast<uint32_t>(builder.width),	static_cast<uint32_t>(builder.height), 1 },
 			layerCount
 		);
 		seDevice.generateMipMaps(
 			commandBuffer,
 			image,
 			format,
-			static_cast<uint32_t>(builder.width),
-			static_cast<uint32_t>(builder.height),
+			{ static_cast<uint32_t>(builder.width),	static_cast<uint32_t>(builder.height), 1 },
 			mipLevels,
 			layerCount,
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL

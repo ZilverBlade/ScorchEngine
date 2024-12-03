@@ -67,7 +67,7 @@ namespace ScorchEngine {
 			samplerInfo.mipLodBias = 0.0f;
 			samplerInfo.maxAnisotropy = 1.0f;
 			samplerInfo.minLod = 0.0f;
-			samplerInfo.maxLod = static_cast<float>(createInfo.mipLevels);
+			samplerInfo.maxLod = static_cast<float>(createInfo.mipLevels - 1);
 			samplerInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 			samplerInfo.addressModeV = samplerInfo.addressModeU;
 			samplerInfo.addressModeW = samplerInfo.addressModeU;

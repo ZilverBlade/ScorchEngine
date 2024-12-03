@@ -42,8 +42,8 @@ project "ScorchEngineDev"
 	  "vendor/simdjson/include",
 	  "vendor/assimp/include",
 	  "vendor/entt/include",
-	  "vendor/GammaHUD/GHUDCore/include",
-	  "vendor/GammaHUD/GHUDVulkan/include",
+	  "vendor/SpearHUD/SHUDCore/include",
+	  "vendor/SpearHUD/SHUDVulkan/include",
    }
    
    libdirs {
@@ -52,8 +52,7 @@ project "ScorchEngineDev"
 	  "vendor/imgui/lib",
 	  "vendor/assimp/lib",
 	  "vendor/simdjson/lib",
-	  "vendor/GammaHUD/GHUDCore/lib",
-	  "vendor/GammaHUD/GHUDVulkan/lib"
+	  "vendor/SpearHUD/SHUDCore/lib"
    }
    links {
       "vulkan-1",
@@ -71,8 +70,7 @@ project "ScorchEngineDev"
       symbols "On"
 	  links {
 	  "ImGui_d",
-	  "GHUDCore_d",
-	  "GHUDVulkan_d",
+	  "SHUDCore_d",
 	  "assimp-vc143-mtd",
 	  "simdjson_d",
 	  }
@@ -83,8 +81,7 @@ project "ScorchEngineDev"
       optimize "Speed"
 	  links {
 	  "ImGui",
-	  "GHUDCore",
-	  "GHUDVulkan",
+	  "SHUDCore",
 	  "assimp-vc143-mt",
 	  "simdjson",
 	  }

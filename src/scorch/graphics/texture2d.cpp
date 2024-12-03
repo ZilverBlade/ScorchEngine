@@ -72,8 +72,7 @@ namespace ScorchEngine {
 			commandBuffer,
 			stagingBuffer,
 			image,
-			static_cast<uint32_t>(builder.width),
-			static_cast<uint32_t>(builder.height),
+			{ static_cast<uint32_t>(builder.width),	static_cast<uint32_t>(builder.height), 1 },
 			layerCount
 		);
 		seDevice.transitionImageLayout(

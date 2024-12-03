@@ -1,14 +1,15 @@
 #pragma once
 
 #include "model.h"
-//#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <scorch/systems/resource_system.h>
+#include <scorch/graphics/sdf.h>
 #include <filesystem>
 
 namespace ScorchEngine {
 	bool SEModel::Builder::loadModel(const std::string& filepath) {
+		filePath = filepath;
 		uint32_t processFlags =
 			aiProcess_Triangulate |
 			aiProcess_OptimizeMeshes |
@@ -60,8 +61,8 @@ namespace ScorchEngine {
 		for (uint32_t i = 0; i < mesh->mNumVertices; i++) {
 			submesh.vertexPositions.push_back({
 				factor * mesh->mVertices[i].x,
-				factor * mesh->mVertices[i].z,
-				factor * mesh->mVertices[i].y
+				factor * mesh->mVertices[i].y,
+				factor * mesh->mVertices[i].z
 			});
 			submesh.vertexUVs.push_back({
 				mesh->mTextureCoords[0][i].x,
@@ -69,13 +70,13 @@ namespace ScorchEngine {
 			});
 			submesh.vertexNormals.push_back({
 				mesh->mNormals[i].x,
-				mesh->mNormals[i].z,
-				mesh->mNormals[i].y
+				mesh->mNormals[i].y,
+				mesh->mNormals[i].z
 			});
 			submesh.vertexTangents.push_back({
 				mesh->mNormals[i].x,
-				mesh->mNormals[i].z,
-				mesh->mNormals[i].y
+				mesh->mNormals[i].y,
+				mesh->mNormals[i].z
 			});
 		}
 
@@ -85,6 +86,10 @@ namespace ScorchEngine {
 			for (uint32_t j = 0; j < face.mNumIndices; j++)
 				submesh.indices.push_back(face.mIndices[j]);
 		}
+	}
+
+	void SEModel::Builder::setSDFQuality(glm::ivec3 resolution) {
+		sdfResolution = resolution;
 	}
 
 	std::shared_ptr<std::unordered_map<std::string, ResourceID>>
@@ -185,23 +190,13 @@ namespace ScorchEngine {
 		return outMaterials;
 	}
 	
-	SEModel::SEModel(SEDevice& device, const SEModel::Builder& builder) : seDevice(device) {
-		for (const auto& [slot, data] : builder.submeshes) {
-			submeshes[slot] = {};
-			Submesh& submesh = submeshes[slot];
-
-			submesh.vertexPositionBuffer = createBuffer(data.vertexPositions);
-			submesh.vertexUVBuffer = createBuffer(data.vertexUVs);
-			submesh.vertexNormalBuffer = createBuffer(data.vertexNormals);
-			submesh.vertexTangentsBuffer = createBuffer(data.vertexTangents);
-			submesh.indexBuffer = createBuffer(data.indices);
-
-			submesh.vertexCount = submesh.vertexPositionBuffer->getInstanceCount();
-			submesh.indexCount = submesh.indexBuffer->getInstanceCount();
-		}
+	SEModel::SEModel(SEDevice& device, SEDescriptorPool& descriptorPool, const SEModel::Builder& builder) 
+		: seDevice(device) {
+		createSubmeshes(builder);
+		createSDF(descriptorPool, builder);
 	}
 	SEModel::~SEModel() {
-		
+		delete sdf;
 	}
 
 	void SEModel::bind(VkCommandBuffer commandBuffer, const std::string& submeshName) {
@@ -235,6 +230,55 @@ namespace ScorchEngine {
 			strings.push_back(slot);
 		}
 		return strings;
+	}
+
+	SEVoxelSDF& SEModel::getSDF() {
+		return *sdf;
+	}
+
+	void SEModel::createSubmeshes(const SEModel::Builder& builder) {
+		for (const auto& [slot, data] : builder.submeshes) {
+			submeshes[slot] = {};
+			Submesh& submesh = submeshes[slot];
+
+			submesh.vertexPositionBuffer = createBuffer(data.vertexPositions);
+			submesh.vertexUVBuffer = createBuffer(data.vertexUVs);
+			submesh.vertexNormalBuffer = createBuffer(data.vertexNormals);
+			submesh.vertexTangentsBuffer = createBuffer(data.vertexTangents);
+			submesh.indexBuffer = createBuffer(data.indices);
+
+			submesh.vertexCount = submesh.vertexPositionBuffer->getInstanceCount();
+			submesh.indexCount = submesh.indexBuffer->getInstanceCount();
+		}
+	}
+
+	void SEModel::createSDF(SEDescriptorPool& descriptorPool, const SEModel::Builder& builder) {
+		SELOG_INF("Creating SDF for %s [%ix%ix%i]", builder.filePath.c_str(),
+			builder.sdfResolution.x, builder.sdfResolution.y, builder.sdfResolution.z);
+		std::vector<glm::vec3> vertices;
+		std::vector<std::array<uint32_t, 3>> triangles;
+		for (const auto& [slot, data] : builder.submeshes) {
+			{
+				size_t offset = vertices.size();
+				vertices.resize(vertices.size() + data.vertexPositions.size());
+				std::copy(data.vertexPositions.begin(), data.vertexPositions.end(), vertices.begin() + offset);
+			} 
+			{
+				size_t offset = triangles.size();
+				triangles.resize(triangles.size() + data.indices.size() / 3);
+				memcpy(
+					reinterpret_cast<uint8_t*>(triangles.data()) + offset * 12,
+					data.indices.data(),
+					data.indices.size() * sizeof(uint32_t)
+				);
+			}
+		}
+		SEVoxelSDF::Builder sdfBuilder;
+		sdfBuilder	.setVertices(vertices)
+					.setTriangles(triangles)
+					.setResolution(builder.sdfResolution)
+					.build();
+		sdf = new SEVoxelSDF(seDevice, descriptorPool, sdfBuilder);
 	}
 
 	template<typename T>

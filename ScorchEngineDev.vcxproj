@@ -60,7 +60,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>26812;4244;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\GammaHUD\GHUDCore\include;vendor\GammaHUD\GHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;C:\VulkanSDK\1.3.290.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\SpearHUD\SHUDCore\include;vendor\SpearHUD\SHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -71,8 +71,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui_d.lib;GHUDCore_d.lib;GHUDVulkan_d.lib;assimp-vc143-mtd.lib;simdjson_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\GammaHUD\GHUDCore\lib;vendor\GammaHUD\GHUDVulkan\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui_d.lib;SHUDCore_d.lib;assimp-vc143-mtd.lib;simdjson_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\SpearHUD\SHUDCore\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -81,7 +81,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>26812;4244;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\GammaHUD\GHUDCore\include;vendor\GammaHUD\GHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;C:\VulkanSDK\1.3.290.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\SpearHUD\SHUDCore\include;vendor\SpearHUD\SHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -95,8 +95,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui.lib;GHUDCore.lib;GHUDVulkan.lib;assimp-vc143-mt.lib;simdjson.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\GammaHUD\GHUDCore\lib;vendor\GammaHUD\GHUDVulkan\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui.lib;SHUDCore.lib;assimp-vc143-mt.lib;simdjson.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\SpearHUD\SHUDCore\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -119,6 +119,7 @@
     <ClInclude Include="src\scorch\ecs\level.h" />
     <ClInclude Include="src\scorch\graphics\environment_map.h" />
     <ClInclude Include="src\scorch\graphics\model.h" />
+    <ClInclude Include="src\scorch\graphics\sdf.h" />
     <ClInclude Include="src\scorch\graphics\surface_material.h" />
     <ClInclude Include="src\scorch\graphics\texture.h" />
     <ClInclude Include="src\scorch\graphics\texture2d.h" />
@@ -138,7 +139,9 @@
     <ClInclude Include="src\scorch\systems\rendering\shadow_map_system.h" />
     <ClInclude Include="src\scorch\systems\rendering\sky_light_system.h" />
     <ClInclude Include="src\scorch\systems\rendering\skybox_system.h" />
+    <ClInclude Include="src\scorch\systems\rendering\vsdf_render_system.h" />
     <ClInclude Include="src\scorch\systems\resource_system.h" />
+    <ClInclude Include="src\scorch\systems\ui\performance_viewer.h" />
     <ClInclude Include="src\scorch\utils\matrix_math.h" />
     <ClInclude Include="src\scorch\utils\resid.h" />
     <ClInclude Include="src\scorch\utils\uuid.h" />
@@ -148,6 +151,7 @@
     <ClInclude Include="src\scorch\vkapi\compute_pipeline.h" />
     <ClInclude Include="src\scorch\vkapi\descriptors.h" />
     <ClInclude Include="src\scorch\vkapi\device.h" />
+    <ClInclude Include="src\scorch\vkapi\empty_texture.h" />
     <ClInclude Include="src\scorch\vkapi\framebuffer.h" />
     <ClInclude Include="src\scorch\vkapi\framebuffer_attachment.h" />
     <ClInclude Include="src\scorch\vkapi\graphics_pipeline.h" />
@@ -158,7 +162,6 @@
     <ClInclude Include="src\scorch\vkapi\renderer.h" />
     <ClInclude Include="src\scorch\vkapi\shader.h" />
     <ClInclude Include="src\scorch\vkapi\swap_chain.h" />
-    <ClInclude Include="src\scorch\vkapi\empty_texture.h" />
     <ClInclude Include="src\scorch\window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -173,10 +176,12 @@
     <ClCompile Include="src\scorch\ecs\level.cpp" />
     <ClCompile Include="src\scorch\graphics\environment_map.cpp" />
     <ClCompile Include="src\scorch\graphics\model.cpp" />
+    <ClCompile Include="src\scorch\graphics\sdf.cpp" />
     <ClCompile Include="src\scorch\graphics\surface_material.cpp" />
     <ClCompile Include="src\scorch\graphics\texture.cpp" />
     <ClCompile Include="src\scorch\graphics\texture2d.cpp" />
     <ClCompile Include="src\scorch\graphics\texture_cube.cpp" />
+    <ClCompile Include="src\scorch\log.cpp" />
     <ClCompile Include="src\scorch\main.cpp" />
     <ClCompile Include="src\scorch\rendering\camera.cpp" />
     <ClCompile Include="src\scorch\systems\post_fx\fx\ppfx_screen_correct.cpp" />
@@ -187,7 +192,10 @@
     <ClCompile Include="src\scorch\systems\rendering\shadow_map_system.cpp" />
     <ClCompile Include="src\scorch\systems\rendering\sky_light_system.cpp" />
     <ClCompile Include="src\scorch\systems\rendering\skybox_system.cpp" />
+    <ClCompile Include="src\scorch\systems\rendering\vsdf_render_system.cpp" />
     <ClCompile Include="src\scorch\systems\resouce_system.cpp" />
+    <ClCompile Include="src\scorch\systems\ui\performance_viewer.cpp" />
+    <ClCompile Include="src\scorch\systems\ui\vulkan_shud_impl.cpp" />
     <ClCompile Include="src\scorch\utils\resid.cpp" />
     <ClCompile Include="src\scorch\utils\uuid.cpp" />
     <ClCompile Include="src\scorch\vkapi\buffer.cpp" />
@@ -195,6 +203,7 @@
     <ClCompile Include="src\scorch\vkapi\compute_pipeline.cpp" />
     <ClCompile Include="src\scorch\vkapi\descriptors.cpp" />
     <ClCompile Include="src\scorch\vkapi\device.cpp" />
+    <ClCompile Include="src\scorch\vkapi\empty_texture.cpp" />
     <ClCompile Include="src\scorch\vkapi\framebuffer.cpp" />
     <ClCompile Include="src\scorch\vkapi\framebuffer_attachment.cpp" />
     <ClCompile Include="src\scorch\vkapi\graphics_pipeline.cpp" />
@@ -204,7 +213,6 @@
     <ClCompile Include="src\scorch\vkapi\renderer.cpp" />
     <ClCompile Include="src\scorch\vkapi\shader.cpp" />
     <ClCompile Include="src\scorch\vkapi\swap_chain.cpp" />
-    <ClCompile Include="src\scorch\vkapi\empty_texture.cpp" />
     <ClCompile Include="src\scorch\window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -65,20 +65,12 @@ namespace ScorchEngine {
 		}
 	}
 	static glm::vec3 orientations[6]{
-		{ 0.f, 0.f, glm::half_pi<float>() },	// right (works)
-		{ 0.f, 0.f, -glm::half_pi<float>() },		// left
+		{ 0.f, glm::half_pi<float>() , 0.f },	// right (works)
+		{ 0.f, -glm::half_pi<float>() , 0.f},		// left
 		{ glm::half_pi<float>(), 0.f, 0.f },	// up (works)
 		{ -glm::half_pi<float>() , 0.f, 0.f },		// down 
 		{ 0.f, 0.f, 0.f },						// front (works)
-		{ 0.f, 0.f, glm::pi<float>() }			// back
-	};
-	static glm::vec3 lookVectors[6]{
-		{ 1.f, 0.f, 0.0 },	
-		{ -1.f, 0.f, 0.0 },
-		{ 0.f, 1.f, 0.0 },
-		{ 0.f, -1.f, 0.0 },
-		{ 0.f, 0.f, 1.f, },
-		{ 0.f, 0.f, -1.f, }
+		{ 0.f, glm::pi<float>() , 0.f}			// back
 	};
 	void SEEnvironmentMap::generatePrefilteredEnvironmentMap(VkCommandBuffer commandBuffer) {
 		struct EnvPrefilteredPush {
@@ -89,7 +81,6 @@ namespace ScorchEngine {
 			for (int i = 0; i < 6; i++) {
 				SECamera camera{};
 				camera.setViewYXZ({}, orientations[i]);
-				//camera.setViewDirection({}, lookVectors[i]);
 				EnvPrefilteredPush push{};
 				push.mvp =  camera.getView();
 				for (int j = 0; j < envPrefilteredMipLevels; j++) {
@@ -104,7 +95,6 @@ namespace ScorchEngine {
 			for (int i = 0; i < 6; i++) {
 				SECamera camera{};
 				camera.setViewYXZ({}, orientations[i]);
-				//camera.setViewDirection({}, lookVectors[i]);
 				glm::mat4 mvp = camera.getView();
 				envIrradianceGen->render(commandBuffer, &mvp, i); 
 			}

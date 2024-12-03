@@ -59,7 +59,7 @@ namespace ScorchEngine {
 		pickPhyisicalDevice();
 		createLogicalDevice();
 		createCommandPool();
-		graphicsQueues = createQueues(SEQueueType::Graphics, 3, 0);
+		graphicsQueues = createQueues(SEQueueType::Graphics, 1, 0);
 	}
 
 	SEDevice::~SEDevice() {
@@ -286,14 +286,12 @@ namespace ScorchEngine {
 
 		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 		std::vector<float> queuePriorities{
-			1.0f,
-			1.0f,
 			1.0f
 		};
 		VkDeviceQueueCreateInfo queueCreateInfo[1]{};
 		queueCreateInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 		queueCreateInfo[0].queueFamilyIndex = 0;
-		queueCreateInfo[0].queueCount = 3;
+		queueCreateInfo[0].queueCount = 1;
 		queueCreateInfo[0].pQueuePriorities = queuePriorities.data();
 
 
@@ -368,17 +366,13 @@ namespace ScorchEngine {
 		switch (type) {
 		case(SEQueueType::Graphics):
 			for (SEQueue& queue : graphicsQueues) {
-				if (!queue.occupied) {
-					queue.occupied = true;
-					return &queue;
-				}
+				return &queue;
 			}
 		}
 		SELOG_ERR("Ran out of GPU queues!!");
 	}
 
 	void SEDevice::freeAvailableQueue(SEQueue* queue) {
-		queue->occupied = false;
 	}
 
 	VkCommandBuffer SEDevice::beginSingleTimeCommands() {
@@ -501,7 +495,7 @@ namespace ScorchEngine {
 	}
 
 	void SEDevice::copyBufferToImage(
-		VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
+		VkCommandBuffer commandBuffer, VkBuffer buffer, VkImage image, VkExtent3D resolution, uint32_t layerCount) {
 
 		VkBufferImageCopy region{};
 		region.bufferOffset = 0;
@@ -514,7 +508,7 @@ namespace ScorchEngine {
 		region.imageSubresource.layerCount = layerCount;
 
 		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = { width, height, 1 };
+		region.imageExtent = resolution;
 
 		vkCmdCopyBufferToImage(
 			commandBuffer,
@@ -526,7 +520,7 @@ namespace ScorchEngine {
 	}
 
 	void SEDevice::copyImageToBuffer(
-		VkCommandBuffer commandBuffer, VkImage image, VkImageLayout layout, VkBuffer buffer, uint32_t width, uint32_t height, uint32_t layerCount, uint32_t mipLevel) {
+		VkCommandBuffer commandBuffer, VkImage image, VkImageLayout layout, VkBuffer buffer, VkExtent3D resolution, uint32_t layerCount, uint32_t mipLevel) {
 		
 		VkBufferImageCopy region{};
 		region.bufferOffset = 0;
@@ -539,7 +533,7 @@ namespace ScorchEngine {
 		region.imageSubresource.layerCount = layerCount;
 
 		region.imageOffset = { 0, 0, 0 };
-		region.imageExtent = { width, height, 1 };
+		region.imageExtent = resolution;
 
 		vkCmdCopyImageToBuffer(
 			commandBuffer,
@@ -555,8 +549,7 @@ namespace ScorchEngine {
 		VkCommandBuffer commandBuffer, 
 		VkImage image, 
 		VkFormat format, 
-		uint32_t width, 
-		uint32_t height, 
+		VkExtent3D resolution,
 		uint32_t mipLevels,
 		uint32_t layerCount,
 		VkImageLayout finalLayout
@@ -581,9 +574,9 @@ namespace ScorchEngine {
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = layerCount;
 
-		int mipWidth = width;
-		int mipHeight = height;
-
+		int mipWidth = resolution.width;
+		int mipHeight = resolution.height;
+		int mipDepth = resolution.depth;
 		for (uint32_t i = 1; i < mipLevels; i++) {
 			//VkImageMemoryBarrier barrier{ ibarrier };
 			barrier.subresourceRange.baseMipLevel = i - 1;
@@ -597,14 +590,14 @@ namespace ScorchEngine {
 			VkImageBlit blit{};
 
 			blit.srcOffsets[0] = { 0, 0, 0 };
-			blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+			blit.srcOffsets[1] = { mipWidth, mipHeight, mipDepth };
 			blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			blit.srcSubresource.mipLevel = i - 1;
 			blit.srcSubresource.baseArrayLayer = 0;
 			blit.srcSubresource.layerCount = layerCount;
 			
 			blit.dstOffsets[0] = { 0, 0, 0 };
-			blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+			blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, mipDepth > 1 ? mipDepth / 2 : 1 };
 			blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			blit.dstSubresource.mipLevel = i;
 			blit.dstSubresource.baseArrayLayer = 0;
@@ -623,6 +616,7 @@ namespace ScorchEngine {
 
 			if (mipWidth > 1) mipWidth /= 2;
 			if (mipHeight > 1) mipHeight /= 2;
+			if (mipDepth > 1) mipDepth /= 2;
 		}
 
 		barrier.subresourceRange.baseMipLevel = mipLevels - 1;

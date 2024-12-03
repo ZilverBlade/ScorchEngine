@@ -13,6 +13,10 @@
 #include <scorch/controllers/camera_controller.h>
 #include <scorch/graphics/surface_material.h>
 #include <scorch/systems/rendering/shadow_map_system.h>
+#include <scorch/systems/ui/performance_viewer.h>
+#include <shudvk/vk_context.h>
+#include <fstream>
+#include <scorch/systems/rendering/vsdf_render_system.h>
 
 namespace ScorchEngine::Apps {
 	RenderApp::RenderApp(const char* name) : VulkanBaseApp(name)
@@ -31,10 +35,48 @@ namespace ScorchEngine::Apps {
 			.addBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // brdfLUT
 			.build();
 
-	
+		SHUD::VulkanContextCreateInfo uiContextCreate{};
+		uiContextCreate.mDevice = seDevice.getDevice();
+		uiContextCreate.mFramebufferFormat = seSwapChain->getSwapChainImageFormat();
+		uiContextCreate.mPhysicalDevice = seDevice.getPhysicalDevice();
+		uiContextCreate.mRenderPass = seSwapChain->getRenderPass();
+		uiContextCreate.mSwapChainImageCount = seSwapChain->getImageCount();
+
+		std::ifstream file("D:/Directories/Documents/Visual Studio 2019/Projects/ScorchEngine/vendor/SpearHUD/SHUDVulkan/shaders/shud.vert.spv", std::ios::binary);
+
+		// Stop eating new lines in binary mode!!!
+		file.unsetf(std::ios::skipws);
+
+		// get its size:
+		std::streampos fileSize;
+
+		file.seekg(0, std::ios::end);
+		fileSize = file.tellg();
+		file.seekg(0, std::ios::beg);
+
+		// reserve capacity
+		std::vector<char> vec;
+		vec.reserve(fileSize);
+
+		// read the data:
+		vec.insert(vec.begin(),
+			std::istream_iterator<char>(file),
+			std::istream_iterator<char>());
+
+		uiContextCreate.mVshCodeOverride = vec.data();
+		uiContextCreate.mVshCodeOverrideSize = vec.size();
+		SHUD::VulkanContext* uiContext = new SHUD::VulkanContext(uiContextCreate);
+
+		VkCommandBuffer singleTimeCommands = seDevice.beginSingleTimeCommands();
+		uiContext->CreateResources(singleTimeCommands);
+		seDevice.endSingleTimeCommands(singleTimeCommands);
+		uiContext->SetResolution({ (float)seWindow.getExtent().width,(float)seWindow.getExtent().height });
+
+		UIPerformanceViewer performanceViewer = UIPerformanceViewer(seDevice);
+
 		ShadowMapSystem* shadowMapSystem = new ShadowMapSystem(seDevice, *staticPool);
 
-		VkSampleCountFlagBits msaa = VK_SAMPLE_COUNT_8_BIT;
+		VkSampleCountFlagBits msaa = VK_SAMPLE_COUNT_1_BIT;
 		RenderSystem* renderSystem = new ForwardRenderSystem(
 			seDevice,
 			resolution, {
@@ -59,6 +101,13 @@ namespace ScorchEngine::Apps {
 			skyLightDescriptorLayout->getDescriptorSetLayout(),
 			msaa
 		);
+		VoxelSDFRenderSystem* sdfRenderSystem = new VoxelSDFRenderSystem(
+			seDevice,
+			renderSystem->getOpaqueRenderPass()->getRenderPass(),
+			globalUBODescriptorLayout->getDescriptorSetLayout(),
+			msaa
+		);
+
 		LightSystem lightSystem = LightSystem();
 
 		PostFX::Effect* screenCorrection = new PostFX::ScreenCorrection(
@@ -85,6 +134,11 @@ namespace ScorchEngine::Apps {
 		ResourceID clearCoatMaterial = resourceSystem->loadSurfaceMaterial("res/materials/paint.json");
 		ResourceID blankMaterial = resourceSystem->loadSurfaceMaterial("res/materials/blank.json");
 		ResourceID glassMaterial = resourceSystem->loadSurfaceMaterial("res/materials/glass.json");
+
+		ResourceID sphereMesh = resourceSystem->loadModel("res/models/sphere.fbx", { 16,16,16 });;
+		ResourceID cylinderMesh = resourceSystem->loadModel("res/models/cylinder.fbx", { 16,16,16 });;
+		ResourceID teapotMesh = resourceSystem->loadModel("res/models/teapot.fbx", {40,40,40 });;
+		
 		level = std::make_shared<Level>();
 		Actor cameraActor = level->createActor("cameraActor");
 		Actor lightActor = level->createActor("sun");
@@ -115,40 +169,39 @@ namespace ScorchEngine::Apps {
 			//}
 			//carActor.getTransform().translation = { 0.f, 0.f, 1.f };
 
-			
 			auto& floorM = floorActor.addComponent<MeshComponent>();
-			floorM.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
+			floorM.mesh = cylinderMesh;
 			for (const std::string& mapto : resourceSystem->getModel(floorM.mesh)->getSubmeshes()) {
 				floorM.materials[mapto] = blankMaterial;
 			}
-			floorActor.getTransform().translation = { 0.f, 0.f, 2.0f };
-			floorActor.getTransform().scale = { 50.0, 50.0, 0.01f };
+			floorActor.getTransform().translation = { 0.f, -100.0f, 0.f};
+			floorActor.getTransform().scale = { 50.0, 50.0, 50.f };
 
 			auto& msc2 = sphereActor.addComponent<MeshComponent>();
-			msc2.mesh = resourceSystem->loadModel("res/models/cylinder.fbx");
+			msc2.mesh = cylinderMesh;
 			for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
-				msc2.materials[mapto] = glassMaterial;//clearCoatMaterial;
+				msc2.materials[mapto] = blankMaterial;//clearCoatMaterial;
 			}
-			sphereActor.getTransform().translation = { 0.f, 0.f, 3.0f };
+			sphereActor.getTransform().translation = { 0.f, 3.0f, 0.f};
 
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
 				auto& meshactorm = meshactor.addComponent<MeshComponent>();
-				meshactorm.mesh = resourceSystem->loadModel("res/models/sphere.fbx");
+				meshactorm.mesh = sphereMesh;
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
-					meshactorm.materials[mapto] = glassMaterial;
+					meshactorm.materials[mapto] = blankMaterial;
 				}
 				meshactor.getTransform().translation = { 0.f, 3.f, 3.0f };
 			}
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
 				auto& meshactorm = meshactor.addComponent<MeshComponent>();
-				meshactorm.mesh = resourceSystem->loadModel("res/models/teapot.fbx");
+				meshactorm.mesh = teapotMesh;
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
-					meshactorm.materials[mapto] = glassMaterial;
+					meshactorm.materials[mapto] = blankMaterial;
 				}
 				meshactor.getTransform().translation = { 4.f, 3.f, 3.0f };
-				meshactor.getTransform().rotation = { -1.51, 0.0, 0.0 };
+				meshactor.getTransform().rotation = { 0.0, 0.0, 0.0 };
 				meshactor.getTransform().scale = { 100.0, 100.0, 100.0 };
 			}
 
@@ -157,12 +210,12 @@ namespace ScorchEngine::Apps {
 			auto& slc = skyboxActor.addComponent<SkyLightComponent>();
 			slc.environmentMap = resourceSystem->loadTextureCube("res/environmentmaps/skywater").id;
 			slc.intensity = 0.60f;
-			cameraActor.getTransform().translation = { 0.f, -1.f, 2.0f };
+			cameraActor.getTransform().translation = { 0.f,2.0f, -1.f};
 			{
 				lightActor.addComponent<DirectionalLightComponent>();
 				lightActor.addComponent<LightPropagationVolumeComponent>();
 				lightActor.getTransform().rotation.x = 0.54f;
-				lightActor.getTransform().rotation.z = 0.25f;
+				lightActor.getTransform().rotation.y = 0.25f;
 				lightActor.getComponent<DirectionalLightComponent>().intensity = 4.0f;
 				lightActor.getComponent<DirectionalLightComponent>().shadow.maxDistance = 16.0f;
 				lightActor.getComponent<LightPropagationVolumeComponent>().maxExtent = { 32, 32, 32 }; // coverage should be large for better results
@@ -183,6 +236,15 @@ namespace ScorchEngine::Apps {
 			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - oldTime).count();
 			oldTime = newTime;
 			glfwPollEvents();
+			uiContext->UpdateIOFrame();
+			uiContext->Pick();
+
+			performanceViewer.update(frameTime);
+			uiContext->GetDrawList()->Clear();
+			uiContext->GetDrawList()->FrameStart();
+			performanceViewer.renderFps(uiContext->GetDrawList(), { -100.f, 100.f });
+			performanceViewer.renderDtGraph(uiContext->GetDrawList(), { 50.f, 50.f }, { 400.f, 200.f });
+			uiContext->GetDrawList()->FrameEnd();
 
 			controller.moveTranslation(seWindow, frameTime, cameraActor);
 			controller.moveOrientation(seWindow, frameTime, cameraActor);
@@ -232,7 +294,7 @@ namespace ScorchEngine::Apps {
 			camera.setPerspectiveProjection(70.0f, seSwapChain->extentAspectRatio(), 0.01f, 128.f);
 
 			sphereActor.getTransform().translation.x = (sin(incrementTime) * 5.0);
-
+			
 			//incrementTime += frameTime;
 			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
 			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->updateParams();
@@ -284,6 +346,7 @@ namespace ScorchEngine::Apps {
 				renderSystem->beginOpaquePass(frameInfo);
 				frameInfo.skyLight = skyLightSystem->getDescriptorSet(frameIndex);
 				renderSystem->renderOpaque(frameInfo);
+				//sdfRenderSystem->renderSDFs(frameInfo);
 				if (pickedCube) {
 					skyboxSystem->render(frameInfo, skyLightSystem->getDescriptorSet(frameIndex));
 				}
@@ -292,9 +355,14 @@ namespace ScorchEngine::Apps {
 
 				seSwapChain->beginRenderPass(commandBuffer);
 				screenCorrection->render(frameInfo);
+				SHUD::VulkanFrameInfo uiFrameInfo;
+				uiFrameInfo.mCommandBuffer = commandBuffer;
+				uiFrameInfo.mFrameIndex = frameIndex;
+				uiContext->Render(&uiFrameInfo);
 				seSwapChain->endRenderPass(commandBuffer);
 
 				commandBuffers[frameIndex]->end();
+				uiContext->Cleanup();
 
 				seRenderer->submitCommandBuffers({ commandBuffers[frameIndex].get() });
 				seRenderer->submitQueue(seSwapChain->getSubmitInfo(&frameIndex), seSwapChain->getFence(frameIndex));
@@ -312,6 +380,7 @@ namespace ScorchEngine::Apps {
 				delete oldSwapChain;
 				renderSystem->resize({ extent.width, extent.height });
 				screenCorrection->resize({ extent.width, extent.height }, { renderSystem->getColorAttachment() });
+				uiContext->SetResolution({ (float)seWindow.getExtent().width, (float)seWindow.getExtent().height });
 				seWindow.resetWindowResizedFlag();
 			}
 		}
@@ -322,6 +391,7 @@ namespace ScorchEngine::Apps {
 		delete screenCorrection;
 		delete skyLightSystem;
 		delete skyboxSystem;
+		delete sdfRenderSystem;
 
 		delete resourceSystem;
 	}

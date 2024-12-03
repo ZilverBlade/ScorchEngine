@@ -18,11 +18,13 @@ namespace ScorchEngine {
 			delete material;
 		}
 	}
-	ResourceID ResourceSystem::loadModel(std::string path) {
+	ResourceID ResourceSystem::loadModel(std::string path, glm::ivec3 sdfResolution) {
+		SELOG_INF("Loading model %s", path.c_str());
 		ResourceID id = ResourceID(path);
 		auto bdr = SEModel::Builder();
 		bdr.loadModel(path);
-		modelAssets[id] = new SEModel(seDevice, bdr);
+		bdr.setSDFQuality(sdfResolution);
+		modelAssets[id] = new SEModel(seDevice, seDescriptorPool, bdr);
 		return id;
 	}
 	SEModel* ResourceSystem::getModel(ResourceID id) {
@@ -34,6 +36,7 @@ namespace ScorchEngine {
 		}
 	}
 	TextureResourceIDAttributes ResourceSystem::loadTexture2D(std::string path, bool srgb, bool linearSampler) {
+		SELOG_INF("Loading texture %s", path.c_str());
 		ResourceID id = ResourceID(path);
 		auto bdr = SETexture::Builder();
 		bdr.loadSTB2DImage(path);
@@ -59,6 +62,7 @@ namespace ScorchEngine {
 		}
 	}
 	TextureResourceIDAttributes ResourceSystem::loadTextureCube(std::string path, bool srgb, bool linearSampler) {
+		SELOG_INF("Loading cubemap %s", path.c_str());
 		ResourceID id = ResourceID(path);
 		auto bdr = SETexture::Builder();
 		bdr.loadSTBCubeFolder(path);
@@ -83,6 +87,7 @@ namespace ScorchEngine {
 		}
 	}
 	ResourceID ResourceSystem::loadSurfaceMaterial(std::string path) {
+		SELOG_INF("Loading surface material %s", path.c_str());
 		ResourceID id = ResourceID(path);
 		SESurfaceMaterial* material = new SESurfaceMaterial(seDevice, seDescriptorPool, this);
 		material->load(path);
