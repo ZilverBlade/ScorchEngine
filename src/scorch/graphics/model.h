@@ -40,13 +40,14 @@ namespace ScorchEngine {
 				std::vector<uint32_t> indices{};
 			};
 			bool loadModel(const std::string& filepath);
+		private:
+			bool decodeJsonProperties(const std::string& filepath);
 			void processNode(aiNode* node, const aiScene* scene);
 			void loadSubmesh(aiMesh* mesh, const aiScene* scene);
-			// pixels per metre
-			void setSDFQuality(glm::ivec3 resolution);
 			std::shared_ptr<std::unordered_map<std::string, ResourceID>> loadMaterials(SEDevice& device, ResourceSystem* resourceSystem);
 
 		private:
+			float importScale = 1.0f;
 			Assimp::Importer importer;
 			const aiScene* scene;
 			std::unordered_map<std::string, Submesh> submeshes{};
@@ -55,6 +56,7 @@ namespace ScorchEngine {
 			std::string filePath;
 			std::string modelPath;
 			glm::ivec3 sdfResolution;
+			float sdfConservativeFactor;
 			friend class SEModel;
 		};
 

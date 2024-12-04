@@ -18,12 +18,11 @@ namespace ScorchEngine {
 			delete material;
 		}
 	}
-	ResourceID ResourceSystem::loadModel(std::string path, glm::ivec3 sdfResolution) {
+	ResourceID ResourceSystem::loadModel(std::string path) {
 		SELOG_INF("Loading model %s", path.c_str());
 		ResourceID id = ResourceID(path);
 		auto bdr = SEModel::Builder();
 		bdr.loadModel(path);
-		bdr.setSDFQuality(sdfResolution);
 		modelAssets[id] = new SEModel(seDevice, seDescriptorPool, bdr);
 		return id;
 	}

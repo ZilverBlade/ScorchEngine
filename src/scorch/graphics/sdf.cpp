@@ -13,8 +13,10 @@ namespace ScorchEngine {
 		this->triangles = triangles;
 		return *this;
 	}
-	SEVoxelSDF::Builder& SEVoxelSDF::Builder::setResolution(glm::ivec3 dim) {
+	SEVoxelSDF::Builder& SEVoxelSDF::Builder::setResolution(glm::ivec3 dim, float conservativity) {
 		this->resolution = dim;
+		this->conservativity = conservativity;
+		assert(conservativity >= 0.0f && conservativity <= 1.0f);
 		return *this;
 	}
 	void SEVoxelSDF::Builder::build() {
@@ -49,6 +51,7 @@ namespace ScorchEngine {
 							glm::vec3 pointInSpace = (uvSpace * 2.0f - 1.0f) * boundsHalfExtent + boundsCenter;
 
 							findClosestTriangle(pointInSpace, distanceFieldPoints[index]);
+
 							++index;
 						}
 					}
@@ -60,6 +63,20 @@ namespace ScorchEngine {
 		for (auto& dispatch : dispatches) {
 			if (dispatch.joinable()) {
 				dispatch.join();
+			}
+		}
+
+		// pinch all samples closer to the surfaces
+		if (conservativity > 0.0f) {
+			glm::vec3 conservativePinchAxes = boundsHalfExtent / (glm::vec3)resolution; // half extent of 1 pixel
+			float conservativePinchRadius = conservativity * std::min(conservativePinchAxes.x, std::min(conservativePinchAxes.y, conservativePinchAxes.z));
+
+			for (float& point : distanceFieldPoints) {
+				if (point < 0.0f) {
+					point = point + conservativePinchRadius;
+				} else {
+					point = point - conservativePinchRadius;
+				}
 			}
 		}
 	}
@@ -134,7 +151,7 @@ namespace ScorchEngine {
 	void SEVoxelSDF::createVoxel(const SEVoxelSDF::Builder& builder) {
 		SEEmptyTextureCreateInfo createInfo{};
 		createInfo.dimensions = builder.resolution;
-		createInfo.format = VK_FORMAT_R32_SFLOAT;
+		createInfo.format = VK_FORMAT_R16_SFLOAT;
 		createInfo.imageType = VK_IMAGE_TYPE_3D;
 		createInfo.layers = 1;
 		createInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -151,27 +168,27 @@ namespace ScorchEngine {
 			//assuming neither NAN nor +-INF( IEEE 754-2008  standard)
 			uint16_t half = 0;
 			uint32_t single = reinterpret_cast<const uint32_t&>(builder.distanceFieldPoints[i]);
-			int32_t exponent_e127 = ((single & 0x7F8) >> 23);
+			int32_t exponent_e127 = ((single & 0x7F800000) >> 23);
 			half |= (single & 0x80000000) >> 16; // sign
 			int32_t mantissa23 = single & 0x7FFFFF;
-			int32_t mantissa9 = mantissa23 >> 14; // truncate bits after the 9th MSB
+			int32_t mantissa9 = mantissa23 >> 13; // truncate bits after the 10th MSB
 			half |= mantissa9;
 			if (exponent_e127 != 0) {
 				int32_t exponent_e15 = std::clamp(exponent_e127 - 127, -14, 15) + 15;
-				half |= exponent_e15 << 9;
+				half |= exponent_e15 << 10;
 			}
 			fp16distances[i] = half;
 		}
 
 		SEBuffer stagingBuffer = SEBuffer(
 			seDevice,
-			4,
+			2,
 			fp16distances.size(),
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT
 		);
 		stagingBuffer.map();
-		stagingBuffer.writeToBuffer(builder.distanceFieldPoints.data());
+		stagingBuffer.writeToBuffer(fp16distances.data());
 		stagingBuffer.flush();
 		VkCommandBuffer cmb = seDevice.beginSingleTimeCommands();
 		seDevice.transitionImageLayout(cmb, distanceFieldTexture->getImage(), createInfo.format,

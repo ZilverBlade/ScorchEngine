@@ -22,7 +22,7 @@ namespace ScorchEngine {
 		struct Builder {
 			Builder& setVertices(std::vector<glm::vec3> vertices);
 			Builder& setTriangles(std::vector<std::array<uint32_t, 3>> triangles);
-			Builder& setResolution(glm::ivec3 dim);
+			Builder& setResolution(glm::ivec3 dim, float conservativity = 0.0f);
 			void build();
 		private:
 			int findClosestTriangle(glm::vec3 point, float& outSignedDist);
@@ -31,6 +31,7 @@ namespace ScorchEngine {
 			std::vector<glm::vec3> vertices;
 			std::vector<std::array<uint32_t, 3>> triangles;
 			glm::ivec3 resolution;	
+			float conservativity;
 			glm::vec3 boundsHalfExtent;
 			glm::vec3 boundsCenter;
 			std::vector<float> distanceFieldPoints;

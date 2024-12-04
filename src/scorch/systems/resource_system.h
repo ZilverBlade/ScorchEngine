@@ -35,7 +35,7 @@ namespace ScorchEngine {
 		ResourceSystem(const ResourceSystem&) = delete;
 		ResourceSystem& operator=(const ResourceSystem&) = delete;
 
-		ResourceID loadModel(std::string path, glm::ivec3 sdfResolution);
+		ResourceID loadModel(std::string path);
 		SEModel* getModel(ResourceID id);
 
 		TextureResourceIDAttributes loadTexture2D(std::string path, bool srgb, bool linearSampler);

@@ -1,0 +1,12 @@
+{
+	"name": "Cube",
+	"config": {
+		"importScale": 1.0,
+		"enableSdf": true,
+		"sdfResolution": [16,16,16],
+		"sdfConservativeFactor": 0.0
+	},
+	"materials": [
+		"res/materials/blank.json"
+	]
+}

@@ -6,10 +6,10 @@
 #include <scorch/systems/resource_system.h>
 #include <scorch/graphics/sdf.h>
 #include <filesystem>
+#include <simdjson.h>
 
 namespace ScorchEngine {
 	bool SEModel::Builder::loadModel(const std::string& filepath) {
-		filePath = filepath;
 		uint32_t processFlags =
 			aiProcess_Triangulate |
 			aiProcess_OptimizeMeshes |
@@ -21,16 +21,54 @@ namespace ScorchEngine {
 			aiProcess_FlipUVs;
 
 		modelPath = filepath.substr(0, filepath.find_last_of("/"));
-		scene = importer.ReadFile(filepath, processFlags);
+		std::string name = filepath.substr(filepath.find_last_of("/") + 1,
+			filepath.find_last_of(".") - filepath.find_last_of("/") - 1);
+		for (auto& p : std::filesystem::directory_iterator(modelPath)) {
+			std::string file_name = p.path().filename().string();
+			if (file_name.find(name) == 0) {
+				filePath = modelPath + "/" + file_name;
+				format = p.path().filename().extension().string().substr(1);
+				break;
+			}
+		}
+		if (filePath.empty()) {
+			throw std::runtime_error("model does not exist! " + filepath);
+		}
+		decodeJsonProperties(filepath);
+
+		scene = importer.ReadFile(filePath, processFlags);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 			SELOG_ERR("Error importing file '%s': %s", filepath.c_str(), importer.GetErrorString());
 			return false;
 		}
 
-		format = filepath.substr(filepath.find_last_of(".") + 1);
 
 		processNode(scene->mRootNode, scene);
+		return true;
+	}
+	bool SEModel::Builder::decodeJsonProperties(const std::string& filepath) {
+		simdjson::dom::parser parser;
+		simdjson::padded_string json = simdjson::padded_string::load(filepath);
+		const auto& data = parser.parse(json);
+		if (data.error() != simdjson::error_code::SUCCESS) {
+			throw std::runtime_error("simdjson parser error");
+		}
+		auto& config = data["config"];
+
+		if (config["importScale"].error() == simdjson::error_code::SUCCESS) {
+			this->importScale = config["importScale"].get_double().value();
+		}
+		if (config["sdfResolution"].error() == simdjson::error_code::SUCCESS) {
+			this->sdfResolution = {
+				config["sdfResolution"].get_array().at(0).get_int64().value(),
+				config["sdfResolution"].get_array().at(1).get_int64().value(),
+				config["sdfResolution"].get_array().at(2).get_int64().value()
+			};
+		}
+		if (config["sdfConservativeFactor"].error() == simdjson::error_code::SUCCESS) {
+			this->sdfConservativeFactor = config["sdfConservativeFactor"].get_double().value();
+		}
 		return true;
 	}
 	void SEModel::Builder::processNode(aiNode* node, const aiScene* scene) {
@@ -45,11 +83,11 @@ namespace ScorchEngine {
 		}
 	}
 	void SEModel::Builder::loadSubmesh(aiMesh* mesh, const aiScene* scene) {
-		float factor{ 1.0f };
+		float factor = this->importScale;
 		const uint32_t index = mesh->mMaterialIndex;
 		aiMaterial* material = scene->mMaterials[index];
 		std::string materialSlot = material->GetName().C_Str();
-		if (this->format == "fbx" && this->filePath != "res/models/teapot.fbx") factor *= 0.01f; // fbx unit is in cm for some reason
+		if (this->format == "fbx") factor *= 0.01f; // fbx unit is in cm for some reason
 		if (this->format == "gltf") materialSlot = "material_" + std::to_string(index); // cant reliably get material slot name with gltf
 
 		if (submeshes.find(materialSlot) == submeshes.end()) {
@@ -86,10 +124,6 @@ namespace ScorchEngine {
 			for (uint32_t j = 0; j < face.mNumIndices; j++)
 				submesh.indices.push_back(face.mIndices[j]);
 		}
-	}
-
-	void SEModel::Builder::setSDFQuality(glm::ivec3 resolution) {
-		sdfResolution = resolution;
 	}
 
 	std::shared_ptr<std::unordered_map<std::string, ResourceID>>
@@ -276,7 +310,7 @@ namespace ScorchEngine {
 		SEVoxelSDF::Builder sdfBuilder;
 		sdfBuilder	.setVertices(vertices)
 					.setTriangles(triangles)
-					.setResolution(builder.sdfResolution)
+					.setResolution(builder.sdfResolution, builder.sdfConservativeFactor)
 					.build();
 		sdf = new SEVoxelSDF(seDevice, descriptorPool, sdfBuilder);
 	}

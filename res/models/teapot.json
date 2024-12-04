@@ -1,0 +1,12 @@
+{
+	"name": "Utah Teatpot",
+	"config": {
+		"importScale": 100.0,
+		"enableSdf": true,
+		"sdfResolution": [40,40,40],
+		"sdfConservativeFactor": 0.0
+	},
+	"materials": [
+		"res/materials/blank.json"
+	]
+}
