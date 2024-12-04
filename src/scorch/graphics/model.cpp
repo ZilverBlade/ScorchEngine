@@ -49,7 +49,7 @@ namespace ScorchEngine {
 		const uint32_t index = mesh->mMaterialIndex;
 		aiMaterial* material = scene->mMaterials[index];
 		std::string materialSlot = material->GetName().C_Str();
-		if (this->format == "fbx") factor *= 0.01f; // fbx unit is in cm for some reason
+		if (this->format == "fbx" && this->filePath != "res/models/teapot.fbx") factor *= 0.01f; // fbx unit is in cm for some reason
 		if (this->format == "gltf") materialSlot = "material_" + std::to_string(index); // cant reliably get material slot name with gltf
 
 		if (submeshes.find(materialSlot) == submeshes.end()) {

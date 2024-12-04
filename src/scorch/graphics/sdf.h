@@ -26,8 +26,7 @@ namespace ScorchEngine {
 			void build();
 		private:
 			int findClosestTriangle(glm::vec3 point, float& outSignedDist);
-			float distanceToTriangle(glm::vec3 point, std::array<uint32_t, 3> triangle);
-			glm::vec4 planeFromTriangle(std::array<uint32_t, 3> triangle);
+			float signedDistanceSquareToTriangle(glm::vec3 point, std::array<uint32_t, 3> triangle);
 
 			std::vector<glm::vec3> vertices;
 			std::vector<std::array<uint32_t, 3>> triangles;

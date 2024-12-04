@@ -2,6 +2,8 @@
 #extension GL_GOOGLE_include_directive : enable
 
 layout (location = 0) in vec3 ray;
+layout (location = 1) in vec3 local;
+layout (location = 2) in vec3 world;
 layout (location = 0) out vec4 outColor;
 
 #include "global_ubo.glsl"
@@ -9,38 +11,46 @@ layout (location = 0) out vec4 outColor;
 layout (set = 1, binding = 0) uniform sampler3D sdf;
 
 layout (push_constant) uniform Push {
-	mat4 inverseTransform;
+	vec4 translation;
 	vec3 halfExtent;
+	float time;
 } push;
 
-
 vec3 worldToVoxelSpace(vec3 p) {
-	vec3 cc = (push.inverseTransform * vec4(p, 1.0)).xyz / push.halfExtent;
+	vec3 cc = (p - push.translation.xyz) / push.halfExtent;
 	return cc * 0.5 + 0.5;
 }
 
-float THRESHOLD = 0.001;
-int MAX_STEPS = 8;
+float THRESHOLD = 0.01;
+int MAX_STEPS = 32;
 
 void main() {
-	vec3 ro = ubo.invViewMatrix[3].xyz;
+	vec3 ro = world;
 	vec3 rd = normalize(ray);
 
+	vec3 nor = cross(dFdy(world), dFdx(world));
+
 	bool hit = false;
-	for (int i = 0; i < MAX_STEPS; ++i) {
-		float closest = texture(sdf, worldToVoxelSpace(ro)).r;
-		if (closest < THRESHOLD) {
-			hit = true;
+	float stepLength = 0.01;
+	float closest = 100000.0;
+	/*for (int i = 0; i < MAX_STEPS; ++i) {
+		vec3 uv = worldToVoxelSpace(ro);
+		closest = min(closest, texture(sdf, uv).r);
+		if (closest < 0.0) {
 			break;
 		}
-		ro += rd * closest;
+		//if (closest < THRESHOLD) {
+		//	hit = true;
+		//	break;
+		//}
+		ro += rd * stepLength;
+	}*/
+vec3 debug = clamp(texture(sdf, vec3(local.x, push.time, local.z) * 0.5 + 0.5).rrr, 0.0, 1.0);
+	outColor = vec4(debug, 1.0);
+	
+	if (debug.r > 0.0) {
+		discard;
 	}
+	outColor = vec4(1.0);
 
-	if (hit) {
-		vec3 nor = normalize(cross(dFdx(ro) - ro, dFdy(ro) - ro));
-		float col = dot(rd, nor);
-		outColor = vec4(col.xxx, 1.0);
-	} else {
-		outColor = vec4(0..xxx, 1.0);
-	}
 }

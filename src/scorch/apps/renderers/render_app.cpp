@@ -41,30 +41,6 @@ namespace ScorchEngine::Apps {
 		uiContextCreate.mPhysicalDevice = seDevice.getPhysicalDevice();
 		uiContextCreate.mRenderPass = seSwapChain->getRenderPass();
 		uiContextCreate.mSwapChainImageCount = seSwapChain->getImageCount();
-
-		std::ifstream file("D:/Directories/Documents/Visual Studio 2019/Projects/ScorchEngine/vendor/SpearHUD/SHUDVulkan/shaders/shud.vert.spv", std::ios::binary);
-
-		// Stop eating new lines in binary mode!!!
-		file.unsetf(std::ios::skipws);
-
-		// get its size:
-		std::streampos fileSize;
-
-		file.seekg(0, std::ios::end);
-		fileSize = file.tellg();
-		file.seekg(0, std::ios::beg);
-
-		// reserve capacity
-		std::vector<char> vec;
-		vec.reserve(fileSize);
-
-		// read the data:
-		vec.insert(vec.begin(),
-			std::istream_iterator<char>(file),
-			std::istream_iterator<char>());
-
-		uiContextCreate.mVshCodeOverride = vec.data();
-		uiContextCreate.mVshCodeOverrideSize = vec.size();
 		SHUD::VulkanContext* uiContext = new SHUD::VulkanContext(uiContextCreate);
 
 		VkCommandBuffer singleTimeCommands = seDevice.beginSingleTimeCommands();
@@ -137,6 +113,7 @@ namespace ScorchEngine::Apps {
 
 		ResourceID sphereMesh = resourceSystem->loadModel("res/models/sphere.fbx", { 16,16,16 });;
 		ResourceID cylinderMesh = resourceSystem->loadModel("res/models/cylinder.fbx", { 16,16,16 });;
+		ResourceID cubeMesh = resourceSystem->loadModel("res/models/cube.fbx", { 16,16,16 });;
 		ResourceID teapotMesh = resourceSystem->loadModel("res/models/teapot.fbx", {40,40,40 });;
 		
 		level = std::make_shared<Level>();
@@ -174,11 +151,11 @@ namespace ScorchEngine::Apps {
 			for (const std::string& mapto : resourceSystem->getModel(floorM.mesh)->getSubmeshes()) {
 				floorM.materials[mapto] = blankMaterial;
 			}
-			floorActor.getTransform().translation = { 0.f, -100.0f, 0.f};
-			floorActor.getTransform().scale = { 50.0, 50.0, 50.f };
+			//floorActor.getTransform().translation = { 0.f, -100.0f, 0.f};
+			//floorActor.getTransform().scale = { 50.0, 50.0, 50.f };
 
 			auto& msc2 = sphereActor.addComponent<MeshComponent>();
-			msc2.mesh = cylinderMesh;
+			msc2.mesh = sphereMesh;
 			for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
 				msc2.materials[mapto] = blankMaterial;//clearCoatMaterial;
 			}
@@ -187,7 +164,7 @@ namespace ScorchEngine::Apps {
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
 				auto& meshactorm = meshactor.addComponent<MeshComponent>();
-				meshactorm.mesh = sphereMesh;
+				meshactorm.mesh = teapotMesh;
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
 					meshactorm.materials[mapto] = blankMaterial;
 				}
@@ -196,13 +173,13 @@ namespace ScorchEngine::Apps {
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
 				auto& meshactorm = meshactor.addComponent<MeshComponent>();
-				meshactorm.mesh = teapotMesh;
+				meshactorm.mesh = cubeMesh;
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
 					meshactorm.materials[mapto] = blankMaterial;
 				}
 				meshactor.getTransform().translation = { 4.f, 3.f, 3.0f };
-				meshactor.getTransform().rotation = { 0.0, 0.0, 0.0 };
-				meshactor.getTransform().scale = { 100.0, 100.0, 100.0 };
+				//meshactor.getTransform().rotation = { 0.0, 0.0, 0.0 };
+				//meshactor.getTransform().scale = { 100.0, 100.0, 100.0 };
 			}
 
 			Actor skyboxActor = level->createActor("skyboxActor");
@@ -341,15 +318,15 @@ namespace ScorchEngine::Apps {
 				renderData[frameIndex].ssboBuffer->writeToBuffer(renderData[frameIndex].sceneSSBO.get());
 				renderData[frameIndex].ssboBuffer->flush();
 
-				renderSystem->renderEarlyDepth(frameInfo);
+				//renderSystem->renderEarlyDepth(frameInfo);
 
 				renderSystem->beginOpaquePass(frameInfo);
 				frameInfo.skyLight = skyLightSystem->getDescriptorSet(frameIndex);
-				renderSystem->renderOpaque(frameInfo);
-				//sdfRenderSystem->renderSDFs(frameInfo);
+				//renderSystem->renderOpaque(frameInfo);
 				if (pickedCube) {
 					skyboxSystem->render(frameInfo, skyLightSystem->getDescriptorSet(frameIndex));
 				}
+				sdfRenderSystem->renderSDFs(frameInfo);
 				renderSystem->renderTranslucent(frameInfo);
 				renderSystem->endOpaquePass(frameInfo);
 

@@ -39,7 +39,7 @@ namespace ScorchEngine {
 				std::vector<glm::vec3> vertexTangents{};
 				std::vector<uint32_t> indices{};
 			};
-			bool loadModel(const std::string &filepath);
+			bool loadModel(const std::string& filepath);
 			void processNode(aiNode* node, const aiScene* scene);
 			void loadSubmesh(aiMesh* mesh, const aiScene* scene);
 			// pixels per metre
