@@ -13,44 +13,37 @@ layout (set = 1, binding = 0) uniform sampler3D sdf;
 layout (push_constant) uniform Push {
 	vec4 translation;
 	vec3 halfExtent;
-	float time;
 } push;
 
 vec3 worldToVoxelSpace(vec3 p) {
-	vec3 cc = (p - push.translation.xyz) / push.halfExtent;
+	vec3 cc = (p - push.translation.xyz) / (push.halfExtent / 2.0);
 	return cc * 0.5 + 0.5;
 }
 
-float THRESHOLD = 0.01;
+float THRESHOLD = 0.001;
 int MAX_STEPS = 32;
 
 void main() {
 	vec3 ro = world;
 	vec3 rd = normalize(ray);
 
-	vec3 nor = cross(dFdy(world), dFdx(world));
 
-	bool hit = false;
-	float stepLength = 0.01;
-	float closest = 100000.0;
-	/*for (int i = 0; i < MAX_STEPS; ++i) {
+	float closest = 1000000000.0;
+	for (int i = 0; i < MAX_STEPS; ++i) {
 		vec3 uv = worldToVoxelSpace(ro);
-		closest = min(closest, texture(sdf, uv).r);
-		if (closest < 0.0) {
+		closest = texture(sdf, uv).r;
+		if (closest < THRESHOLD) {
 			break;
 		}
-		//if (closest < THRESHOLD) {
-		//	hit = true;
-		//	break;
-		//}
-		ro += rd * stepLength;
-	}*/
-vec3 debug = clamp(texture(sdf, vec3(local.x, push.time, local.z) * 0.5 + 0.5).rrr, 0.0, 1.0);
-	outColor = vec4(debug, 1.0);
+		ro += rd * closest;
+	}
 	
-	if (debug.r > 0.0) {
+	if (closest > THRESHOLD) {
 		discard;
 	}
-	outColor = vec4(1.0);
+	vec3 nor = normalize(cross(dFdy(ro), dFdx(ro)));
+	vec3 dir = vec3(-1.0, -1.0, 0.5);
+	vec3 col = clamp(dot(nor, -dir) * vec3(1.0), 0..xxx, 1..xxx);
+	outColor = vec4(col, 1.0);
 
 }

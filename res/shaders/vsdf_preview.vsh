@@ -11,13 +11,12 @@ layout (location = 2) out vec3 world;
 layout (push_constant) uniform Push {
 	vec4 translation;
 	vec3 halfExtent;
-	float time;
 } push;
 
 void main() {
-	vec4 worldPos = vec4(vertices[gl_VertexIndex] * vec3(push.halfExtent.x, 0.01, push.halfExtent.z) + push.translation.xyz, 1.0);
+	vec4 worldPos = vec4(vertices[gl_VertexIndex] * push.halfExtent + push.translation.xyz, 1.0);
 	ray = worldPos.xyz - ubo.invViewMatrix[3].xyz;
-	local = vertices[gl_VertexIndex] * 2.0;
+	local = vertices[gl_VertexIndex];
 	world = worldPos.xyz;
 	gl_Position = ubo.viewProjMatrix * worldPos;
 	

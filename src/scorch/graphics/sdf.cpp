@@ -28,8 +28,8 @@ namespace ScorchEngine {
 			boundsMax = glm::max(vert, boundsMax);
 		}
 		// overcompensate to have a valid SDF distance on the borders
-		boundsMin -= 1.0F / (glm::vec3)resolution;
-		boundsMax += 1.0F / (glm::vec3)resolution;
+		boundsMin -= 1.5F / (glm::vec3)resolution;
+		boundsMax += 1.5F / (glm::vec3)resolution;
 
 		boundsHalfExtent = (boundsMax - boundsMin) / 2.0f;
 		boundsCenter = (boundsMax + boundsMin) / 2.0f;

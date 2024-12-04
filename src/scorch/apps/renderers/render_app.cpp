@@ -112,7 +112,7 @@ namespace ScorchEngine::Apps {
 		ResourceID glassMaterial = resourceSystem->loadSurfaceMaterial("res/materials/glass.json");
 
 		ResourceID sphereMesh = resourceSystem->loadModel("res/models/sphere.fbx", { 16,16,16 });;
-		ResourceID cylinderMesh = resourceSystem->loadModel("res/models/cylinder.fbx", { 16,16,16 });;
+		ResourceID cylinderMesh = resourceSystem->loadModel("res/models/cylinder.fbx", { 32,32,8 });;
 		ResourceID cubeMesh = resourceSystem->loadModel("res/models/cube.fbx", { 16,16,16 });;
 		ResourceID teapotMesh = resourceSystem->loadModel("res/models/teapot.fbx", {40,40,40 });;
 		
@@ -151,6 +151,7 @@ namespace ScorchEngine::Apps {
 			for (const std::string& mapto : resourceSystem->getModel(floorM.mesh)->getSubmeshes()) {
 				floorM.materials[mapto] = blankMaterial;
 			}
+			floorActor.getTransform().translation = { 3.f, 3.0f, 0.f };
 			//floorActor.getTransform().translation = { 0.f, -100.0f, 0.f};
 			//floorActor.getTransform().scale = { 50.0, 50.0, 50.f };
 
@@ -159,7 +160,7 @@ namespace ScorchEngine::Apps {
 			for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
 				msc2.materials[mapto] = blankMaterial;//clearCoatMaterial;
 			}
-			sphereActor.getTransform().translation = { 0.f, 3.0f, 0.f};
+			sphereActor.getTransform().translation = { 0.f, 3.0f, 0.f };
 
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
@@ -168,7 +169,7 @@ namespace ScorchEngine::Apps {
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
 					meshactorm.materials[mapto] = blankMaterial;
 				}
-				meshactor.getTransform().translation = { 0.f, 3.f, 3.0f };
+				meshactor.getTransform().translation = { 6.f, 3.f, 0.0f };
 			}
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
@@ -177,7 +178,7 @@ namespace ScorchEngine::Apps {
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
 					meshactorm.materials[mapto] = blankMaterial;
 				}
-				meshactor.getTransform().translation = { 4.f, 3.f, 3.0f };
+				meshactor.getTransform().translation = { 9.f, 3.f, 0.0f };
 				//meshactor.getTransform().rotation = { 0.0, 0.0, 0.0 };
 				//meshactor.getTransform().scale = { 100.0, 100.0, 100.0 };
 			}

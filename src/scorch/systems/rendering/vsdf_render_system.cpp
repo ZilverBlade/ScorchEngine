@@ -10,7 +10,6 @@ namespace ScorchEngine {
 	struct Push {
 		glm::vec4 translation;
 		glm::vec3 halfExtent;
-		float time;
 	};
 	VoxelSDFRenderSystem::VoxelSDFRenderSystem(SEDevice& device, VkRenderPass renderPass, 
 		VkDescriptorSetLayout uboLayout, VkSampleCountFlagBits msaaSamples)	
@@ -23,8 +22,6 @@ namespace ScorchEngine {
 		delete pipelineLayout;
 	}
 	void VoxelSDFRenderSystem::renderSDFs(const FrameInfo& frameInfo) {
-		static float time = 0.0f;
-		time += frameInfo.frameTime;
 		pipeline->bind(frameInfo.commandBuffer);
 		for (entt::entity ent : frameInfo.level->getRegistry().view<TransformComponent, MeshComponent>()) {
 			Actor actor = { ent, frameInfo.level.get() };
@@ -46,15 +43,11 @@ namespace ScorchEngine {
 				nullptr
 			);
 
-			for (float y = -1.0; y <= 1.0; y += 0.02f) {
-				Push pushData;
-				pushData.translation = { actor.getTransform().translation, 1.0f };
-				pushData.translation.y += 0.25 * y * pushData.halfExtent.y;
-				pushData.halfExtent = 2.0f * model->getSDF().getHalfExtent();
-				pushData.time = y;
-				push.push(frameInfo.commandBuffer, pipelineLayout->getPipelineLayout(), &pushData);
-				vkCmdDraw(frameInfo.commandBuffer, 36, 1, 0, 0);
-			}
+			Push pushData;
+			pushData.translation = { actor.getTransform().translation, 1.0f };
+			pushData.halfExtent = 2.0f * model->getSDF().getHalfExtent();
+			push.push(frameInfo.commandBuffer, pipelineLayout->getPipelineLayout(), &pushData);
+			vkCmdDraw(frameInfo.commandBuffer, 36, 1, 0, 0);
 		}
 	}
 	void VoxelSDFRenderSystem::createPipelineLayout(VkDescriptorSetLayout uboLayout) {
