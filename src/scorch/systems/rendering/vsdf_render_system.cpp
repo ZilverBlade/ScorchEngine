@@ -8,8 +8,10 @@
 
 namespace ScorchEngine {
 	struct Push {
-		glm::vec4 translation;
+		glm::mat4 invTransform;
 		glm::vec3 halfExtent;
+		int align;
+		glm::vec3 scale;
 	};
 	VoxelSDFRenderSystem::VoxelSDFRenderSystem(SEDevice& device, VkRenderPass renderPass, 
 		VkDescriptorSetLayout uboLayout, VkSampleCountFlagBits msaaSamples)	
@@ -42,10 +44,13 @@ namespace ScorchEngine {
 				0,
 				nullptr
 			);
-
+			auto& transform = actor.getTransform();
 			Push pushData;
-			pushData.translation = { actor.getTransform().translation, 1.0f };
-			pushData.halfExtent = 2.0f * model->getSDF().getHalfExtent();
+			glm::mat4 transformMat = transform.getTransformMatrix();
+			transformMat[3] +=glm::vec4( model->getSDF().getCenter(), 0.0f);
+			pushData.invTransform = glm::inverse(transformMat);
+			pushData.halfExtent = model->getSDF().getHalfExtent();
+			pushData.scale = transform.scale;
 			push.push(frameInfo.commandBuffer, pipelineLayout->getPipelineLayout(), &pushData);
 			vkCmdDraw(frameInfo.commandBuffer, 36, 1, 0, 0);
 		}
@@ -64,8 +69,8 @@ namespace ScorchEngine {
 	void VoxelSDFRenderSystem::createGraphicsPipeline(VkRenderPass renderPass, VkSampleCountFlagBits msaaSamples) {
 		SEGraphicsPipelineConfigInfo configInfo = SEGraphicsPipelineConfigInfo(1);
 		configInfo.setSampleCount(msaaSamples);
-		configInfo.disableDepthTest();
-		configInfo.disableDepthWrite();
+		//configInfo.disableDepthTest();
+		//configInfo.disableDepthWrite();
 		configInfo.setCullMode(VK_CULL_MODE_FRONT_BIT);
 		configInfo.renderPass = renderPass;
 		configInfo.pipelineLayout = pipelineLayout->getPipelineLayout();

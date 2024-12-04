@@ -53,6 +53,9 @@ namespace ScorchEngine {
 		glm::vec3 getHalfExtent() {
 			return halfExtent;
 		}
+		glm::vec3 getCenter() {
+			return center;
+		}
 		glm::ivec3 getResolution() {
 			return distanceFieldTexture->getDimensions();
 		}
@@ -67,6 +70,7 @@ namespace ScorchEngine {
 		std::unique_ptr<SEDescriptorSetLayout> descriptorSetLayout;
 
 		glm::vec3 halfExtent;
+		glm::vec3 center;
 
 		VkDescriptorSet distanceFieldDescriptor=nullptr;
 		SEEmptyTexture* distanceFieldTexture;

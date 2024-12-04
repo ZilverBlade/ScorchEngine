@@ -11,17 +11,20 @@ layout (location = 0) out vec4 outColor;
 layout (set = 1, binding = 0) uniform sampler3D sdf;
 
 layout (push_constant) uniform Push {
-	vec4 translation;
+	mat4 invTransform;
 	vec3 halfExtent;
+	vec3 scale;
 } push;
 
 
-float THRESHOLD = 0.01;
-int MAX_STEPS = 32;
-float EPSILON = 0.004;
+float THRESHOLD = 0.015;
+int MAX_STEPS = 64;
+float EPSILON = 0.02;
+
+mat3 rotationMatrix;
 
 vec3 worldToVoxelSpace(vec3 p) {
-	vec3 cc = (p - push.translation.xyz) / (push.halfExtent / 2.0);
+	vec3 cc = (push.invTransform * vec4(p, 1.0)).xyz / (push.halfExtent);
 	return cc * 0.5 + 0.5;
 }
 
@@ -29,9 +32,11 @@ vec2 sceneSDF(vec3 ro) {
 	vec3 start = ro;
 	vec3 rd = normalize(ray);
 	float closest = 1000000000.0;
+	//float closestScale = dot(push.scale, abs(rotationMatrix * rd));
+	float closestScale =  min(push.scale.x, min(push.scale.y, push.scale.z));
 	for (int i = 0; i < MAX_STEPS; ++i) {
 		vec3 uv = worldToVoxelSpace(ro);
-		closest = texture(sdf, uv).r;
+		closest = closestScale * texture(sdf, uv).r;
 		if (closest < THRESHOLD) {
 			break;
 		}
@@ -50,14 +55,24 @@ vec3 estimateNormal(vec3 p) {
 
 
 void main() {
+	mat4 transformMatrix = inverse(push.invTransform);
+	rotationMatrix = mat3(
+		normalize(transformMatrix[0].xyz),
+		normalize(transformMatrix[1].xyz),
+		normalize(transformMatrix[2].xyz)
+	);
+
 	vec3 ro = world;
-	float closest = sceneSDF(world).x;
-	if (closest > THRESHOLD) {
+	vec2 res = sceneSDF(world);
+	if (res.x > THRESHOLD) {
 		discard;
 	}
 	vec3 nor = estimateNormal(world);
 	vec3 dir = vec3(-1.0, -1.0, 0.5);
-	vec3 col = clamp(dot(nor, -dir) * vec3(1.0), 0..xxx, 1..xxx);
+	vec3 col = max(dot(nor, -dir), 0.0) * vec3(1.0) + vec3(0.2, 0.25, 0.3);
 	outColor = vec4(col, 1.0);
 
+	vec3 trueWorld = world + normalize(ray) * res.y;
+	vec4 clip = ubo.viewProjMatrix * vec4(trueWorld, 1.0);
+	gl_FragDepth = clip.z / clip.w;
 }

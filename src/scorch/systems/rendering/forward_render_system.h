@@ -10,7 +10,10 @@ namespace ScorchEngine {
 		virtual void renderEarlyDepth(FrameInfo& frameInfo) override;
 		virtual void renderOpaque(FrameInfo& frameInfo) override;
 		virtual void renderTranslucent(FrameInfo& frameInfo) override;
-		 
+
+		virtual void beginEarlyDepthPass(FrameInfo& frameInfo) override;
+		virtual void endEarlyDepthPass(FrameInfo& frameInfo) override;
+
 		virtual void beginOpaquePass(FrameInfo& frameInfo) override;
 		virtual void endOpaquePass(FrameInfo& frameInfo) override;
 

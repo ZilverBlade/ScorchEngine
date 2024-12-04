@@ -9,12 +9,13 @@ layout (location = 2) out vec3 world;
 #include "cube.glsl"
 
 layout (push_constant) uniform Push {
-	vec4 translation;
+	mat4 invTransform;
 	vec3 halfExtent;
+	vec3 scale;
 } push;
 
 void main() {
-	vec4 worldPos = vec4(vertices[gl_VertexIndex] * push.halfExtent + push.translation.xyz, 1.0);
+	vec4 worldPos = inverse(push.invTransform) * vec4(2.0 * vertices[gl_VertexIndex] * push.halfExtent, 1.0);
 	ray = worldPos.xyz - ubo.invViewMatrix[3].xyz;
 	local = vertices[gl_VertexIndex];
 	world = worldPos.xyz;

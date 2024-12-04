@@ -40,7 +40,6 @@ namespace ScorchEngine {
 	}
 
 	void ForwardRenderSystem::renderEarlyDepth(FrameInfo& frameInfo) {
-		earlyDepthRenderPass->beginRenderPass(frameInfo.commandBuffer, earlyDepthFramebuffer);
 		earlyDepthPipeline->bind(frameInfo.commandBuffer);
 
 		vkCmdBindDescriptorSets(
@@ -56,8 +55,6 @@ namespace ScorchEngine {
 		
 		renderMeshes(frameInfo, push, earlyDepthPipelineLayout->getPipelineLayout(), 1, false, false);
 		renderMeshes(frameInfo, push, earlyDepthPipelineLayout->getPipelineLayout(), 1, false, true);
-
-		earlyDepthRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
 	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo) {
 		opaquePipeline->bind(frameInfo.commandBuffer);
@@ -106,6 +103,14 @@ namespace ScorchEngine {
 
 		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, true, false);
 		//renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, true, true);
+	}
+
+	void ForwardRenderSystem::beginEarlyDepthPass(FrameInfo& frameInfo) {
+		earlyDepthRenderPass->beginRenderPass(frameInfo.commandBuffer, earlyDepthFramebuffer);
+	}
+
+	void ForwardRenderSystem::endEarlyDepthPass(FrameInfo& frameInfo) {
+		earlyDepthRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
 
 	void ForwardRenderSystem::beginOpaquePass(FrameInfo& frameInfo) {

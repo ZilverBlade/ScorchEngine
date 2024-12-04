@@ -121,6 +121,7 @@ namespace ScorchEngine::Apps {
 		Actor lightActor = level->createActor("sun");
 		Actor sphereActor = level->createActor("sphereActor");
 		Actor floorActor = level->createActor("floorActor");
+		Actor teapotActor = level->createActor("teapot");
 		{
 
 			//Actor sponzaActor = level->createActor("sponzaActor");
@@ -151,25 +152,24 @@ namespace ScorchEngine::Apps {
 			for (const std::string& mapto : resourceSystem->getModel(floorM.mesh)->getSubmeshes()) {
 				floorM.materials[mapto] = blankMaterial;
 			}
-			floorActor.getTransform().translation = { 113.f, 3.0f, 0.f };
-			//floorActor.getTransform().translation = { 0.f, -100.0f, 0.f};
-			//floorActor.getTransform().scale = { 50.0, 50.0, 50.f };
+			floorActor.getTransform().rotation = { 1.51f, 0.0f, 0.f };
+			floorActor.getTransform().translation = { 0.f, -5.0f, 0.f};
+			floorActor.getTransform().scale = {50.0f, 50.f, 1.0f};
 
 			auto& msc2 = sphereActor.addComponent<MeshComponent>();
 			msc2.mesh = sphereMesh;
 			for (const std::string& mapto : resourceSystem->getModel(msc2.mesh)->getSubmeshes()) {
 				msc2.materials[mapto] = blankMaterial;//clearCoatMaterial;
 			}
-			sphereActor.getTransform().translation = { 1110.f, 3.0f, 0.f };
+			sphereActor.getTransform().translation = { 0.f, 3.0f, 0.f };
 
 			{
-				Actor meshactor = level->createActor("some kind of mesh");
-				auto& meshactorm = meshactor.addComponent<MeshComponent>();
+				auto& meshactorm = teapotActor.addComponent<MeshComponent>();
 				meshactorm.mesh = teapotMesh;
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
 					meshactorm.materials[mapto] = blankMaterial;
 				}
-				meshactor.getTransform().translation = { 6.f, 3.f, 0.0f };
+				teapotActor.getTransform().translation = { 6.f, 3.f, 10.0f };
 			}
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
@@ -178,7 +178,7 @@ namespace ScorchEngine::Apps {
 				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
 					meshactorm.materials[mapto] = blankMaterial;
 				}
-				meshactor.getTransform().translation = { 119.f, 3.f, 0.0f };
+				meshactor.getTransform().translation = { 9.f, 3.f, 0.0f };
 				//meshactor.getTransform().rotation = { 0.0, 0.0, 0.0 };
 				//meshactor.getTransform().scale = { 100.0, 100.0, 100.0 };
 			}
@@ -265,15 +265,17 @@ namespace ScorchEngine::Apps {
 			if (seWindow.isKeyDown(GLFW_KEY_T)) {
 				flPropCount += frameTime;
 			}
+			bool previewSDF = seWindow.isKeyDown(GLFW_KEY_0);
 			
 			lightActor.getComponent<LightPropagationVolumeComponent>().propagationIterations = flPropCount;
 
 			camera.setViewYXZ(cameraActor.getTransform().translation, cameraActor.getTransform().rotation);
 			camera.setPerspectiveProjection(70.0f, seSwapChain->extentAspectRatio(), 0.01f, 128.f);
 
-			sphereActor.getTransform().translation.x = (sin(incrementTime) * 5.0);
-			
-			//incrementTime += frameTime;
+			teapotActor.getTransform().rotation.y = incrementTime;
+			teapotActor.getTransform().scale = glm::vec3(1.0, 1.0, sin(incrementTime) + 2.0f);
+
+			incrementTime += frameTime;
 			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->roughnessFactor = (sin(incrementTime) + 1.0) * 0.5;
 			//resourceSystem->getSurfaceMaterial(clearCoatMaterial)->updateParams();
 
@@ -319,15 +321,22 @@ namespace ScorchEngine::Apps {
 				renderData[frameIndex].ssboBuffer->writeToBuffer(renderData[frameIndex].sceneSSBO.get());
 				renderData[frameIndex].ssboBuffer->flush();
 
-				//renderSystem->renderEarlyDepth(frameInfo);
-
+				renderSystem->beginEarlyDepthPass(frameInfo);
+				if (!previewSDF) {
+					renderSystem->renderEarlyDepth(frameInfo);
+				}
+				renderSystem->endEarlyDepthPass(frameInfo);
 				renderSystem->beginOpaquePass(frameInfo);
 				frameInfo.skyLight = skyLightSystem->getDescriptorSet(frameIndex);
-				//renderSystem->renderOpaque(frameInfo);
+				if (!previewSDF) {
+					renderSystem->renderOpaque(frameInfo);
+				}
 				if (pickedCube) {
 					skyboxSystem->render(frameInfo, skyLightSystem->getDescriptorSet(frameIndex));
 				}
-				sdfRenderSystem->renderSDFs(frameInfo);
+				if (previewSDF) {
+					sdfRenderSystem->renderSDFs(frameInfo);
+				}
 				renderSystem->renderTranslucent(frameInfo);
 				renderSystem->endOpaquePass(frameInfo);
 

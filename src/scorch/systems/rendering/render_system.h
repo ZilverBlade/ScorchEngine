@@ -35,7 +35,9 @@ namespace ScorchEngine {
 		virtual void renderSkybox(FrameInfo& frameInfo) {}
 		 
 		virtual void compositeData(FrameInfo& frameInfo) {}
-		 
+
+		virtual void beginEarlyDepthPass(FrameInfo& frameInfo) {}
+		virtual void endEarlyDepthPass(FrameInfo& frameInfo) {}
 		virtual void beginOpaquePass(FrameInfo& frameInfo) {}
 		virtual void endOpaquePass(FrameInfo& frameInfo) {}
 		virtual void beginTranslucentPass(FrameInfo& frameInfo) {}

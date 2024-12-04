@@ -30,8 +30,8 @@ namespace ScorchEngine {
 			boundsMax = glm::max(vert, boundsMax);
 		}
 		// overcompensate to have a valid SDF distance on the borders
-		boundsMin -= 1.5F / (glm::vec3)resolution;
-		boundsMax += 1.5F / (glm::vec3)resolution;
+		boundsMin -= 2.0F / (glm::vec3)resolution;
+		boundsMax += 2.0F / (glm::vec3)resolution;
 
 		boundsHalfExtent = (boundsMax - boundsMin) / 2.0f;
 		boundsCenter = (boundsMax + boundsMin) / 2.0f;
@@ -138,7 +138,7 @@ namespace ScorchEngine {
 
 	}
 	SEVoxelSDF::SEVoxelSDF(SEDevice& device, SEDescriptorPool& descriptorPool, const SEVoxelSDF::Builder& builder) 
-		: seDevice(device), seDescriptorPool(descriptorPool), halfExtent(builder.boundsHalfExtent) {
+		: seDevice(device), seDescriptorPool(descriptorPool), halfExtent(builder.boundsHalfExtent), center(builder.boundsCenter) {
 		createVoxel(builder);
 		createDescriptorSetLayout();
 		createDescriptor();
