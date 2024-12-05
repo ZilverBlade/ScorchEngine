@@ -14,7 +14,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ 128, 128 },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/envbrdfgen.fsh.spv"),
-			descriptorPool,
 			{},
 			VK_FORMAT_R16G16_SFLOAT, //VK_FORMAT_R8G8_UNORM,
 			VK_IMAGE_VIEW_TYPE_2D
@@ -30,7 +29,6 @@ namespace ScorchEngine {
 				seDevice,
 				envMapImageDimensions,
 				SEShader(SEShaderType::Fragment, "res/shaders/spirv/envprefiltergen.fsh.spv"),
-				descriptorPool,
 				{ envMapImageInfo },
 				VK_FORMAT_R8G8B8A8_UNORM,
 				VK_IMAGE_VIEW_TYPE_CUBE,
@@ -42,7 +40,6 @@ namespace ScorchEngine {
 				seDevice,
 				{ 128, 128 },
 				SEShader(SEShaderType::Fragment, "res/shaders/spirv/envirrgen.fsh.spv"),
-				descriptorPool,
 				{ envMapImageInfo },
 				VK_FORMAT_R8G8B8A8_UNORM,
 				VK_IMAGE_VIEW_TYPE_CUBE,

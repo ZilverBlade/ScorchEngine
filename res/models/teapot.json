@@ -4,7 +4,7 @@
 		"importScale": 100.0,
 		"enableSdf": true,
 		"sdfResolution": [40,40,40],
-		"sdfConservativeFactor": 0.0
+		"sdfConservativeFactor": 0.15
 	},
 	"materials": [
 		"res/materials/blank.json"

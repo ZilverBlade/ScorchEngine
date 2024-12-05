@@ -6,17 +6,19 @@
 #include <scorch/systems/rendering/light_system.h>
 #include <scorch/systems/rendering/sky_light_system.h>
 #include <scorch/systems/rendering/skybox_system.h>
+#include <scorch/systems/rendering/vsdf_previewer.h>
+#include <scorch/systems/rendering/vsdf_render_system.h>
+#include <scorch/systems/rendering/shadow_map_system.h>
+
 #include <scorch/systems/resource_system.h>
 
 #include <scorch/systems/post_fx/fx/ppfx_screen_correct.h>
 
 #include <scorch/controllers/camera_controller.h>
 #include <scorch/graphics/surface_material.h>
-#include <scorch/systems/rendering/shadow_map_system.h>
 #include <scorch/systems/ui/performance_viewer.h>
 #include <shudvk/vk_context.h>
 #include <fstream>
-#include <scorch/systems/rendering/vsdf_render_system.h>
 
 namespace ScorchEngine::Apps {
 	RenderApp::RenderApp(const char* name) : VulkanBaseApp(name)
@@ -27,7 +29,7 @@ namespace ScorchEngine::Apps {
 	}
 	void RenderApp::run() {
 		glm::vec2 resolution = { 1280, 720 };
-		ResourceSystem* resourceSystem = new ResourceSystem(seDevice, *staticPool);
+		ResourceSystem* resourceSystem = new ResourceSystem(seDevice, seDevice.getDescriptorPool());
 		MaterialSystem::createDescriptorSetLayout(seDevice);
 		std::unique_ptr<SEDescriptorSetLayout> skyLightDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT) // prefiltered
@@ -50,9 +52,10 @@ namespace ScorchEngine::Apps {
 
 		UIPerformanceViewer performanceViewer = UIPerformanceViewer(seDevice);
 
-		ShadowMapSystem* shadowMapSystem = new ShadowMapSystem(seDevice, *staticPool);
+		ShadowMapSystem* shadowMapSystem = new ShadowMapSystem(seDevice);
 
 		VkSampleCountFlagBits msaa = VK_SAMPLE_COUNT_1_BIT;
+
 		RenderSystem* renderSystem = new ForwardRenderSystem(
 			seDevice,
 			resolution, {
@@ -65,7 +68,6 @@ namespace ScorchEngine::Apps {
 		);
 		SkyLightSystem* skyLightSystem = new SkyLightSystem(
 			seDevice,
-			*staticPool,
 			skyLightDescriptorLayout,
 			seSwapChain->getImageCount()
 		);
@@ -77,19 +79,25 @@ namespace ScorchEngine::Apps {
 			skyLightDescriptorLayout->getDescriptorSetLayout(),
 			msaa
 		);
-		VoxelSDFRenderSystem* sdfRenderSystem = new VoxelSDFRenderSystem(
+		VoxelSdfPreviewer* sdfPreviewer = new VoxelSdfPreviewer(
 			seDevice,
 			renderSystem->getOpaqueRenderPass()->getRenderPass(),
 			globalUBODescriptorLayout->getDescriptorSetLayout(),
 			msaa
 		);
+		VoxelSdfRenderSystem* sdfRenderSystem = new VoxelSdfRenderSystem(
+			seDevice,
+			resolution,
+			renderSystem->getDepthAttachment()->getDescriptor(),
+			globalUBODescriptorLayout->getDescriptorSetLayout()
+		);
+		renderSystem->setSdfShadowTexture(sdfRenderSystem->getShadowMaskDescriptor());
 
 		LightSystem lightSystem = LightSystem();
 
 		PostFX::Effect* screenCorrection = new PostFX::ScreenCorrection(
 			seDevice,
 			resolution,
-			*staticPool,
 			renderSystem->getColorAttachment(),
 			seSwapChain
 		);
@@ -153,7 +161,7 @@ namespace ScorchEngine::Apps {
 				floorM.materials[mapto] = blankMaterial;
 			}
 			floorActor.getTransform().rotation = { 1.51f, 0.0f, 0.f };
-			floorActor.getTransform().translation = { 0.f, -5.0f, 0.f};
+			floorActor.getTransform().translation = { 0.f, -1.0f, 0.f};
 			floorActor.getTransform().scale = {50.0f, 50.f, 1.0f};
 
 			auto& msc2 = sphereActor.addComponent<MeshComponent>();
@@ -265,7 +273,7 @@ namespace ScorchEngine::Apps {
 			if (seWindow.isKeyDown(GLFW_KEY_T)) {
 				flPropCount += frameTime;
 			}
-			bool previewSDF = seWindow.isKeyDown(GLFW_KEY_0);
+			bool previewSdf = seWindow.isKeyDown(GLFW_KEY_0);
 			
 			lightActor.getComponent<LightPropagationVolumeComponent>().propagationIterations = flPropCount;
 
@@ -322,20 +330,22 @@ namespace ScorchEngine::Apps {
 				renderData[frameIndex].ssboBuffer->flush();
 
 				renderSystem->beginEarlyDepthPass(frameInfo);
-				if (!previewSDF) {
+				if (!previewSdf) {
 					renderSystem->renderEarlyDepth(frameInfo);
 				}
 				renderSystem->endEarlyDepthPass(frameInfo);
+				if (!previewSdf) {
+					sdfRenderSystem->renderSdfShadows(frameInfo, lightActor);
+				}
 				renderSystem->beginOpaquePass(frameInfo);
 				frameInfo.skyLight = skyLightSystem->getDescriptorSet(frameIndex);
-				if (!previewSDF) {
+				if (!previewSdf) {
 					renderSystem->renderOpaque(frameInfo);
+				} else {
+					sdfPreviewer->renderSdfs(frameInfo);
 				}
 				if (pickedCube) {
 					skyboxSystem->render(frameInfo, skyLightSystem->getDescriptorSet(frameIndex));
-				}
-				if (previewSDF) {
-					sdfRenderSystem->renderSDFs(frameInfo);
 				}
 				renderSystem->renderTranslucent(frameInfo);
 				renderSystem->endOpaquePass(frameInfo);
@@ -366,6 +376,8 @@ namespace ScorchEngine::Apps {
 				seSwapChain = new SESwapChain(seDevice, seWindow, extent, oldSwapChain);
 				delete oldSwapChain;
 				renderSystem->resize({ extent.width, extent.height });
+				sdfRenderSystem->resize({ extent.width, extent.height }, renderSystem->getDepthAttachment()->getDescriptor());
+				renderSystem->setSdfShadowTexture(sdfRenderSystem->getShadowMaskDescriptor());
 				screenCorrection->resize({ extent.width, extent.height }, { renderSystem->getColorAttachment() });
 				uiContext->SetResolution({ (float)seWindow.getExtent().width, (float)seWindow.getExtent().height });
 				seWindow.resetWindowResizedFlag();
@@ -378,7 +390,8 @@ namespace ScorchEngine::Apps {
 		delete screenCorrection;
 		delete skyLightSystem;
 		delete skyboxSystem;
-		delete sdfRenderSystem;
+		delete sdfPreviewer;
+		//delete sdfRenderSystem;
 
 		delete resourceSystem;
 	}

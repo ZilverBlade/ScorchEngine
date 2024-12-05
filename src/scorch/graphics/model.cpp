@@ -227,7 +227,7 @@ namespace ScorchEngine {
 	SEModel::SEModel(SEDevice& device, SEDescriptorPool& descriptorPool, const SEModel::Builder& builder) 
 		: seDevice(device) {
 		createSubmeshes(builder);
-		createSDF(descriptorPool, builder);
+		createSdf(descriptorPool, builder);
 	}
 	SEModel::~SEModel() {
 		delete sdf;
@@ -266,7 +266,7 @@ namespace ScorchEngine {
 		return strings;
 	}
 
-	SEVoxelSDF& SEModel::getSDF() {
+	SEVoxelSdf& SEModel::getSdf() {
 		return *sdf;
 	}
 
@@ -286,8 +286,8 @@ namespace ScorchEngine {
 		}
 	}
 
-	void SEModel::createSDF(SEDescriptorPool& descriptorPool, const SEModel::Builder& builder) {
-		SELOG_INF("Creating SDF for %s [%ix%ix%i]", builder.filePath.c_str(),
+	void SEModel::createSdf(SEDescriptorPool& descriptorPool, const SEModel::Builder& builder) {
+		SELOG_INF("Creating Sdf for %s [%ix%ix%i]", builder.filePath.c_str(),
 			builder.sdfResolution.x, builder.sdfResolution.y, builder.sdfResolution.z);
 		std::vector<glm::vec3> vertices;
 		std::vector<std::array<uint32_t, 3>> triangles;
@@ -307,12 +307,12 @@ namespace ScorchEngine {
 				);
 			}
 		}
-		SEVoxelSDF::Builder sdfBuilder;
+		SEVoxelSdf::Builder sdfBuilder;
 		sdfBuilder	.setVertices(vertices)
 					.setTriangles(triangles)
 					.setResolution(builder.sdfResolution, builder.sdfConservativeFactor)
 					.build();
-		sdf = new SEVoxelSDF(seDevice, descriptorPool, sdfBuilder);
+		sdf = new SEVoxelSdf(seDevice, descriptorPool, sdfBuilder);
 	}
 
 	template<typename T>

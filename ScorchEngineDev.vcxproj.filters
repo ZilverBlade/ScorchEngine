@@ -105,6 +105,9 @@
     <ClInclude Include="src\scorch\graphics\model.h">
       <Filter>graphics</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\graphics\sdf.h">
+      <Filter>graphics</Filter>
+    </ClInclude>
     <ClInclude Include="src\scorch\graphics\surface_material.h">
       <Filter>graphics</Filter>
     </ClInclude>
@@ -158,6 +161,12 @@
       <Filter>systems\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\rendering\skybox_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\vsdf_previewer.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\vsdf_render_system.h">
       <Filter>systems\rendering</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\systems\resource_system.h">
@@ -225,12 +234,6 @@
       <Filter>vkapi</Filter>
     </ClInclude>
     <ClInclude Include="src\scorch\window.h" />
-    <ClInclude Include="src\scorch\graphics\sdf.h">
-      <Filter>graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="src\scorch\systems\rendering\vsdf_render_system.h">
-      <Filter>systems\rendering</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
@@ -266,6 +269,9 @@
     <ClCompile Include="src\scorch\graphics\model.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\graphics\sdf.cpp">
+      <Filter>graphics</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\graphics\surface_material.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
@@ -278,6 +284,7 @@
     <ClCompile Include="src\scorch\graphics\texture_cube.cpp">
       <Filter>graphics</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\log.cpp" />
     <ClCompile Include="src\scorch\main.cpp" />
     <ClCompile Include="src\scorch\rendering\camera.cpp">
       <Filter>rendering</Filter>
@@ -306,8 +313,20 @@
     <ClCompile Include="src\scorch\systems\rendering\skybox_system.cpp">
       <Filter>systems\rendering</Filter>
     </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\vsdf_previewer.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\vsdf_render_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
     <ClCompile Include="src\scorch\systems\resouce_system.cpp">
       <Filter>systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\ui\performance_viewer.cpp">
+      <Filter>systems\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\ui\vulkan_shud_impl.cpp">
+      <Filter>systems\ui</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\utils\resid.cpp">
       <Filter>utils</Filter>
@@ -361,18 +380,5 @@
       <Filter>vkapi</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\window.cpp" />
-    <ClCompile Include="src\scorch\systems\ui\performance_viewer.cpp">
-      <Filter>systems\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\systems\ui\vulkan_shud_impl.cpp">
-      <Filter>systems\ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\log.cpp" />
-    <ClCompile Include="src\scorch\graphics\sdf.cpp">
-      <Filter>graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\systems\rendering\vsdf_render_system.cpp">
-      <Filter>systems\rendering</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

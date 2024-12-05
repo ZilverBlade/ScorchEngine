@@ -8,8 +8,8 @@
 #include <scorch/systems/resource_system.h>
 
 namespace ScorchEngine {
-	SkyLightSystem::SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool, std::unique_ptr<SEDescriptorSetLayout>& skyLightDescriptorLayout, uint32_t framesInFlight)
-		: seDevice(device), seDescriptorPool(descriptorPool), skyLightDescriptorLayout(skyLightDescriptorLayout) {
+	SkyLightSystem::SkyLightSystem(SEDevice& device, std::unique_ptr<SEDescriptorSetLayout>& skyLightDescriptorLayout, uint32_t framesInFlight)
+		: seDevice(device), skyLightDescriptorLayout(skyLightDescriptorLayout) {
 		descriptorSet.resize(framesInFlight);
 	}
 	SkyLightSystem::~SkyLightSystem() {
@@ -19,7 +19,7 @@ namespace ScorchEngine {
 	}
 	void SkyLightSystem::update(FrameInfo& frameInfo, SceneSSBO& sceneBuffer, SETextureCube* skyLight) {
 		if (envCubeToMap.find(skyLight) == envCubeToMap.end()) {
-			envCubeToMap[skyLight] = new SEEnvironmentMap(seDevice, seDescriptorPool, skyLightDescriptorLayout, skyLight->getImageInfo(), { skyLight->getExtent().width, skyLight->getExtent().height }, false);
+			envCubeToMap[skyLight] = new SEEnvironmentMap(seDevice, seDevice.getDescriptorPool(), skyLightDescriptorLayout, skyLight->getImageInfo(), { skyLight->getExtent().width, skyLight->getExtent().height }, false);
 			VkCommandBuffer commandBuffer = seDevice.beginSingleTimeCommands();
 			envCubeToMap[skyLight]->generateEnvironmentBRDF(commandBuffer);
 			envCubeToMap[skyLight]->generateIrradianceMap(commandBuffer);

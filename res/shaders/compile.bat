@@ -47,4 +47,6 @@ glslc.exe -O -g -fshader-stage=fragment lpv_propagation.fsh -o spirv/lpv_propaga
 glslc.exe -O -g -fshader-stage=vertex vsdf_preview.vsh -o spirv/vsdf_preview.vsh.spv
 glslc.exe -O -g -fshader-stage=fragment vsdf_preview.fsh -o spirv/vsdf_preview.fsh.spv
 
+glslc.exe -O -g -fshader-stage=fragment vsdf_shadow.fsh -o spirv/vsdf_shadow.fsh.spv
+
 pause

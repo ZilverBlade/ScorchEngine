@@ -6,6 +6,9 @@
 
 #define MAX_FRAMES_IN_FLIGHT 3
 namespace ScorchEngine {
+	class SEEmptyTexture;
+	class SEDescriptorPool;
+
 	struct QueueFamilyIndices {
 		uint32_t presentFamily = 0;
 		uint32_t presentQueueCount = 0;
@@ -81,6 +84,8 @@ namespace ScorchEngine {
 		void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t layerCount);
 		void generateMipMaps(VkCommandBuffer commandBuffer, VkImage image, VkFormat format, VkExtent3D resolution, uint32_t mipLevels, uint32_t layerCount, VkImageLayout finalLayout);
 	
+		VkDescriptorImageInfo getDummyTexture2dDescriptor();
+		SEDescriptorPool& getDescriptorPool();
 	private:
 
 		VkPhysicalDeviceProperties deviceProperties{};
@@ -92,6 +97,9 @@ namespace ScorchEngine {
 		void pickPhyisicalDevice();
 		void createLogicalDevice();
 		void createCommandPool();
+
+		void createDescriptorPool();
+		void createEmptyTextures();
 
 		VkPhysicalDeviceFeatures requestFeatures();
 		bool checkDeviceFeatureSupport(VkPhysicalDevice device);
@@ -113,6 +121,9 @@ namespace ScorchEngine {
 		std::vector<SEQueue> graphicsQueues{};
 		std::vector<SEQueue> computeQueues{};
 
+		SEEmptyTexture* emptyTexture2D;
+
+		SEDescriptorPool* descriptorPool;
 		VkCommandPool commandPool;
 
 		VkDebugUtilsMessengerEXT debugMessenger{};

@@ -17,7 +17,7 @@ extern "C" {
 	struct aiMaterial;
 }
 namespace ScorchEngine {
-	class SEVoxelSDF {
+	class SEVoxelSdf {
 	public:
 		struct Builder {
 			Builder& setVertices(std::vector<glm::vec3> vertices);
@@ -35,14 +35,14 @@ namespace ScorchEngine {
 			glm::vec3 boundsHalfExtent;
 			glm::vec3 boundsCenter;
 			std::vector<float> distanceFieldPoints;
-			friend class SEVoxelSDF;
+			friend class SEVoxelSdf;
 		};
 
-		SEVoxelSDF(SEDevice& device, SEDescriptorPool& descriptorPool, const SEVoxelSDF::Builder& builder);
-		~SEVoxelSDF();
+		SEVoxelSdf(SEDevice& device, SEDescriptorPool& descriptorPool, const SEVoxelSdf::Builder& builder);
+		~SEVoxelSdf();
 
-		SEVoxelSDF(const SEVoxelSDF&) = delete;
-		SEVoxelSDF& operator=(const SEVoxelSDF&) = delete;
+		SEVoxelSdf(const SEVoxelSdf&) = delete;
+		SEVoxelSdf& operator=(const SEVoxelSdf&) = delete;
 
 		VkDescriptorSetLayout getDescriptorSetLayout() {
 			return descriptorSetLayout->getDescriptorSetLayout();
@@ -60,7 +60,7 @@ namespace ScorchEngine {
 			return distanceFieldTexture->getDimensions();
 		}
 	private:
-		void createVoxel(const SEVoxelSDF::Builder& builder);
+		void createVoxel(const SEVoxelSdf::Builder& builder);
 		void createDescriptorSetLayout();
 		void createDescriptor();
 

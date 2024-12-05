@@ -12,10 +12,14 @@ namespace ScorchEngine {
 	) : RenderSystem(device, size), sampleCount(msaaSamples)
 	{
 		init(size);
+		createDescriptorSetLayouts();
 		createGraphicsPipelines(descriptorSetLayouts);
 	}
 	ForwardRenderSystem::~ForwardRenderSystem() {
 		destroy();
+		if (screenInputsDescriptor == VK_NULL_HANDLE) {
+			seDevice.getDescriptorPool().freeDescriptors({ screenInputsDescriptor });
+		}
 		delete opaquePipeline;
 		delete opaquePipelineLayout;
 		delete earlyDepthPipeline;
@@ -57,12 +61,17 @@ namespace ScorchEngine {
 		renderMeshes(frameInfo, push, earlyDepthPipelineLayout->getPipelineLayout(), 1, false, true);
 	}
 	void ForwardRenderSystem::renderOpaque(FrameInfo& frameInfo) {
+		if (screenInputsDescriptor == VK_NULL_HANDLE) {
+			rebuildScreenInputsDescriptor(seDevice.getDummyTexture2dDescriptor());
+		}
+
 		opaquePipeline->bind(frameInfo.commandBuffer);
-		VkDescriptorSet sets[4]{
+		VkDescriptorSet sets[5]{
 			frameInfo.globalUBO,
 			frameInfo.sceneSSBO,
 			frameInfo.skyLight,
-			frameInfo.shadowMap
+			frameInfo.shadowMap,
+			screenInputsDescriptor
 		};
 
 		vkCmdBindDescriptorSets(
@@ -70,24 +79,24 @@ namespace ScorchEngine {
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			opaquePipelineLayout->getPipelineLayout(),
 			0,
-			4,
+			5,
 			sets,
 			0,
 			nullptr
 		);
 
-		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, false, false);
-		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, false, true);
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 5, false, false);
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 5, false, true);
 	}
 
 	void ForwardRenderSystem::renderTranslucent(FrameInfo& frameInfo) {
-
 		translucentPipeline->bind(frameInfo.commandBuffer);
-		VkDescriptorSet sets[4]{
+		VkDescriptorSet sets[5]{
 			frameInfo.globalUBO,
 			frameInfo.sceneSSBO,
 			frameInfo.skyLight,
-			frameInfo.shadowMap
+			frameInfo.shadowMap,
+			screenInputsDescriptor
 		};
 
 		vkCmdBindDescriptorSets(
@@ -95,14 +104,14 @@ namespace ScorchEngine {
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			opaquePipelineLayout->getPipelineLayout(),
 			0,
-			4,
+			5,
 			sets,
 			0,
 			nullptr
 		);
 
-		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, true, false);
-		//renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 4, true, true);
+		renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 5, true, false);
+		//renderMeshes(frameInfo, push, opaquePipelineLayout->getPipelineLayout(), 5, true, true);
 	}
 
 	void ForwardRenderSystem::beginEarlyDepthPass(FrameInfo& frameInfo) {
@@ -125,6 +134,10 @@ namespace ScorchEngine {
 		opaqueFramebuffer->resize(glm::ivec3(size, 1), opaqueRenderPass);
 	}
 
+	void ForwardRenderSystem::setSdfShadowTexture(VkDescriptorImageInfo sdfShadowTexture) {
+		rebuildScreenInputsDescriptor(sdfShadowTexture);
+	}
+
 	void ForwardRenderSystem::createFramebufferAttachments(glm::vec2 size) {
 		SEFramebufferAttachmentCreateInfo depthAttachmentCreateInfo{};
 		depthAttachmentCreateInfo.dimensions = glm::ivec3(size, 1);
@@ -133,7 +146,7 @@ namespace ScorchEngine {
 		depthAttachmentCreateInfo.imageAspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 		depthAttachmentCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		depthAttachmentCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		depthAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		depthAttachmentCreateInfo.sampleCount = sampleCount;
 		depthAttachmentCreateInfo.linearFiltering = false;
 		depthAttachment = new SEFramebufferAttachment(seDevice, depthAttachmentCreateInfo);
@@ -215,7 +228,7 @@ namespace ScorchEngine {
 	void ForwardRenderSystem::createGraphicsPipelines(std::vector<VkDescriptorSetLayout> descriptorSetLayouts) {
 		push = SEPushConstant(sizeof(ModelMatrixPush), VK_SHADER_STAGE_VERTEX_BIT);
 
-		earlyDepthPipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, 
+		earlyDepthPipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() },
 			{ descriptorSetLayouts[0], MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout() });
 		// early depth only cares about first (global ubo) set layout
 
@@ -232,6 +245,7 @@ namespace ScorchEngine {
 		);
 
 		std::vector<VkDescriptorSetLayout> setLayouts = descriptorSetLayouts;
+		setLayouts.push_back(screenInputsDescriptorSetLayout->getDescriptorSetLayout());
 		setLayouts.push_back(MaterialSystem::getMaterialDescriptorSetLayout()->getDescriptorSetLayout());
 		opaquePipelineLayout = new SEPipelineLayout(seDevice, { push.getRange() }, setLayouts);
 
@@ -245,7 +259,8 @@ namespace ScorchEngine {
 		opaquePipeline = new SEGraphicsPipeline(
 			seDevice,
 			pipelineConfigInfo,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") }
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), 
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") }
 		);
 
 		SEGraphicsPipelineConfigInfo translucentPipelineConfigInfo{};
@@ -259,7 +274,22 @@ namespace ScorchEngine {
 		translucentPipeline = new SEGraphicsPipeline(
 			seDevice,
 			translucentPipelineConfigInfo,
-			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"), SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") }
+			{ SEShader(SEShaderType::Vertex, "res/shaders/spirv/model.vsh.spv"),
+			SEShader(SEShaderType::Fragment, "res/shaders/spirv/forward_shading.fsh.spv") }
 		);
+	}
+	void ForwardRenderSystem::createDescriptorSetLayouts() {
+		screenInputsDescriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
+			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.build();
+	}
+	void ForwardRenderSystem::rebuildScreenInputsDescriptor(VkDescriptorImageInfo sdfShadowInput) {
+		auto writer = SEDescriptorWriter(*screenInputsDescriptorSetLayout, seDevice.getDescriptorPool())
+			.writeImage(0, &sdfShadowInput);
+		if (screenInputsDescriptor == VK_NULL_HANDLE) {
+			writer.build(screenInputsDescriptor);
+		} else {
+			writer.overwrite(screenInputsDescriptor);
+		}
 	}
 }

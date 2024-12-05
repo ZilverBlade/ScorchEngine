@@ -11,10 +11,9 @@ namespace ScorchEngine::PostFX {
 	ScreenCorrection::ScreenCorrection(
 		SEDevice& device, 
 		glm::vec2 size,
-		SEDescriptorPool& descriptorPool,
 		SEFramebufferAttachment* inputAttachment, 
 		SESwapChain* swapChain
-	) : PostFX::Effect(device), seDescriptorPool(descriptorPool), inputAttachment(inputAttachment) {
+	) : PostFX::Effect(device), inputAttachment(inputAttachment) {
 		
 		ppfxSceneDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
@@ -77,7 +76,7 @@ namespace ScorchEngine::PostFX {
 	}
 	void ScreenCorrection::createSceneDescriptors() {
 		VkDescriptorImageInfo imageInfo = inputAttachment->getDescriptor();
-		SEDescriptorWriter(*ppfxSceneDescriptorLayout, seDescriptorPool)
+		SEDescriptorWriter(*ppfxSceneDescriptorLayout, seDevice.getDescriptorPool())
 			.writeImage(0, &imageInfo)
 			.build(ppfxSceneDescriptorSet);
 	}

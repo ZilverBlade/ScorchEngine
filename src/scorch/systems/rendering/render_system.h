@@ -45,6 +45,9 @@ namespace ScorchEngine {
 		virtual void beginCompositionPass(FrameInfo& frameInfo) {}
 		virtual void endCompositionPass(FrameInfo& frameInfo){}
 
+		virtual  void setSdfShadowTexture(VkDescriptorImageInfo sdfShadowTexture){}
+
+
 		SEFramebufferAttachment* getColorAttachment() {
 			SEFramebufferAttachment* attachment{};
 			getColorAttachment(&attachment);

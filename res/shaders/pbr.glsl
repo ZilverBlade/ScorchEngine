@@ -16,6 +16,8 @@ layout (set = 3, binding = 1) uniform sampler3D virtual_PropagatedLPV;
 layout (set = 3, binding = 2) uniform sampler2D skyLightVFAOmap;
 layout (set = 3, binding = 3) uniform sampler2D causticMap;
 
+layout (set = 4, binding = 0) uniform sampler2D sdfShadowMask;
+
 struct FragmentLitPBRData {
 	vec3 position;
 	vec3 normal;
@@ -306,10 +308,10 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 		PrivateLightingData lightingData;
 		lightingData.radiance = radiance;
 		
-		float shadow = sampleShadow(shadowMapPCF, fragment.position, scene.directionalLight.vp);
+		vec2 uv = gl_FragCoord.xy / ubo.screenSize;
+		float shadow = textureLod(sdfShadowMask, uv, 0.0).x;//sampleShadow(shadowMapPCF, fragment.position, scene.directionalLight.vp);
 		diffuse += shadow * (1.0 - F_Schlick(F0, pbrData.NdL)) * pbrLambertDiffuseBRDF(pbrSData, pbrData, lightingData);
-		diffuse += 
-		specular += shadow *  pbrSchlickBeckmannBRDF(pbrSData, pbrData, lightingData);
+		specular += shadow * pbrSchlickBeckmannBRDF(pbrSData, pbrData, lightingData);
 		if (enableClearCoatBRDF) {
 			clearCoat += shadow * pbrSchlickBeckmannBRDF(ccpbrSData, pbrData, lightingData);
 		}

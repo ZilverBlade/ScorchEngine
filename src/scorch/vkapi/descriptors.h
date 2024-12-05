@@ -46,6 +46,7 @@ namespace ScorchEngine {
 			Builder& setPoolFlags(VkDescriptorPoolCreateFlags flags);
 			Builder& setMaxSets(uint32_t count);
 			std::unique_ptr<SEDescriptorPool> build() const;
+			SEDescriptorPool* build_Raw() const;
 
 		private:
 			SEDevice& seDevice;

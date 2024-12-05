@@ -16,7 +16,6 @@ namespace ScorchEngine {
 			SEDevice& device,
 			glm::vec2 resolution,
 			const SEShader& fragmentShader,
-			SEDescriptorPool& descriptorPool,
 			const std::vector<VkDescriptorImageInfo>& inputAttachments,
 			VkFormat framebufferFormat,
 			VkImageViewType viewType,
@@ -46,7 +45,6 @@ namespace ScorchEngine {
 		void createRenderPass(glm::vec2 resolution);
 
 		SEDevice& seDevice;
-		SEDescriptorPool& descriptorPool;
 
 		uint32_t mipLevels = 1;
 		uint32_t layerCount = 1;

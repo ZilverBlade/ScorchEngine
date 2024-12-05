@@ -5,21 +5,21 @@
 #include <glm/gtx/norm.hpp>
 
 namespace ScorchEngine {
-	SEVoxelSDF::Builder& SEVoxelSDF::Builder::setVertices(std::vector<glm::vec3> vertices) {
+	SEVoxelSdf::Builder& SEVoxelSdf::Builder::setVertices(std::vector<glm::vec3> vertices) {
 		this->vertices = vertices;
 		return *this;
 	}
-	SEVoxelSDF::Builder& SEVoxelSDF::Builder::setTriangles(std::vector<std::array<uint32_t, 3>> triangles) {
+	SEVoxelSdf::Builder& SEVoxelSdf::Builder::setTriangles(std::vector<std::array<uint32_t, 3>> triangles) {
 		this->triangles = triangles;
 		return *this;
 	}
-	SEVoxelSDF::Builder& SEVoxelSDF::Builder::setResolution(glm::ivec3 dim, float conservativity) {
+	SEVoxelSdf::Builder& SEVoxelSdf::Builder::setResolution(glm::ivec3 dim, float conservativity) {
 		this->resolution = dim;
 		this->conservativity = conservativity;
 		assert(conservativity >= 0.0f && conservativity <= 1.0f);
 		return *this;
 	}
-	void SEVoxelSDF::Builder::build() {
+	void SEVoxelSdf::Builder::build() {
 		size_t points = resolution.x * resolution.y * resolution.z;
 		distanceFieldPoints.resize(points);
 
@@ -29,9 +29,9 @@ namespace ScorchEngine {
 			boundsMin = glm::min(vert, boundsMin);
 			boundsMax = glm::max(vert, boundsMax);
 		}
-		// overcompensate to have a valid SDF distance on the borders
-		boundsMin -= 2.0F / (glm::vec3)resolution;
-		boundsMax += 2.0F / (glm::vec3)resolution;
+		// overcompensate to have a valid Sdf distance on the borders
+		boundsMin -= conservativity;
+		boundsMax += conservativity;
 
 		boundsHalfExtent = (boundsMax - boundsMin) / 2.0f;
 		boundsCenter = (boundsMax + boundsMin) / 2.0f;
@@ -65,22 +65,8 @@ namespace ScorchEngine {
 				dispatch.join();
 			}
 		}
-
-		// pinch all samples closer to the surfaces
-		if (conservativity > 0.0f) {
-			glm::vec3 conservativePinchAxes = boundsHalfExtent / (glm::vec3)resolution; // half extent of 1 pixel
-			float conservativePinchRadius = conservativity * std::min(conservativePinchAxes.x, std::min(conservativePinchAxes.y, conservativePinchAxes.z));
-
-			for (float& point : distanceFieldPoints) {
-				if (point < 0.0f) {
-					point = point + conservativePinchRadius;
-				} else {
-					point = point - conservativePinchRadius;
-				}
-			}
-		}
 	}
-	int SEVoxelSDF::Builder::findClosestTriangle(glm::vec3 point, float& outSignedDist) {
+	int SEVoxelSdf::Builder::findClosestTriangle(glm::vec3 point, float& outSignedDist) {
 		float positiveSqDist = INFINITY;
 		float negativeSqDist = -INFINITY;
 		int positiveTri = -1;
@@ -108,7 +94,7 @@ namespace ScorchEngine {
 		return negativeTri;
 		
 	}
-	float SEVoxelSDF::Builder::signedDistanceSquareToTriangle(glm::vec3 p, std::array<uint32_t, 3> triangle) {
+	float SEVoxelSdf::Builder::signedDistanceSquareToTriangle(glm::vec3 p, std::array<uint32_t, 3> triangle) {
 		glm::vec3 v21 = vertices[triangle[1]] - vertices[triangle[0]];
 		glm::vec3 v32 = vertices[triangle[2]] - vertices[triangle[1]];
 		glm::vec3 v13 = vertices[triangle[0]] - vertices[triangle[2]];
@@ -137,18 +123,18 @@ namespace ScorchEngine {
 		}
 
 	}
-	SEVoxelSDF::SEVoxelSDF(SEDevice& device, SEDescriptorPool& descriptorPool, const SEVoxelSDF::Builder& builder) 
+	SEVoxelSdf::SEVoxelSdf(SEDevice& device, SEDescriptorPool& descriptorPool, const SEVoxelSdf::Builder& builder) 
 		: seDevice(device), seDescriptorPool(descriptorPool), halfExtent(builder.boundsHalfExtent), center(builder.boundsCenter) {
 		createVoxel(builder);
 		createDescriptorSetLayout();
 		createDescriptor();
 	}
-	SEVoxelSDF::~SEVoxelSDF() {
+	SEVoxelSdf::~SEVoxelSdf() {
 		vkDeviceWaitIdle(seDevice.getDevice());
 		seDescriptorPool.freeDescriptors({ distanceFieldDescriptor });
 		delete distanceFieldTexture;
 	}
-	void SEVoxelSDF::createVoxel(const SEVoxelSDF::Builder& builder) {
+	void SEVoxelSdf::createVoxel(const SEVoxelSdf::Builder& builder) {
 		SEEmptyTextureCreateInfo createInfo{};
 		createInfo.dimensions = builder.resolution;
 		createInfo.format = VK_FORMAT_R16_SFLOAT;
@@ -199,12 +185,12 @@ namespace ScorchEngine {
 			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1, 1);
 		seDevice.endSingleTimeCommands(cmb);
 	}
-	void SEVoxelSDF::createDescriptorSetLayout() {
+	void SEVoxelSdf::createDescriptorSetLayout() {
 		descriptorSetLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
 	}
-	void SEVoxelSDF::createDescriptor() {
+	void SEVoxelSdf::createDescriptor() {
 		SEDescriptorWriter(*descriptorSetLayout, seDescriptorPool)
 			.writeImage(0, &distanceFieldTexture->getDescriptor())
 			.build(distanceFieldDescriptor);

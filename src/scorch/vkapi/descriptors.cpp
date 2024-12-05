@@ -69,6 +69,10 @@ namespace ScorchEngine {
 		return std::make_unique<SEDescriptorPool>(seDevice, maxSets, poolFlags, poolSizes);
 	}
 
+	SEDescriptorPool* SEDescriptorPool::Builder::build_Raw() const {
+		return new SEDescriptorPool(seDevice, maxSets, poolFlags, poolSizes);
+	}
+
 	// *************** Descriptor Pool *********************
 
 	SEDescriptorPool::SEDescriptorPool(

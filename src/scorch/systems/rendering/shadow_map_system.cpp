@@ -58,8 +58,7 @@ namespace ScorchEngine {
 		}
 	};
 
-	ShadowMapSystem::ShadowMapSystem(
-		SEDevice& device, SEDescriptorPool& descriptorPool) : seDevice(device), seDescriptorPool(descriptorPool) {
+	ShadowMapSystem::ShadowMapSystem(SEDevice& device) : seDevice(device) {
 		init();
 	}
 	ShadowMapSystem::~ShadowMapSystem() {
@@ -175,7 +174,7 @@ namespace ScorchEngine {
 		auto vfaoMapImageInfo = vfaoBlurFieldsV->getAttachment()->getDescriptor();
 		auto causticMapImageInfo = causticBlurV->getAttachment()->getDescriptor();
 
-		SEDescriptorWriter(*shadowMapDescriptorSetLayout, seDescriptorPool)
+		SEDescriptorWriter(*shadowMapDescriptorSetLayout, seDevice.getDescriptorPool())
 			.writeImage(0, &shadowMapImageInfo)
 			.writeImage(1, &lpvPropAtlasSHImageInfo)
 			.writeImage(2, &vfaoMapImageInfo)
@@ -204,7 +203,7 @@ namespace ScorchEngine {
 
 		for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			auto injData = lpvInjectionData[i]->getDescriptorInfo();
-			SEDescriptorWriter(*lpvGenerationDataDescriptorSetLayout, seDescriptorPool)
+			SEDescriptorWriter(*lpvGenerationDataDescriptorSetLayout, seDevice.getDescriptorPool())
 				.writeBuffer(0, &injData)
 				.writeImage(1, &rsmDepthData)
 				.writeImage(2, &rsmNormalData)
@@ -224,7 +223,7 @@ namespace ScorchEngine {
 		auto causticFresnelImageInfo = causticMapFresnelAttachment->getDescriptor();
 		auto causticValueMapImageInfo = causticValueMap->getDescriptor();
 		causticValueMapImageInfo.sampler = VK_NULL_HANDLE;
-		SEDescriptorWriter(*causticInjectionDescriptorSetLayout, seDescriptorPool)
+		SEDescriptorWriter(*causticInjectionDescriptorSetLayout, seDevice.getDescriptorPool())
 			.writeImage(0, &causticRefractionImageInfo)
 			.writeImage(1, &causticFresnelImageInfo)
 			.writeImage(2, &causticValueMapImageInfo)
@@ -833,7 +832,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/caustics_injection.fsh.spv"),
-			seDescriptorPool,
 			{},
 			VK_FORMAT_R8_UINT,
 			VK_IMAGE_VIEW_TYPE_2D,
@@ -843,7 +841,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/caustics_scale.fsh.spv"),
-			seDescriptorPool,
 			{causticValueMap->getDescriptor()},
 			VK_FORMAT_R16_SFLOAT,
 			VK_IMAGE_VIEW_TYPE_2D
@@ -853,7 +850,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_h.fsh.spv"),
-			seDescriptorPool,
 			{ causticScale->getAttachment()->getDescriptor() },
 			VK_FORMAT_R16_SFLOAT,
 			VK_IMAGE_VIEW_TYPE_2D
@@ -862,7 +858,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_v.fsh.spv"),
-			seDescriptorPool,
 			{ causticBlurH->getAttachment()->getDescriptor() },
 			VK_FORMAT_R16_SFLOAT,
 			VK_IMAGE_VIEW_TYPE_2D
@@ -894,7 +889,6 @@ namespace ScorchEngine {
 			seDevice,
 			{SHADOW_MAP_RSM_RESOLUTION, SHADOW_MAP_RSM_RESOLUTION},
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/lpv_injection.fsh.spv"),
-			seDescriptorPool,
 			{},
 			VK_FORMAT_R8_UINT,
 			VK_IMAGE_VIEW_TYPE_2D,
@@ -904,7 +898,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ LPV_RESOLUTION, LPV_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/lpv_propagation.fsh.spv"),
-			seDescriptorPool,
 			{},
 			VK_FORMAT_R8_UINT,
 			VK_IMAGE_VIEW_TYPE_2D,
@@ -935,7 +928,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/vfao_fields.fsh.spv"),
-			seDescriptorPool,
 			{ vfaoMapVarianceAttachment->getDescriptor() },
 			VK_FORMAT_R16G16B16A16_UNORM,
 			VK_IMAGE_VIEW_TYPE_2D
@@ -946,7 +938,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_h.fsh.spv"),
-			seDescriptorPool,
 			{ vfaoComputeFields->getAttachment()->getDescriptor() },
 			VK_FORMAT_R16G16B16A16_UNORM,
 			VK_IMAGE_VIEW_TYPE_2D
@@ -955,7 +946,6 @@ namespace ScorchEngine {
 			seDevice,
 			{ VFAO_MAP_RESOLUTION, VFAO_MAP_RESOLUTION },
 			SEShader(SEShaderType::Fragment, "res/shaders/spirv/gaussian_v.fsh.spv"),
-			seDescriptorPool,
 			{ vfaoBlurFieldsH->getAttachment()->getDescriptor() },
 			VK_FORMAT_R16G16B16A16_UNORM,
 			VK_IMAGE_VIEW_TYPE_2D

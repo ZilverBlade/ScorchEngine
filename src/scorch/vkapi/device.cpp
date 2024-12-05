@@ -2,6 +2,8 @@
 
 #include <vulkan/vk_enum_string_helper.h>
 #include <scorch/vkapi/device.h>
+#include <scorch/vkapi/empty_texture.h>
+#include <scorch/vkapi/descriptors.h>
 #include <GLFW/glfw3.h>
 #include <set>
 
@@ -59,15 +61,18 @@ namespace ScorchEngine {
 		pickPhyisicalDevice();
 		createLogicalDevice();
 		createCommandPool();
+		createDescriptorPool();
 		graphicsQueues = createQueues(SEQueueType::Graphics, 1, 0);
+		createEmptyTextures();
 	}
 
 	SEDevice::~SEDevice() {
+		delete descriptorPool;
+		vkDestroyCommandPool(device, commandPool, nullptr);
+		vkDestroyDevice(device, nullptr);
 		if (enableValidationLayers) {
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
 		}
-		vkDestroyCommandPool(device, commandPool, nullptr);
-		vkDestroyDevice(device, nullptr);
 		vkDestroyInstance(instance, nullptr);
 	}
 
@@ -325,6 +330,34 @@ namespace ScorchEngine {
 		if (vkCreateCommandPool(device, &graphicsPoolInfo, nullptr, &commandPool) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create graphics command pool!");
 		}
+	}
+
+	void SEDevice::createDescriptorPool() {
+		descriptorPool = SEDescriptorPool::Builder(*this)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 4096)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 4096)
+			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4096)
+			.setMaxSets(4096 * 3)
+			.build_Raw();
+	}
+
+	void SEDevice::createEmptyTextures() {
+		SEEmptyTextureCreateInfo createInfo{};
+		createInfo.dimensions = {1,1,1};
+		createInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+		createInfo.imageType = VK_IMAGE_TYPE_2D;
+		createInfo.layers = 1;
+		createInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		createInfo.linearFiltering = true;
+		createInfo.mipLevels = 1;
+		createInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		emptyTexture2D = new SEEmptyTexture(*this, createInfo);
+
+		VkCommandBuffer cmb = beginSingleTimeCommands();
+		transitionImageLayout(cmb, emptyTexture2D->getImage(), createInfo.format,
+			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, 1, 1);
+		endSingleTimeCommands(cmb);
 	}
 
 	uint32_t SEDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
@@ -634,6 +667,14 @@ namespace ScorchEngine {
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 			vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 		}
+	}
+
+	VkDescriptorImageInfo SEDevice::getDummyTexture2dDescriptor() {
+		return emptyTexture2D->getDescriptor();
+	}
+
+	SEDescriptorPool& SEDevice::getDescriptorPool() {
+		return *descriptorPool;
 	}
 
 	void SEDevice::transitionImageLayout(

@@ -7,14 +7,14 @@ namespace ScorchEngine {
 		SEDevice& device,
 		glm::vec2 resolution,
 		const SEShader& fragmentShader,
-		SEDescriptorPool& descriptorPool,
 		const std::vector<VkDescriptorImageInfo>& inputAttachments,
 		VkFormat framebufferFormat,
 		VkImageViewType viewType,
 		const std::vector<VkDescriptorSetLayout>& extraDescriptorSetLayouts,
 		uint32_t layers,
 		uint32_t mipLevels
-	) : seDevice(device), inputAttachments(inputAttachments), ppfxFramebufferFormat(framebufferFormat), ppfxFramebufferViewType(viewType), descriptorPool(descriptorPool), layerCount(layers), mipLevels(mipLevels) {
+	) : seDevice(device), inputAttachments(inputAttachments), ppfxFramebufferFormat(framebufferFormat),
+		ppfxFramebufferViewType(viewType),layerCount(layers), mipLevels(mipLevels) {
 		if (inputAttachments.size() != 0) {
 			SEDescriptorSetLayout::Builder builder = SEDescriptorSetLayout::Builder(seDevice);
 			for (int i = 0; i < inputAttachments.size(); i++) {
@@ -96,7 +96,7 @@ namespace ScorchEngine {
 
 	void SEPostProcessingEffect::createSceneDescriptors() {
 		if (inputAttachments.size() != 0) {
-			auto writer = SEDescriptorWriter(*ppfxSceneDescriptorLayout, descriptorPool);
+			auto writer = SEDescriptorWriter(*ppfxSceneDescriptorLayout, seDevice.getDescriptorPool());
 			for (int i = 0; i < inputAttachments.size(); i++) {
 				writer.writeImage(i, &inputAttachments[i]);
 			}

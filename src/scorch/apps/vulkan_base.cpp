@@ -19,13 +19,6 @@ namespace ScorchEngine::Apps {
 			.setMaxSets(imageCount * 2)
 			.build();
 
-		staticPool = SEDescriptorPool::Builder(seDevice)
-			.addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 4096)
-			.addPoolSize(VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 4096)
-			.addPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4096)
-			.setMaxSets(4096 * 3)
-			.build();
-
 		for (int i = 0; i < seSwapChain->getImageCount(); i++) {
 			InFlightRenderData data{};
 			data.uboBuffer = std::make_unique<SEBuffer>(

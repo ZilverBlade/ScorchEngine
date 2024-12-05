@@ -2,31 +2,56 @@
 #include <scorch/vkapi/push_constant.h>
 #include <scorch/vkapi/device.h>
 #include <scorch/vkapi/descriptors.h>
-
+#include <glm/vec2.hpp>
 namespace ScorchEngine {
 	class SEGraphicsPipeline;
 	class SEPipelineLayout;
+	class SEFramebuffer;
+	class SEFramebufferAttachment;
+	class SERenderPass;
+	class SEDescriptorPool;
+	class Actor;
 	struct FrameInfo;
 
-	class VoxelSDFRenderSystem {
+	const float VSDF_SHADOW_QUALITY = 0.5f;
+
+	class VoxelSdfRenderSystem {
 	public:
-		VoxelSDFRenderSystem(SEDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout uboLayout, VkSampleCountFlagBits msaaSamples);
-		~VoxelSDFRenderSystem();
+		VoxelSdfRenderSystem(SEDevice& device, glm::vec2 size,
+			VkDescriptorImageInfo depthTarget, VkDescriptorSetLayout uboLayout);
+		~VoxelSdfRenderSystem();
 
-		VoxelSDFRenderSystem(const VoxelSDFRenderSystem&) = delete;
-		VoxelSDFRenderSystem& operator=(const VoxelSDFRenderSystem&) = delete;
-		VoxelSDFRenderSystem(VoxelSDFRenderSystem&&) = delete;
-		VoxelSDFRenderSystem& operator=(VoxelSDFRenderSystem&&) = delete;
+		VoxelSdfRenderSystem(const VoxelSdfRenderSystem&) = delete;
+		VoxelSdfRenderSystem& operator=(const VoxelSdfRenderSystem&) = delete;
+		VoxelSdfRenderSystem(VoxelSdfRenderSystem&&) = delete;
+		VoxelSdfRenderSystem& operator=(VoxelSdfRenderSystem&&) = delete;
 
-		void renderSDFs(const FrameInfo& frameInfo);
+		void renderSdfShadows(const FrameInfo& frameInfo, Actor sun);
+
+		VkDescriptorImageInfo getShadowMaskDescriptor();
+
+		void resize(glm::vec2 size, VkDescriptorImageInfo depthTarget);
 	protected:
+		void createRenderTargets(glm::vec2 size);
+		void createRenderPasses();
+		void createFramebuffers();
+
 		void createPipelineLayout(VkDescriptorSetLayout uboLayout);
-		void createGraphicsPipeline(VkRenderPass renderPass, VkSampleCountFlagBits msaaSamples);
+		void createGraphicsPipeline();
+
+		void rebuildDepthDescriptor(VkDescriptorImageInfo depthTarget);
 
 		SEDevice& seDevice;
 
+		SERenderPass* shadowMaskRenderPass;
+		SEFramebuffer* shadowMaskFramebuffer;
+		SEFramebufferAttachment* shadowMaskRenderTarget;
+
+		VkDescriptorSet depthDescriptor = VK_NULL_HANDLE;
+
 		SEPushConstant push{};
-		std::unique_ptr<SEDescriptorSetLayout> descriptorSetLayout;
+		std::unique_ptr<SEDescriptorSetLayout> sdfDescriptorSetLayout;
+		std::unique_ptr<SEDescriptorSetLayout> depthDescriptorSetLayout;
 		SEPipelineLayout* pipelineLayout{};
 		SEGraphicsPipeline* pipeline{};
 	};

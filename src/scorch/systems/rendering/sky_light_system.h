@@ -8,7 +8,7 @@
 namespace ScorchEngine {
 	class SkyLightSystem {
 	public:
-		SkyLightSystem(SEDevice& device, SEDescriptorPool& descriptorPool, std::unique_ptr<SEDescriptorSetLayout>& skyLightDescriptorLayout, uint32_t framesInFlight);
+		SkyLightSystem(SEDevice& device, std::unique_ptr<SEDescriptorSetLayout>& skyLightDescriptorLayout, uint32_t framesInFlight);
 		~SkyLightSystem();
 
 		SkyLightSystem(const SkyLightSystem&) = delete;
@@ -22,7 +22,6 @@ namespace ScorchEngine {
 		std::unordered_map<SETextureCube*, SEEnvironmentMap*> envCubeToMap{};
 
 		SEDevice& seDevice;
-		SEDescriptorPool& seDescriptorPool;
 		std::unique_ptr<SEDescriptorSetLayout>& skyLightDescriptorLayout;
 		std::vector<VkDescriptorSet> descriptorSet{};
 	};

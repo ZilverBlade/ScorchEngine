@@ -17,7 +17,9 @@ namespace ScorchEngine {
 		virtual void beginOpaquePass(FrameInfo& frameInfo) override;
 		virtual void endOpaquePass(FrameInfo& frameInfo) override;
 
-		virtual void resize(glm::vec2 size) override;	
+		virtual void resize(glm::vec2 size) override;
+
+		virtual void setSdfShadowTexture(VkDescriptorImageInfo sdfShadowTexture) override;
 	protected:
 		virtual void getColorAttachment(SEFramebufferAttachment** out) override {
 			*out = (sampleCount == VK_SAMPLE_COUNT_1_BIT) ? opaqueColorAttachment : opaqueColorResolveAttachment;
@@ -37,7 +39,13 @@ namespace ScorchEngine {
 		virtual void createFramebuffers() override;
 		virtual void createGraphicsPipelines(std::vector<VkDescriptorSetLayout> descriptorSetLayouts) override;
 
+		void createDescriptorSetLayouts();
+		void rebuildScreenInputsDescriptor(VkDescriptorImageInfo sdfShadowInput);
+
 		VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
+
+		VkDescriptorSet screenInputsDescriptor = VK_NULL_HANDLE;
+		std::unique_ptr<SEDescriptorSetLayout> screenInputsDescriptorSetLayout = nullptr;
 
 		SEFramebufferAttachment* depthAttachment{};
 		SEFramebufferAttachment* opaqueColorAttachment{};
@@ -50,7 +58,6 @@ namespace ScorchEngine {
 		SEGraphicsPipeline* opaquePipeline{};
 		SEGraphicsPipeline* translucentPipeline{};
 		
-
 		SEPipelineLayout* earlyDepthPipelineLayout{};
 		SEGraphicsPipeline* earlyDepthPipeline{};
 		SEFramebuffer* earlyDepthFramebuffer{};

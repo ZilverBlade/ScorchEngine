@@ -27,7 +27,7 @@ namespace ScorchEngine {
 
 	class ShadowMapSystem {
 	public:
-		ShadowMapSystem(SEDevice& device, SEDescriptorPool& descriptorPool);
+		ShadowMapSystem(SEDevice& device);
 		~ShadowMapSystem();
 
 		void render(FrameInfo& frameInfo);
@@ -54,7 +54,6 @@ namespace ScorchEngine {
 
 		VkDescriptorSet shadowMapDescriptorSet{};
 		std::unique_ptr<SEDescriptorSetLayout> shadowMapDescriptorSetLayout{};
-		SEDescriptorPool& seDescriptorPool;
 
 		SEFramebufferAttachment* shadowMapAttachment{};
 		SEFramebuffer* shadowMapFramebuffer{};

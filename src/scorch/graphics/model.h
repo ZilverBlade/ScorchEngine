@@ -17,7 +17,7 @@ extern "C" {
 namespace ScorchEngine {
 	class ResourceSystem;
 	class SESurfaceMaterial;
-	class SEVoxelSDF;
+	class SEVoxelSdf;
 	class SEDescriptorPool;
 	class SEModel {
 	public:
@@ -71,17 +71,17 @@ namespace ScorchEngine {
 		
 		std::vector<std::string> getSubmeshes();
 
-		SEVoxelSDF& getSDF();
+		SEVoxelSdf& getSdf();
 	private:
 		void createSubmeshes(const SEModel::Builder& builder);
-		void createSDF(SEDescriptorPool& descriptorPool, const SEModel::Builder& builder);
+		void createSdf(SEDescriptorPool& descriptorPool, const SEModel::Builder& builder);
 
 		template <typename T>
 		std::unique_ptr<SEBuffer> createBuffer(const std::vector<T> & data);
 
 		SEDevice &seDevice;
 
-		SEVoxelSDF* sdf;
+		SEVoxelSdf* sdf;
 
 		std::string boundSubmesh{};
 		std::unordered_map<std::string, Submesh> submeshes{};
