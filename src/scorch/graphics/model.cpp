@@ -225,8 +225,8 @@ namespace ScorchEngine {
 		vkCmdBindIndexBuffer(commandBuffer, submesh.indexBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
 	}
 
-	void SEModel::draw(VkCommandBuffer commandBuffer) {
-		vkCmdDrawIndexed(commandBuffer, submeshes[boundSubmesh].indexCount, 1, 0, 0, 0);
+	void SEModel::draw(VkCommandBuffer commandBuffer, uint32_t instanceCount) {
+		vkCmdDrawIndexed(commandBuffer, submeshes[boundSubmesh].indexCount, instanceCount, 0, 0, 0);
 	}
 
 	std::vector<std::string> SEModel::getSubmeshes() {

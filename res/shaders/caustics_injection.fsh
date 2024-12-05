@@ -28,20 +28,44 @@ const vec2 poissonDisk[16] = vec2[](
    vec2( 0.14383161, -0.14100790 ) 
 );
 
+float causticPower = 6.0;
+
+uint sampleCount = 4; // max 16
+float kernelSize = 8.0; // should be lower for larger distances
+
+vec4 getPixelPercentages(vec2 nrc) {
+	vec2 f = fract(nrc);
+
+    return vec4(
+		(1.0 - f.y) * (1.0 - f.x), 
+		f.y * (1.0- f.x),
+		(1.0 - f.y) * f.x,
+		f.y * f.x
+	);
+}
 void main() {	
 	vec2 ts = vec2(imageSize(causticMap).xy);
-	for (int i = 0; i < 8; i++) {
-		vec2 rv = textureLod(refraction, fragUV + 8.0 * poissonDisk[i] / ts, 0.0).xy;
+	for (int i = 0; i < sampleCount; i++) {
+		vec2 rv = textureLod(refraction, fragUV + kernelSize * poissonDisk[i] / ts, 0.0).xy;
 		vec2 clip = fragUV * 2.0 - 1.0;
 		clip += rv;
 		if (!any(greaterThan(abs(clip), vec2(1.0)))) {		
-			float i = exp(textureLod(fresnel, fragUV, 0.0).x) - 1.0;
-			
-			int c = floatToFixed(i);
+			float fres = textureLod(fresnel, fragUV, 0.0).x;
+			float i = (exp(pow(fres, causticPower)) - 1.0) / float(sampleCount);
 			
 			vec2 uv = clip * 0.5 + 0.5;
 			
-			imageAtomicAdd(causticMap, ivec2(uv * vec2(ts - vec2(1.0))), c);
+			vec2 coord =  uv * vec2(ts - vec2(1.0));
+			vec4 pps =getPixelPercentages (coord);
+			
+			int c0 = floatToFixed(i * pps.x);
+			imageAtomicAdd(causticMap, ivec2(floor(coord)), c0);
+			int c1 = floatToFixed(i * pps.y);
+			imageAtomicAdd(causticMap, ivec2(floor(coord) + vec2(1.0, 0.0)), c1);
+			int c2 = floatToFixed(i * pps.z);
+			imageAtomicAdd(causticMap, ivec2(floor(coord) + vec2(0.0, 1.0)), c2);
+			int c3 = floatToFixed(i * pps.w);
+			imageAtomicAdd(causticMap, ivec2(floor(coord) + vec2(1.0, 1.0)), c3);
 		}
 	}
 }

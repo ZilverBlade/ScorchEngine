@@ -48,9 +48,6 @@
     <ClInclude Include="src\scorch\apps\app.h">
       <Filter>apps</Filter>
     </ClInclude>
-    <ClInclude Include="src\scorch\apps\renderers\render_app.h">
-      <Filter>apps\renderers</Filter>
-    </ClInclude>
     <ClInclude Include="src\scorch\apps\tests\vulkan_test.h">
       <Filter>apps\tests</Filter>
     </ClInclude>
@@ -219,13 +216,22 @@
     <ClInclude Include="src\scorch\vkapi\compute_pipeline.h">
       <Filter>vkapi</Filter>
     </ClInclude>
+    <ClInclude Include="src\scorch\systems\rendering\water_system.h">
+      <Filter>systems\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\renderers\caustics.h">
+      <Filter>apps\renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\renderers\sponza_app.h">
+      <Filter>apps\renderers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scorch\apps\renderers\grass_app.h">
+      <Filter>apps\renderers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\scorch\apps\app.cpp">
       <Filter>apps</Filter>
-    </ClCompile>
-    <ClCompile Include="src\scorch\apps\renderers\render_app.cpp">
-      <Filter>apps\renderers</Filter>
     </ClCompile>
     <ClCompile Include="src\scorch\apps\tests\vulkan_test.cpp">
       <Filter>apps\tests</Filter>
@@ -348,6 +354,18 @@
     </ClCompile>
     <ClCompile Include="src\scorch\vkapi\compute_pipeline.cpp">
       <Filter>vkapi</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\systems\rendering\water_system.cpp">
+      <Filter>systems\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\apps\renderers\caustics.cpp">
+      <Filter>apps\renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\apps\renderers\sponza_app.cpp">
+      <Filter>apps\renderers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scorch\apps\renderers\grass_app.cpp">
+      <Filter>apps\renderers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

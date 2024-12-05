@@ -10,6 +10,9 @@ glslc.exe -O -fshader-stage=fragment screen_correct.fsh -o spirv/screen_correct.
 
 glslc.exe -O -fshader-stage=vertex model.vsh -o spirv/model.vsh.spv
 glslc.exe -O -g -fshader-stage=fragment forward_shading.fsh -o spirv/forward_shading.fsh.spv
+glslc.exe -O -fshader-stage=vertex grass_inst.vsh -o spirv/grass_inst.vsh.spv
+glslc.exe -O -fshader-stage=tesc grass_c.tsh -o spirv/grass_c.tsh.spv
+glslc.exe -O -fshader-stage=tese grass_e.tsh -o spirv/grass_e.tsh.spv
 
 glslc.exe -O -fshader-stage=vertex depth.vsh -o spirv/depth.vsh.spv
 glslc.exe -O -fshader-stage=fragment depth.fsh -o spirv/depth.fsh.spv

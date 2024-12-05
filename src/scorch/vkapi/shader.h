@@ -3,6 +3,8 @@
 namespace ScorchEngine {
 	enum class SEShaderType {
 		Vertex,
+		TessControl,
+		TessEval,
 		Geometry,
 		Fragment,
 		Compute
@@ -21,6 +23,10 @@ namespace ScorchEngine {
 			switch (type) {
 			case ScorchEngine::SEShaderType::Vertex:
 				return VK_SHADER_STAGE_VERTEX_BIT;
+			case ScorchEngine::SEShaderType::TessControl:
+				return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+			case ScorchEngine::SEShaderType::TessEval:
+				return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 			case ScorchEngine::SEShaderType::Geometry:
 				return VK_SHADER_STAGE_GEOMETRY_BIT;
 			case ScorchEngine::SEShaderType::Fragment:

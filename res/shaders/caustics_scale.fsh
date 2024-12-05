@@ -8,5 +8,5 @@ layout (location = 0) in vec2 fragUV;
 layout (location = 0) out float caustics;
 
 void main() {	
-	caustics = fixedToFloat(int(texture(causticMap, fragUV).x)) / 8.0; // 8 samples
+	caustics = fixedToFloat(int(texture(causticMap, fragUV).x));
 }

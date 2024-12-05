@@ -5,10 +5,10 @@
 #include <scorch/ecs/actor.h>
 
 namespace ScorchEngine::Apps {
-	class RenderApp : virtual public VulkanBaseApp {
+	class SponzaApp : virtual public VulkanBaseApp {
 	public:
-		RenderApp(const char* name);
-		virtual ~RenderApp();
+		SponzaApp(const char* name);
+		virtual ~SponzaApp();
 
 		virtual void run();
 	protected:

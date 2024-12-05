@@ -17,6 +17,8 @@ namespace ScorchEngine {
 		viewportInfo.scissorCount = 1;
 		viewportInfo.pScissors = nullptr;
 
+		tesselationStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+
 		//RASTERIZATION
 		rasterizationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		rasterizationInfo.depthClampEnable = VK_FALSE;
@@ -116,7 +118,10 @@ namespace ScorchEngine {
 	void SEGraphicsPipelineConfigInfo::setCullMode(VkCullModeFlags cullMode) {
 		rasterizationInfo.cullMode = cullMode;
 	}
-
+	void SEGraphicsPipelineConfigInfo::enableTesselation(uint32_t controlPoints) {
+		tesselationStateInfo.patchControlPoints = controlPoints;
+		inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+	}
 	void SEGraphicsPipelineConfigInfo::setSampleCount(VkSampleCountFlagBits samples) {
 		multisampleInfo.rasterizationSamples = samples;
 		multisampleInfo.sampleShadingEnable = static_cast<VkBool32>(samples > VK_SAMPLE_COUNT_1_BIT);
@@ -141,6 +146,7 @@ namespace ScorchEngine {
 		assert(configInfo.renderPass != nullptr &&
 			"Cannot create graphics pipeline:: no renderPass provided in configInfo");
 
+		bool hasTesselation = false;
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages{};
 		std::vector<VkShaderModule> shaderModules{};
 		shaderStages.reserve(shaders.size());
@@ -157,6 +163,9 @@ namespace ScorchEngine {
 			shaderStage.pNext = nullptr;
 			shaderStage.pSpecializationInfo = nullptr;
 			shaderStages.push_back(shaderStage);
+			if (shader.getVkShaderStage() == VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT || shader.getVkShaderStage() == VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT) {
+				hasTesselation = true;
+			}
 		}
 
 		auto& bindingDescriptions = configInfo.bindingDescriptions;
@@ -174,6 +183,7 @@ namespace ScorchEngine {
 		pipelineInfo.pStages = shaderStages.data();
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
+		pipelineInfo.pTessellationState = hasTesselation ? &configInfo.tesselationStateInfo : nullptr;
 		pipelineInfo.pViewportState = &configInfo.viewportInfo;
 		pipelineInfo.pRasterizationState = &configInfo.rasterizationInfo;
 		pipelineInfo.pMultisampleState = &configInfo.multisampleInfo;

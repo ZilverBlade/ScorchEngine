@@ -186,6 +186,7 @@ namespace ScorchEngine {
 		enabledFeatures.wideLines = VK_TRUE;
 		enabledFeatures.fragmentStoresAndAtomics = VK_TRUE;
 		enabledFeatures.independentBlend = VK_TRUE;
+		enabledFeatures.tessellationShader = VK_TRUE;
 		return enabledFeatures;
 	}
 
@@ -198,7 +199,8 @@ namespace ScorchEngine {
 			features.fillModeNonSolid &
 			features.wideLines &
 			features.fragmentStoresAndAtomics &
-			features.independentBlend;
+			features.independentBlend &
+			features.tessellationShader;
 	}
 	
 	bool SEDevice::checkDeviceExtensionSupport(VkPhysicalDevice device) {

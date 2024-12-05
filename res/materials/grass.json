@@ -1,0 +1,18 @@
+{
+	"name": "GrassMaterial",
+	"class": "surface",
+	"model": "lit",
+	"config": {
+		"diffuseFactor": [ 0.8, 0.8, 0.8 ],
+		"specularFactor": 0.8,
+		"roughnessFactor": 1.0,
+		"metallicFactor": 0.0,
+		"diffuseTexture": "res/textures/grass_blade_diffuse.png",
+		"roughnessTexture": "res/textures/grass_blade_roughness.png",
+		"normalTexture": "res/textures/grass_blade_normal.png"
+	},
+	"uvScale": [ 1.0, 1.0 ],
+	"uvOffset": [ 0, 0 ],
+	"translucent": false,
+	"doubleSided": true
+}

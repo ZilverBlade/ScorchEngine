@@ -28,6 +28,7 @@ void main() {
 	
 	if (sfShadingModelLit()) {	
 		vec3 N = normalize(fragNormal);
+		N = gl_FrontFacing ? N : -N;
 		FragmentLitPBRData fragment;
 		fragment.position = fragPosWorld;
 		if (sfHasNormalTexture()) {

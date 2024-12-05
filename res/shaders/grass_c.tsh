@@ -1,0 +1,31 @@
+#version 450
+#extension GL_GOOGLE_include_directive : enable
+#include "global_ubo.glsl"
+
+layout (vertices=4) out;
+
+layout (location = 0) in vec3 fragPosWorld[];
+layout (location = 1) in vec2 fragUV[];
+layout (location = 2) in vec3 fragNormal[];
+layout (location = 3) in vec3 fragTangent[];
+
+layout (location = 0) out vec3 out_fragPosWorld[];
+layout (location = 1) out vec2 out_fragUV[];
+layout (location = 2) out vec3 out_fragNormal[];
+layout (location = 3) out vec3 out_fragTangent[];
+
+void main() {
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+   out_fragPosWorld[gl_InvocationID] = fragPosWorld[gl_InvocationID];
+   out_fragUV[gl_InvocationID] = fragUV[gl_InvocationID];
+   out_fragNormal[gl_InvocationID] = fragNormal[gl_InvocationID];
+   out_fragTangent[gl_InvocationID] = fragTangent[gl_InvocationID];
+	
+	gl_TessLevelOuter[0] = 8;
+	gl_TessLevelOuter[1] = 8;
+	gl_TessLevelOuter[2] = 8;
+	gl_TessLevelOuter[3] = 8;
+	
+	gl_TessLevelInner[0] = 1;
+	gl_TessLevelInner[1] = 1;
+}

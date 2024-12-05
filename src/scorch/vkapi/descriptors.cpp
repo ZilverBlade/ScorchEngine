@@ -126,7 +126,7 @@ namespace ScorchEngine {
 		: setLayout{ setLayout }, pool{ pool } {}
 
 	SEDescriptorWriter& SEDescriptorWriter::writeBuffer(
-		uint32_t binding, VkDescriptorBufferInfo* bufferInfo) {
+		uint32_t binding, const VkDescriptorBufferInfo* bufferInfo) {
 		assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
 		auto& bindingDescription = setLayout.bindings[binding];
@@ -145,7 +145,7 @@ namespace ScorchEngine {
 	}
 
 	SEDescriptorWriter& SEDescriptorWriter::writeImage(
-		uint32_t binding, VkDescriptorImageInfo* imageInfo) {
+		uint32_t binding, const VkDescriptorImageInfo* imageInfo) {
 		assert(setLayout.bindings.count(binding) == 1 && "Layout does not contain specified binding");
 
 		auto& bindingDescription = setLayout.bindings[binding];

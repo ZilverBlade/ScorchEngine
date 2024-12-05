@@ -16,8 +16,13 @@ namespace ScorchEngine::PostFX {
 		SESwapChain* swapChain
 	) : PostFX::Effect(device), seDescriptorPool(descriptorPool), inputAttachment(inputAttachment) {
 		
+		auto lutTB = SETexture2D::Builder();
+		lutTB.loadSTB2DImage("res/textures/neutral-lut_1.png");
+		lutTexture = new SETexture2D(seDevice, lutTB);
+
 		ppfxSceneDescriptorLayout = SEDescriptorSetLayout::Builder(seDevice)
 			.addBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
+			.addBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, VK_SHADER_STAGE_FRAGMENT_BIT)
 			.build();
 		createSceneDescriptors();
 		createPipelineLayout();
@@ -77,8 +82,13 @@ namespace ScorchEngine::PostFX {
 	}
 	void ScreenCorrection::createSceneDescriptors() {
 		VkDescriptorImageInfo imageInfo = inputAttachment->getDescriptor();
+		VkDescriptorImageInfo lutImageInfo;
+		lutImageInfo.sampler = lutTexture->getSampler();
+		lutImageInfo.imageView = lutTexture->getImageView();
+		lutImageInfo.imageLayout = lutTexture->getImageLayout();
 		SEDescriptorWriter(*ppfxSceneDescriptorLayout, seDescriptorPool)
 			.writeImage(0, &imageInfo)
+			.writeImage(1, &lutImageInfo)
 			.build(ppfxSceneDescriptorSet);
 	}
 }

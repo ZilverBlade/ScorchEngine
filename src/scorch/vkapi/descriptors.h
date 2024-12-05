@@ -83,8 +83,8 @@ namespace ScorchEngine {
 	public:
 		SEDescriptorWriter(SEDescriptorSetLayout& setLayout, SEDescriptorPool& pool);
 
-		SEDescriptorWriter& writeBuffer(uint32_t binding, VkDescriptorBufferInfo* bufferInfo);
-		SEDescriptorWriter& writeImage(uint32_t binding, VkDescriptorImageInfo* imageInfo);
+		SEDescriptorWriter& writeBuffer(uint32_t binding, const VkDescriptorBufferInfo* bufferInfo);
+		SEDescriptorWriter& writeImage(uint32_t binding, const VkDescriptorImageInfo* imageInfo);
 
 		bool build(VkDescriptorSet& set);
 		void overwrite(VkDescriptorSet& set);

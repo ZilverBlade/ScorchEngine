@@ -1,5 +1,6 @@
 #pragma once
 #include <scorch/systems/post_fx/fx/ppfx_base.h>
+#include <scorch/graphics/texture2d.h>
 
 namespace ScorchEngine {
 	class SESwapChain;
@@ -19,6 +20,7 @@ namespace ScorchEngine {
 			SEDescriptorPool& seDescriptorPool;
 
 			SEFramebufferAttachment* inputAttachment;
+			SETexture2D* lutTexture;
 
 			std::unique_ptr<SEGraphicsPipeline> ppfxPipeline{};
 			std::unique_ptr<SEPipelineLayout> ppfxPipelineLayout{};

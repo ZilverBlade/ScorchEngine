@@ -30,7 +30,7 @@ namespace ScorchEngine {
         VkImageView getImageView() const {
             return imageView;
         }
-        VkDescriptorImageInfo getImageInfo() const {
+       const VkDescriptorImageInfo& getImageInfo() const {
             return descriptor;
         }
         VkImageLayout getImageLayout() const {

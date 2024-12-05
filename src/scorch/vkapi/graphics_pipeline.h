@@ -12,6 +12,7 @@ namespace ScorchEngine {
 		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
 		VkPipelineViewportStateCreateInfo viewportInfo{};
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
+		VkPipelineTessellationStateCreateInfo tesselationStateInfo{};
 		VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
 		VkPipelineMultisampleStateCreateInfo multisampleInfo{};
 		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
@@ -27,6 +28,7 @@ namespace ScorchEngine {
 		void enableAlphaBlending(uint32_t attachment = 0, VkBlendOp blendOp = VK_BLEND_OP_ADD);
 		void wireframe(float thickness = 1.0f);
 		void setCullMode(VkCullModeFlags cullMode);
+		void enableTesselation(uint32_t controlPoints = 4);
 		void setSampleCount(VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
 		void reverseDepth();
 		void disableDepthTest();

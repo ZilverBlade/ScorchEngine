@@ -101,6 +101,11 @@ const vec2 poissonDisk[16] = vec2[](
    vec2( 0.19984126, 0.78641367 ), 
    vec2( 0.14383161, -0.14100790 ) 
 );
+
+float clipstep(float min, float max_, float alpha) {
+	return (alpha - min) * (max_ / (1.0 - min));
+}
+
 float sampleShadow(sampler2DShadow shadow, vec3 world, mat4 vp) {
 	const float BIAS = 0.002;
 	const int PCF_KERNEL = 1;
@@ -120,7 +125,11 @@ float sampleShadow(sampler2DShadow shadow, vec3 world, mat4 vp) {
 	}
 	float causticAccum = texture(causticMap, projCoords.xy).x;
 	
-	return 0.5 * accum / samples + causticAccum;
+	float causticSharpness = 1.0;
+	
+	float caustic = pow(causticAccum, causticSharpness);
+	
+	return accum / samples + caustic;
 }
 
 float sampleVFAO(sampler2D vfaoMap, vec3 world, mat4 vfaoVP) {

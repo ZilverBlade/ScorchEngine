@@ -59,7 +59,7 @@ namespace ScorchEngine {
 		SEModel &operator=(const SEModel &) = delete;
 
 		void bind(VkCommandBuffer commandBuffer, const std::string& submeshName);
-		void draw(VkCommandBuffer commandBuffer);
+		void draw(VkCommandBuffer commandBuffer, uint32_t instanceCount = 1);
 		
 		std::vector<std::string> getSubmeshes();
 	private:

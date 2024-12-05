@@ -126,7 +126,7 @@ namespace ScorchEngine {
 		if (config["ambientOcclusionTexture"].error() == simdjson::error_code::SUCCESS)
 			this->ambientOcclusionTexture = std::string(config["ambientOcclusionTexture"].get_string().value());
 		if (config["opacityMask"].error() == simdjson::error_code::SUCCESS)
-			this->ambientOcclusionTexture = std::string(config["ambientOcclusionTexture"].get_string().value());
+			this->maskTexture = std::string(config["opacityMask"].get_string().value());
 
 		if (material["uvScale"].error() == simdjson::error_code::SUCCESS)
 			this->uvScale = { 
