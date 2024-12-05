@@ -60,7 +60,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>26812;4244;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;C:\VulkanSDK\1.3.290.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\SpearHUD\SHUDCore\include;vendor\SpearHUD\SHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\SpearHUD\SHUDCore\include;vendor\SpearHUD\SHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -72,7 +72,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui_d.lib;SHUDCore_d.lib;assimp-vc143-mtd.lib;simdjson_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\SpearHUD\SHUDCore\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\SpearHUD\SHUDCore\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -81,7 +81,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DisableSpecificWarnings>26812;4244;4996;4005;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;C:\VulkanSDK\1.3.290.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\SpearHUD\SHUDCore\include;vendor\SpearHUD\SHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;D:\GameEngines\Vulkan-1.3.211.0\Include;vendor\glfw-3.3.7\include;vendor\imgui\include;vendor\stbimage\include;vendor\simpleini\include;vendor\simdjson\include;vendor\assimp\include;vendor\entt\include;vendor\SpearHUD\SHUDCore\include;vendor\SpearHUD\SHUDVulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -96,7 +96,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;shlwapi.lib;ImGui.lib;SHUDCore.lib;assimp-vc143-mt.lib;simdjson.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\SpearHUD\SHUDCore\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\GameEngines\Vulkan-1.3.211.0\Lib;vendor\glfw-3.3.7\lib-vc2019;vendor\imgui\lib;vendor\assimp\lib;vendor\simdjson\lib;vendor\SpearHUD\SHUDCore\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
