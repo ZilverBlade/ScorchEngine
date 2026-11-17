@@ -42,10 +42,10 @@ namespace ScorchEngine {
 		shadowMaskRenderPass->beginRenderPass(frameInfo.commandBuffer, shadowMaskFramebuffer);
 		pipeline->bind(frameInfo.commandBuffer);
 		for (entt::entity ent : frameInfo.level->getRegistry().view<TransformComponent, MeshComponent>()) {
+
 			Actor actor = { ent, frameInfo.level.get() };
 			SEModel* model = frameInfo.resourceSystem->getModel(actor.getComponent<Components::MeshComponent>().mesh);
 			VkDescriptorSet descriptor = model->getSdf().getDescriptorSet();
-
 			VkDescriptorSet descriptors[3]{
 				frameInfo.globalUBO,
 				descriptor,
@@ -76,6 +76,7 @@ namespace ScorchEngine {
 
 			push.push(frameInfo.commandBuffer, pipelineLayout->getPipelineLayout(), &pushData);
 			vkCmdDraw(frameInfo.commandBuffer, 6, 1, 0, 0);
+			
 		}
 		shadowMaskRenderPass->endRenderPass(frameInfo.commandBuffer);
 	}
@@ -97,7 +98,7 @@ namespace ScorchEngine {
 		shadowAttachmentCreateInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		shadowAttachmentCreateInfo.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		shadowAttachmentCreateInfo.sampleCount = VK_SAMPLE_COUNT_1_BIT;
-		shadowAttachmentCreateInfo.linearFiltering = false;
+		shadowAttachmentCreateInfo.linearFiltering = true;
 		shadowMaskRenderTarget = new SEFramebufferAttachment(seDevice, shadowAttachmentCreateInfo);
 	}
 
@@ -135,7 +136,7 @@ namespace ScorchEngine {
 		configInfo.renderPass = shadowMaskRenderPass->getRenderPass();
 		configInfo.pipelineLayout = pipelineLayout->getPipelineLayout();
 		configInfo.colorBlendAttachments[0].blendEnable = true;
-		configInfo.colorBlendAttachments[0].colorBlendOp = VK_BLEND_OP_ADD;
+		configInfo.colorBlendAttachments[0].colorBlendOp = VK_BLEND_OP_MIN;
 		configInfo.colorBlendAttachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_SRC_COLOR;
 		configInfo.colorBlendAttachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_ZERO;
 

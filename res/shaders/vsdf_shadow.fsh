@@ -34,13 +34,13 @@ float raySphereIntersect(vec3 r0, vec3 rd, vec3 s0, float sr) {
     return (-b - sqrt((b*b) - 4.0*a*c))/(2.0*a);
 }
 
-const float bias  = SDF_THRESHOLD + 0.5;
+const float bias = SDF_THRESHOLD + 0.05;
 void main() {
 	float depth = textureLod(depthTexture, fragUV, 0.0).r;
 	if (depth == 1.0) discard;
 	vec4 cc = vec4(fragUV * 2.0 - 1.0, depth, 1.0);
 	vec4 viewSpace = ubo.invProjMatrix * cc;
-	viewSpace.xyz /= viewSpace.w;
+	viewSpace /= viewSpace.w;
 	vec4 world = ubo.invViewMatrix * viewSpace;
 	vec3 nor = normalize(cross(dFdy(world.xyz), dFdx(world.xyz)));
 	world.xyz += nor * bias;
@@ -52,9 +52,11 @@ void main() {
 	float radius = length(push.scale * push.halfExtent);
 	
 	float d = raySphereIntersect(world.xyz, push.toSun, center, radius);
-	if (d < 0.0) discard;
-	world.xyz += nor * d;
+	if (d < 0.0 && distance(world.xyz, center) > radius) {
+		//world.xyz += push.toSun * d;
+		discard;
+	}
+	SdfResult res = sceneSdfSmooth(push.toSun, world.xyz, 64, push.invTransform, push.halfExtent, cScale);
 	
-	SdfResult res = sceneSdf(push.toSun, world.xyz, push.invTransform, push.halfExtent, cScale);
-	outVisiblity = res.closest > 0.0001 ? 1.0 : 0.0;
+	outVisiblity = res.visibility;
 }

@@ -13,7 +13,7 @@ namespace ScorchEngine {
 	class Actor;
 	struct FrameInfo;
 
-	const float VSDF_SHADOW_QUALITY = 0.5f;
+	const float VSDF_SHADOW_QUALITY = 1.0f;
 
 	class VoxelSdfRenderSystem {
 	public:

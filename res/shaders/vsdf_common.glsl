@@ -14,6 +14,7 @@ layout (set = 1, binding = 0) uniform sampler3D sdf;
 struct SdfResult {
 	float closest;
 	float dist;
+	float visibility;
 };
 
 vec3 worldToVoxelSpace(vec3 p, mat4 inverseTransform, vec3 sdfHalfExtent) {
@@ -24,11 +25,13 @@ vec3 worldToVoxelSpace(vec3 p, mat4 inverseTransform, vec3 sdfHalfExtent) {
 SdfResult sceneSdf(vec3 rd, vec3 ro, mat4 inverseTransform, vec3 sdfHalfExtent, float closestScale) {
 	vec3 start = ro;
 	SdfResult res;
+	res.visibility = 1.0;
 	//float closestScale = dot(push.scale, abs(rotationMatrix * rd));
 	for (int i = 0; i < SDF_MAX_STEPS; ++i) {
 		vec3 uv = worldToVoxelSpace(ro, inverseTransform, sdfHalfExtent);
 		res.closest = texture(sdf, uv).r;
 		if (res.closest < SDF_THRESHOLD) {
+			res.visibility = 0.0;
 			break;
 		}
 		ro += rd * closestScale * res.closest;
@@ -37,5 +40,29 @@ SdfResult sceneSdf(vec3 rd, vec3 ro, mat4 inverseTransform, vec3 sdfHalfExtent, 
 	res.dist = distance(start, ro);
 	return res;
 }
+
+
+SdfResult sceneSdfSmooth(vec3 rd, vec3 ro, float k, mat4 inverseTransform, vec3 sdfHalfExtent, float closestScale) {
+	vec3 start = ro;
+	SdfResult res;
+	res.dist = 0.0;
+	res.visibility = 1.0;
+	//float closestScale = dot(push.scale, abs(rotationMatrix * rd));
+	for (int i = 0; i < SDF_MAX_STEPS; ++i) {
+		vec3 uv = worldToVoxelSpace(ro, inverseTransform, sdfHalfExtent);
+		res.closest = texture(sdf, uv).r;
+		if (res.closest < SDF_THRESHOLD) {
+        	res.visibility = 0.0;
+			break;
+		}
+		float trueClosest = closestScale*res.closest;
+        res.visibility = min( res.visibility, k*trueClosest/res.dist );
+		ro += rd * trueClosest;
+		res.dist += trueClosest;
+	}
+	res.closest *= closestScale;
+	return res;
+}
+
 
 #endif

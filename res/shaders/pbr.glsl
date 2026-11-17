@@ -293,7 +293,6 @@ vec3 pbrCalculateLighting(FragmentLitPBRData fragment, FragmentClearCoatPBRData 
 			clearCoat += pbrSchlickBeckmannBRDF(ccpbrSData, pbrData, lightingData);
 		}
 	}
-	
 	if (scene.hasDirectionalLight) {
 		vec3 L = -scene.directionalLight.direction;
 		vec3 radiance = scene.directionalLight.color.rgb * scene.directionalLight.color.a;

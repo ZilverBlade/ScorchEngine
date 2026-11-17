@@ -128,8 +128,9 @@ namespace ScorchEngine::Apps {
 		Actor cameraActor = level->createActor("cameraActor");
 		Actor lightActor = level->createActor("sun");
 		Actor sphereActor = level->createActor("sphereActor");
-		Actor floorActor = level->createActor("floorActor");
 		Actor teapotActor = level->createActor("teapot");
+		Actor floorActor = level->createActor("floorActor");
+		Actor cylinderActor = level->createActor("cylinder");
 		{
 
 			//Actor sponzaActor = level->createActor("sponzaActor");
@@ -161,8 +162,18 @@ namespace ScorchEngine::Apps {
 				floorM.materials[mapto] = blankMaterial;
 			}
 			floorActor.getTransform().rotation = { 1.51f, 0.0f, 0.f };
-			floorActor.getTransform().translation = { 0.f, -1.0f, 0.f};
-			floorActor.getTransform().scale = {50.0f, 50.f, 1.0f};
+			floorActor.getTransform().translation = { 0.f, -1.0f, 0.f };
+			floorActor.getTransform().scale = { 50.0f, 50.f, 1.0f };
+
+			auto& cylM = cylinderActor.addComponent<MeshComponent>();
+			cylM.mesh = cylinderMesh;
+			for (const std::string& mapto : resourceSystem->getModel(cylM.mesh)->getSubmeshes()) {
+				cylM.materials[mapto] = blankMaterial;
+			}
+			cylinderActor.getTransform().rotation = { 1.51f, 0.0f, 0.f };
+			cylinderActor.getTransform().translation = { 0.f, 0.0f, 0.f };
+			cylinderActor.getTransform().scale = { 1.0f, 1.f, 2.0f };
+
 
 			auto& msc2 = sphereActor.addComponent<MeshComponent>();
 			msc2.mesh = sphereMesh;
@@ -178,6 +189,14 @@ namespace ScorchEngine::Apps {
 					meshactorm.materials[mapto] = blankMaterial;
 				}
 				teapotActor.getTransform().translation = { 6.f, 3.f, 10.0f };
+			} {
+				Actor meshactor = level->createActor("some kind of mesh");
+				auto& meshactorm = meshactor.addComponent<MeshComponent>();
+				meshactorm.mesh = teapotMesh;
+				for (const std::string& mapto : resourceSystem->getModel(meshactorm.mesh)->getSubmeshes()) {
+					meshactorm.materials[mapto] = blankMaterial;
+				}
+				meshactor.getTransform().translation = { 6.f, 3.f, 13.0f };
 			}
 			{
 				Actor meshactor = level->createActor("some kind of mesh");
@@ -309,6 +328,7 @@ namespace ScorchEngine::Apps {
 				ubo.projMatrix = camera.getProjection();
 				ubo.invProjMatrix = camera.getInverseProjection();
 				ubo.viewProjMatrix = ubo.projMatrix * ubo.viewMatrix;
+				ubo.screenSize = glm::vec2(seWindow.getExtent().width, seWindow.getExtent().height);
 
 				renderData[frameIndex].uboBuffer->writeToBuffer(&ubo);
 				renderData[frameIndex].uboBuffer->flush();
